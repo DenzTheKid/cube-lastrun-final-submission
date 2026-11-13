@@ -1,4 +1,4 @@
-# CUBE: LAST RUN — GAMEPLAY & CONTROLS GUIDE
+# CUBE: LAST RUN — GAMEPLAY & CONTROLS GUIDE (V1.1)
 **Tagline: Run. Shoot. Survive. Don't Stop.**
 
 ---
@@ -6,44 +6,47 @@
 ## 1. Core Mechanics
 
 ### Automatic Running
-The cube survivor automatically charges forward across the ruined post-apocalyptic cityscape. You do not need to hold a movement key to run forward. Your focus is entirely on jumping, aiming, shooting, managing shells, and surviving obstacles.
+The cube survivor automatically charges rightward across the ruined apocalyptic city. Forward motion is continuous. Your focus is entirely on jumping, aiming in discrete directions, shooting, managing your 2 shotgun shells, and surviving hazard encounters.
 
-### Double-Barrel Shotgun & Directional Aiming
-- **Aiming:** Move your **Mouse Cursor** in 360° around the cube. The double-barrel shotgun smoothly tracks your cursor. Alternatively, directional keyboard keys (Arrow keys / WASD) provide aiming fallback.
-- **Shooting:** Press **Left Mouse Button** or **X** to fire a burst of buckshot pellets. Pellets pierce through zombie flesh and blast obstacles.
-- **Two-Shell Capacity:** The shotgun carries exactly 2 shells in its break-action chambers.
-- **Reloading:** Press **R** to reload at any time, or the survivor will automatically reload once both shells are expended (~0.85s reload duration).
+### Double-Barrel Shotgun & Discrete Directional Aiming
+- **5 Discrete Aiming Directions:**
+  1. **Forward:** Straight horizontal ahead (`+X`).
+  2. **Diagonal Upward:** 45° angle upward ahead.
+  3. **Straight Upward:** 90° directly above (`-Y`).
+  4. **Diagonal Downward:** 45° angle downward ahead.
+  5. **Straight Downward:** 90° directly beneath (`+Y`).
+- **Aim Controls:** Move your **Mouse Cursor** in the forward hemisphere to snap automatically to the nearest discrete pose, or use **Keyboard Directional Keys (WASD / Arrows)** for direct snap aiming.
+- **Shooting:** Press **Left Mouse Button** or **X** to fire a burst of 6 buckshot pellets.
+- **Two-Shell Capacity:** The shotgun carries exactly 2 shells.
+- **Reloading:** Press **R** to manually reload early, or the survivor will automatically reload once both shells are expended (~0.80s duration). Firing during reload produces dry click feedback without breaking the reload cycle.
 
 ### Tactical Mechanic: Shotgun Recoil Jump
-- When you fire your shotgun **downward** (pointing toward the ground or beneath you), the explosive recoil impulse launches you upward into the air!
-- **Tactical Utility:**
-  - Launch from flat ground over high obstacles.
-  - Extend airborne jump height and distance.
-  - Recover from falling into dangerous pits or onto spike traps.
-  - Clear concrete barricades while blasting enemies in a single motion.
-- **The Core Dilemma:** Every shell you spend on an enemy ahead is one less shell available for movement and recoil jumping over pits! Choose wisely between offense and mobility.
+- **Straight Downward Firing:** Launches the survivor straight up with a powerful vertical recoil impulse (`-480 px/s`). Clears high platforms and double-jumps in midair!
+- **Diagonal Downward Firing:** Launches the survivor in a long, forward vaulting arc (`+140 px/s` forward boost, `-375 px/s` upward boost). Clears wide spike beds and concrete barricades!
+- **Midair Recovery:** Firing downward while falling immediately cancels downward momentum and launches you upward, allowing clutch saves from fatal pits.
+- **The Core Tactical Dilemma:** Every shell you spend on an enemy ahead is one less shell available for movement and recoil jumping over hazards!
 
 ---
 
 ## 2. Threat Index
 
 ### A. The Rear Horde
-- Looming menacingly from the left side of the screen, a massive wall of ravenous zombies relentlessly pursues the survivor.
-- **Proximity Radar:** The HUD's bottom-right meter tracks how close the horde is:
-  - **Green:** Safe distance.
-  - **Yellow:** Caution — you are falling behind.
-  - **Flashing Red:** Danger! The horde is on your heels.
-- If obstacles or enemies slow you down and the horde catches you, the survivor is overrun, triggers a stylized pixel infection sequence, and the run ends.
+- A massive, animated wall of undead silhouettes and glowing red eyes pursuing you from the left screen boundary.
+- **HUD Proximity Threat Radar:**
+  - **Green (0-35%):** Safe distance.
+  - **Yellow (36-65%):** Caution — you are falling behind.
+  - **Flashing Red (66-100%):** DANGER! The horde is closing in.
+- If obstacles or enemies slow you down and the horde catches you, the survivor is overrun, triggering a stylized pixel infection sequence and Game Over.
 
 ### B. Front Zombie Encounters
-1. **Walker (Green):** Basic shambling zombie (1 HP, slow). Easily eliminated with a single buckshot pellet or jumped over.
-2. **Runner (Crimson Red):** Aggressive sprinting zombie (1 HP, fast). Charges at you rapidly, demanding quick reflexes.
-3. **Brute (Armored / Hulking):** Heavy tank zombie with metal armor plates (4 HP, slow). Requires a concentrated point-blank blast or 2 shots to eliminate, or a recoil jump over its head.
+1. **Walker (Green):** Basic shambler (1 HP, slow). Easily eliminated with a single buckshot pellet or jumped over.
+2. **Runner (Crimson Red):** Aggressive sprinter (1 HP, fast). Charges at you rapidly, demanding quick reflexes.
+3. **Brute (Armored / Hulking):** Heavy tank with metal armor chestplate (4 HP, slow). Requires concentrated buckshot blasts or a recoil jump over its head.
 4. **Mutant (Toxic Green / Acid):** Erratic leaping zombie (2 HP, medium speed). Hops unpredictably, creating aerial hazards.
 
 ### C. Environmental Obstacles
-- **Road Spikes:** Sharp metal rebar traps embedded in the pavement. Inflicts 1 damage and slows you down.
-- **Pits:** Gaps in the highway overlooking radioactive sludge. Lethal if fallen into.
+- **Road Spikes:** Sharp metal rebar traps embedded in the pavement. Inflicts 1 damage and knocks the player back.
+- **Toxic Pits:** Gaps in the highway overlooking radioactive sludge. Lethal if fallen into.
 - **Concrete Barricades:** Jersey barriers that block forward running. Must be vaulted over using a regular jump or recoil jump.
 - **Elevated Platforms:** Suspended metal bridges above ground hazards, offering high-ground routes.
 
@@ -54,8 +57,8 @@ The cube survivor automatically charges forward across the ruined post-apocalypt
 | Action | Primary Input (Mouse & Keyboard) | Secondary / Gamepad Input |
 |---|---|---|
 | **Jump** | `Spacebar` / `W` / `Up Arrow` | Joypad Button A / D-Pad Up |
-| **Aim** | `Mouse Cursor` (360° World Tracking) | Arrow Keys / WASD |
+| **Aim** | `Mouse Cursor` (Quantized) or `WASD / Arrows` | D-Pad / Right Analog Stick |
 | **Shoot** | `Left Mouse Button` / `X` / `J` | Joypad Right Trigger / Button X |
-| **Recoil Jump** | Aim `Downward` + `Left Mouse Button` | Aim Down + Shoot |
+| **Recoil Jump** | Aim `Downward` or `Diag-Down` + `Shoot` | Aim Down + Shoot |
 | **Reload** | `R` (Key) | Joypad Button B |
 | **Pause** | `Escape` / `P` | Joypad Start |

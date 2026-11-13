@@ -1,12 +1,14 @@
 extends CanvasLayer
 class_name PauseMenu
 
-# Pause menu overlay with Resume, Restart, and Main Menu buttons.
+# Pause menu overlay with Resume, Restart, Audio Settings, and Main Menu buttons.
 
 @onready var panel: PanelContainer = %PausePanel
 @onready var resume_btn: Button = %ResumeButton
 @onready var restart_btn: Button = %RestartButton
 @onready var menu_btn: Button = %MenuButton
+@onready var sfx_check: CheckButton = %PauseSfxCheck
+@onready var music_check: CheckButton = %PauseMusicCheck
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -14,6 +16,11 @@ func _ready() -> void:
 	resume_btn.pressed.connect(_on_resume_pressed)
 	restart_btn.pressed.connect(_on_restart_pressed)
 	menu_btn.pressed.connect(_on_menu_pressed)
+
+	if sfx_check:
+		sfx_check.toggled.connect(_on_sfx_toggled)
+	if music_check:
+		music_check.toggled.connect(_on_music_toggled)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and not event.is_echo():
@@ -40,6 +47,14 @@ func _on_restart_pressed() -> void:
 	get_tree().paused = false
 	if GameManager:
 		GameManager.restart_game()
+
+func _on_sfx_toggled(toggled_on: bool) -> void:
+	if AudioManager:
+		AudioManager.set_sfx_volume(1.0 if toggled_on else 0.0)
+
+func _on_music_toggled(toggled_on: bool) -> void:
+	if AudioManager:
+		AudioManager.set_music_volume(1.0 if toggled_on else 0.0)
 
 func _on_menu_pressed() -> void:
 	if AudioManager:

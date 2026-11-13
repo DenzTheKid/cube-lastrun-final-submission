@@ -1,7 +1,11 @@
 extends Node
 
-# Autoload: AudioManager
-# Handles SFX and music playback across the game.
+# Autoload: AudioManager for CUBE: LAST RUN V1.1.
+# Features:
+# - Polyphonic 8-channel SFX voice pool with pitch modulation.
+# - Anti-spam cooldown timers per sound effect.
+# - Seamless music playback for gameplay and menu.
+# - Independent linear-to-dB volume controls for SFX and Music.
 
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _music_player: AudioStreamPlayer
@@ -9,6 +13,10 @@ var _current_music_name: String = ""
 
 var sfx_volume_db: float = 0.0
 var music_volume_db: float = -6.0
+
+# Cooldown tracking to prevent audio spam / cacophony
+var _sfx_cooldowns: Dictionary = {}
+const MIN_SFX_INTERVAL: float = 0.045
 
 const SFX_STREAMS: Dictionary = {
 	"jump": preload("res://assets/audio/sfx_jump.wav"),
@@ -45,9 +53,22 @@ func _ready() -> void:
 		add_child(p)
 		_sfx_players.append(p)
 
+func _process(delta: float) -> void:
+	# Decrement cooldown timers
+	for k in _sfx_cooldowns.keys():
+		_sfx_cooldowns[k] -= delta
+		if _sfx_cooldowns[k] <= 0.0:
+			_sfx_cooldowns.erase(k)
+
 func play_sfx(sfx_name: String, pitch_range: float = 0.05) -> void:
 	if not SFX_STREAMS.has(sfx_name):
 		return
+
+	# Prevent duplicate sounds firing in rapid succession
+	if _sfx_cooldowns.has(sfx_name):
+		return
+	_sfx_cooldowns[sfx_name] = MIN_SFX_INTERVAL
+
 	var stream: AudioStream = SFX_STREAMS[sfx_name]
 	for p in _sfx_players:
 		if not p.playing:
@@ -56,6 +77,7 @@ func play_sfx(sfx_name: String, pitch_range: float = 0.05) -> void:
 			p.volume_db = sfx_volume_db
 			p.play()
 			return
+
 	# If all busy, reuse the first player
 	var fallback: AudioStreamPlayer = _sfx_players[0]
 	fallback.stream = stream

@@ -1,8 +1,9 @@
 extends CanvasLayer
 class_name HUD
 
-# Gameplay HUD displaying score, distance, survival time, health,
-# two-shell ammunition with reload gauge, and horde proximity threat meter.
+# Gameplay HUD for CUBE: LAST RUN V1.1.
+# Displays score, distance, survival timer, health hearts,
+# two-shell ammunition with active reload gauge, and dynamic horde danger radar.
 
 @onready var score_label: Label = %ScoreLabel
 @onready var distance_label: Label = %DistanceLabel
@@ -16,8 +17,9 @@ class_name HUD
 @onready var hp_label: Label = %HpLabel
 
 var _is_reloading: bool = false
-var _reload_duration: float = 0.85
+var _reload_duration: float = 0.80
 var _reload_elapsed: float = 0.0
+var _warning_pulse_timer: float = 0.0
 
 func _ready() -> void:
 	if GameManager:
@@ -39,6 +41,10 @@ func _process(delta: float) -> void:
 		_reload_elapsed += delta
 		reload_bar.value = clampf((_reload_elapsed / _reload_duration) * 100.0, 0.0, 100.0)
 
+	if horde_warning.visible:
+		_warning_pulse_timer += delta * 6.0
+		horde_warning.modulate.a = 0.5 + 0.5 * sin(_warning_pulse_timer)
+
 func setup_player(player: Player) -> void:
 	if player:
 		player.health_changed.connect(_on_health_changed)
@@ -56,15 +62,15 @@ func _on_distance_updated(dist: float) -> void:
 func _on_health_changed(hp: int, max_hp: int) -> void:
 	hp_label.text = "HP: %d/%d" % [hp, max_hp]
 	if hp == 1:
-		hp_label.modulate = Color(1.0, 0.3, 0.3)
+		hp_label.modulate = Color(1.0, 0.25, 0.25)
 	else:
 		hp_label.modulate = Color.WHITE
 
 func _on_ammo_changed(current: int, _max_ammo: int) -> void:
 	# Shell 1
-	shell_1.modulate = Color.WHITE if current >= 1 else Color(0.3, 0.3, 0.3, 0.6)
+	shell_1.modulate = Color.WHITE if current >= 1 else Color(0.25, 0.25, 0.3, 0.45)
 	# Shell 2
-	shell_2.modulate = Color.WHITE if current >= 2 else Color(0.3, 0.3, 0.3, 0.6)
+	shell_2.modulate = Color.WHITE if current >= 2 else Color(0.25, 0.25, 0.3, 0.45)
 
 func _on_reload_started(duration: float) -> void:
 	_is_reloading = true
@@ -80,12 +86,12 @@ func _on_reload_finished() -> void:
 
 func _on_horde_proximity_changed(proximity: float) -> void:
 	horde_bar.value = proximity * 100.0
-	if proximity > 0.70:
+	if proximity > 0.65:
 		horde_warning.visible = true
-		horde_bar.modulate = Color(1.0, 0.1, 0.1) # Danger Red
-	elif proximity > 0.40:
+		horde_bar.modulate = Color(1.0, 0.15, 0.15) # Danger Red
+	elif proximity > 0.35:
 		horde_warning.visible = false
-		horde_bar.modulate = Color(1.0, 0.8, 0.2) # Caution Yellow
+		horde_bar.modulate = Color(1.0, 0.85, 0.2) # Caution Yellow
 	else:
 		horde_warning.visible = false
 		horde_bar.modulate = Color(0.2, 0.9, 0.3) # Safe Green

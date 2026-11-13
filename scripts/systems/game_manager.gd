@@ -90,14 +90,14 @@ func trigger_game_over() -> void:
 
 func restart_game() -> void:
 	start_game()
-	get_tree().change_scene_to_file("res://scenes/main/game_world.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/main/game_world.tscn")
 
 func go_to_menu() -> void:
 	current_state = State.MENU
 	get_tree().paused = false
 	if AudioManager:
 		AudioManager.play_music("menu")
-	get_tree().change_scene_to_file("res://scenes/main/main_menu.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/main/main_menu.tscn")
 
 func save_game_data() -> void:
 	var data: Dictionary = {

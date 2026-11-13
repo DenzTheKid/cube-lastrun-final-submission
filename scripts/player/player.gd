@@ -1,9 +1,10 @@
 extends CharacterBody2D
 class_name Player
 
-# Cube Survivor player controller.
-# Handles auto-running, jumping, shotgun recoil integration, animation states,
-# hazard damage, and horde capture transformation.
+# Cube Survivor player controller for CUBE: LAST RUN V1.1.
+# Implements auto-running, responsive jumping, coyote time & jump buffering,
+# directional aim visualization, capped recoil jump integration,
+# hazard damage invulnerability, footstep audio, and stylized death sequences.
 
 signal health_changed(current_hp: int, max_hp: int)
 signal died
@@ -12,6 +13,7 @@ signal died
 @export var jump_velocity: float = -380.0
 @export var gravity: float = 980.0
 @export var max_fall_speed: float = 650.0
+@export var max_upward_velocity: float = -540.0
 
 @export var max_hp: int = 2
 var current_hp: int = 2
@@ -26,10 +28,14 @@ var jump_buffer_timer: float = 0.0
 const COYOTE_TIME: float = 0.12
 const JUMP_BUFFER_TIME: float = 0.12
 
-# Animation timing
+# Footstep audio timer
+var _footstep_timer: float = 0.0
+
+# Animation timing & aim pose
 var _anim_timer: float = 0.0
 var _anim_frame: int = 0
 var _was_on_floor: bool = true
+var _current_aim_enum: int = 0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -41,6 +47,7 @@ func _ready() -> void:
 	health_changed.emit(current_hp, max_hp)
 	if shotgun:
 		shotgun.recoil_impulse.connect(_on_shotgun_recoil)
+		shotgun.aim_changed.connect(_on_shotgun_aim_changed)
 	invuln_timer.timeout.connect(func(): is_invulnerable = false; sprite.modulate = Color.WHITE)
 
 func _physics_process(delta: float) -> void:
@@ -50,7 +57,7 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 		return
 
-	# Auto-running speed scaled by difficulty
+	# Auto-running speed scaled smoothly by difficulty
 	var speed_mult: float = GameManager.difficulty_factor if GameManager else 1.0
 	velocity.x = base_run_speed * speed_mult
 
@@ -58,7 +65,7 @@ func _physics_process(delta: float) -> void:
 	if GameManager:
 		GameManager.add_distance(velocity.x * delta * 0.05)
 
-	# Gravity
+	# Gravity & Ground Contact
 	if not is_on_floor():
 		velocity.y = minf(velocity.y + gravity * delta, max_fall_speed)
 		coyote_timer -= delta
@@ -68,6 +75,15 @@ func _physics_process(delta: float) -> void:
 			# Landed!
 			if AudioManager:
 				AudioManager.play_sfx("land", 0.1)
+
+		# Footsteps on pavement
+		_footstep_timer += delta
+		var step_interval: float = 0.28 / speed_mult
+		if _footstep_timer >= step_interval:
+			_footstep_timer = 0.0
+			# Play subtle land/tap as footstep
+			if AudioManager:
+				AudioManager.play_sfx("land", 0.2)
 
 	_was_on_floor = is_on_floor()
 
@@ -81,7 +97,7 @@ func _physics_process(delta: float) -> void:
 	if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
 		_perform_jump()
 
-	# Variable jump height (releasing jump early cuts upward velocity)
+	# Variable jump height (releasing jump cuts upward velocity)
 	if Input.is_action_just_released("jump") and velocity.y < (jump_velocity * 0.45):
 		velocity.y = jump_velocity * 0.45
 
@@ -103,17 +119,24 @@ func _perform_jump() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("jump")
 
+func _on_shotgun_aim_changed(aim_enum: int, _vec: Vector2) -> void:
+	_current_aim_enum = aim_enum
+
 func _on_shotgun_recoil(force: Vector2) -> void:
-	# Recoil impulse from shotgun firing
+	# Downward shot -> Upward boost
 	if force.y < 0.0:
-		# Downward shot -> Upward boost!
-		# If falling fast, cancel negative fall velocity first so the boost always lifts!
+		# If falling downward, cancel fall momentum so boost is crisp and immediate
 		if velocity.y > 0.0:
 			velocity.y = 0.0
 		velocity.y += force.y
-		# Allow fresh jump timing after recoil jump
+		# Clamp to prevent launch beyond screen top
+		velocity.y = maxf(velocity.y, max_upward_velocity)
+		# Provide tactical half-coyote window
 		coyote_timer = COYOTE_TIME * 0.5
-	# Apply horizontal kick
+	elif force.y > 0.0:
+		velocity.y += force.y
+
+	# Apply horizontal impulse
 	velocity.x += force.x
 
 func _update_animation(delta: float) -> void:
@@ -121,11 +144,11 @@ func _update_animation(delta: float) -> void:
 
 	if not is_on_floor():
 		if velocity.y < 0.0:
-			# Jumping
-			sprite.frame = 13 # Row 2, frame 1
+			# Jumping (Row 2, frame 12-13)
+			sprite.frame = 13
 		else:
-			# Falling
-			sprite.frame = 19 # Row 3, frame 1
+			# Falling (Row 3, frame 18-19)
+			sprite.frame = 19
 	else:
 		# Running (Row 1: frames 6 to 11)
 		var run_frame_duration: float = 0.10 / (GameManager.difficulty_factor if GameManager else 1.0)
@@ -149,10 +172,10 @@ func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 	else:
 		# Invulnerability flash & knockback
 		is_invulnerable = true
-		invuln_timer.start(0.8)
-		sprite.modulate = Color(1.0, 0.4, 0.4, 0.7)
+		invuln_timer.start(0.85)
+		sprite.modulate = Color(1.0, 0.35, 0.35, 0.75)
 		if knockback_dir != Vector2.ZERO:
-			velocity += knockback_dir.normalized() * 120.0
+			velocity += knockback_dir.normalized() * 140.0
 
 func die() -> void:
 	if is_dead:
@@ -160,7 +183,7 @@ func die() -> void:
 	is_dead = true
 	velocity = Vector2.ZERO
 	shotgun.visible = false
-	# Play death collapse animation (Row 6)
+	# Death collapse animation (Row 6)
 	sprite.frame = 36
 	var tw: Tween = create_tween()
 	tw.tween_property(sprite, "frame", 39, 0.5)
@@ -177,7 +200,7 @@ func trigger_horde_catch() -> void:
 	velocity = Vector2.ZERO
 	shotgun.visible = false
 
-	# Stylized non-graphic zombie transformation sequence (Row 7: frames 42-45)
+	# Stylized zombie transformation sequence (Row 7: frames 42-45)
 	sprite.frame = 42
 	var tw: Tween = create_tween()
 	tw.tween_property(sprite, "frame", 45, 0.9)

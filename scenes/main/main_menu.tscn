@@ -171,11 +171,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "• Auto-Run: Continuous rightward survival run
 • Jump: [SPACE] / [W] / [UP ARROW]
-• Aim: [MOUSE] 360° directional aiming
-• Shoot: [LEFT CLICK] / [X] (2-Shell Shotgun)
-• RECOIL JUMP: Shoot DOWNWARD to blast into the air!
-  Tactical: Save shells to recoil jump or blast zombies!
-• Reload: [R] (Auto-reloads when dry)
+• Aim: [MOUSE / WASD / ARROWS] 5 Discrete Directions (Forward, Up, Diag-Up, Down, Diag-Down)
+• Shoot: [LEFT CLICK] / [X] (2-Shell Double-Barrel Shotgun)
+• RECOIL JUMP: Shoot DOWNWARD or DIAG-DOWN to launch into the air!
+  Tactical Choice: Spend shells to kill zombies or save shells for jump mobility!
+• Reload: [R] (Auto-reloads when dry, ~0.8s duration)
 • Pause: [ESC] / [P]"
 
 [node name="CloseControlsButton" type="Button" parent="ControlsPanel/Margin/VBox"]
