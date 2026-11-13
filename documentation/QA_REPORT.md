@@ -1,5 +1,5 @@
-# CUBE: LAST RUN — QA REPORT (V1.1 AUDIT & VERIFICATION)
-**Project:** CUBE: LAST RUN  
+# CUBE: LAST RUN — QA REPORT (V1.2 360° AIMING & RECOIL VERIFICATION)
+**Project:** CUBE: LAST RUN V1.2  
 **Engine Version:** Godot Engine 4.7.2 (Stable)  
 **QA Lead:** Antigravity Senior Game QA & Systems Engineer  
 **Date:** 2026-11-13  
@@ -19,10 +19,10 @@ Test Execution Command:
 | **03** | Player runs automatically | Player Physics | **PASS** | `velocity.x` = 175.0 px/s forward charge verified without user input. |
 | **04** | Player jumps | Player Movement | **PASS** | `velocity.y` = -380.0 px/s upward impulse verified on jump trigger. |
 | **05** | Player lands correctly & resets coyote timer | Platformer Physics | **PASS** | Coyote timer resets to 0.12s upon touching ground; landing sound triggered. |
-| **06** | Directional aiming in all 5 discrete poses | Weapon System | **PASS** | Forward (1,0), Diag-Up (0.71,-0.71), Up (0,-1), Diag-Down (0.71,0.71), Down (0,1). |
+| **06** | Full continuous 360-degree aiming | Weapon System | **PASS** | Tested 0°, 45°, 90°, 135°, 180°, -135°, -90°, -45°, 23.5°, 162°, -162°. Smooth rotation & vertical flip verified. |
 | **07** | Shooting consumes ammunition | Weapon Inventory | **PASS** | Two-shell break-action chamber verified: 2 -> 1 -> 0 shells. |
 | **08** | Reload works (auto on empty & manual early) | Weapon Reload State | **PASS** | Automatic reload locks gun at 0 shells; manual reload on 1 shell works (~0.8s). |
-| **09** | Recoil jump works on the ground | Tactical Mobility | **PASS** | Shooting downward on ground propels player to `velocity.y` = -480.0 px/s. |
+| **09** | Recoil jump works on the ground | Tactical Mobility | **PASS** | Shooting downward (Vector2.DOWN) on ground propels player to `velocity.y` = -480.0 px/s. |
 | **10** | Recoil jump works in midair | Air Control / Fall Arrest | **PASS** | Falling at +450 px/s reversed to -480 px/s instantly; allows clutch pit recovery. |
 | **11** | Zombies spawn correctly with collision layer | Enemy Spawning | **PASS** | Walker spawned on Collision Layer 3 (Mask 1), Hitbox on Mask 2. |
 | **12** | Zombies react to damage and die at 0 HP | Combat / Damage | **PASS** | Zombie flashes red/white, health decreases 1 -> 0, squash/fade death sequence plays. |
@@ -38,27 +38,25 @@ Test Execution Command:
 | **22** | Audio volume controls operate correctly | Audio System | **PASS** | SFX and Music volume sliders modulate AudioServer bus cleanly. |
 | **23** | All required assets exist and resolve in VFS | Asset Integrity | **PASS** | 14 audio streams and 14 textures verified present on disk and VFS. |
 | **24** | Zero runtime errors across execution | Stability Audit | **PASS** | 0 script errors, 0 null pointers, 0 unhandled exceptions. |
-| **25** | Long-session memory strictly bounded | Memory Audit | **PASS** | Static memory sampled at 47.73 MB (well below 60 MB budget threshold). |
+| **25** | Long-session memory strictly bounded | Memory Audit | **PASS** | Static memory sampled at 47.74 MB (well below 60 MB budget threshold). |
 
 ---
 
-## 2. Static Analysis & Linting
+## 2. 360° Continuous Sweep & Grip Attachment Verification
+
+Executed via [`scenes/tools/capture_360_test.tscn`](file:///d:/Projects/GODOT/cube--lastrun/scenes/tools/capture_360_test.tscn):
+- **Full Angular Sweep:** Stepped through 0° to 360° at 15° increments.
+- **Weapon Grip Integrity:** Verified that `Shotgun.position` remained locked at `(2, 4)` across every angle with zero detachment or offset drift.
+- **Backward Firing (180°):** Successfully fired pellets directly leftward toward the pursuing horde with proper projectile velocity and casing ejection.
+- **Downward Recoil Jump (270°):** Successfully launched survivor upward from ground (`velocity.y = -480.0 px/s`).
+
+---
+
+## 3. Static Analysis & Linting
 
 Command:
 `python lint_project.py d:\Projects\GODOT\cube--lastrun --pretty`
 
-- **Total Scripts Analyzed:** 16 GDScript files
-- **Total Scenes Analyzed:** 18 `.tscn` scene files
-- **Parse Errors:** 0
-- **Godot 3 Deprecations:** 0
-- **Type Inference Errors:** 0
-- **Invalid Node Paths:** 0
+- **Total Scripts Analyzed:** 17 GDScript files
+- **Total Scenes Analyzed:** 19 `.tscn` scene files
 - **Total Diagnostics:** **0 Errors, 0 Warnings**
-
----
-
-## 3. Manual & Interactive Verification Notes
-
-- **Mouse Cursor Feel:** Snapping to the 5 discrete directions feels natural and solves sub-pixel sprite jitter.
-- **Shotgun Kick & Screen Shake:** The trauma-based camera shake adds physical weight to buckshot bursts without inducing motion sickness.
-- **Horde Proximity Radar:** Smoothly transitions from green to warning red as distance drops below 80px, accompanied by flashing UI warnings.

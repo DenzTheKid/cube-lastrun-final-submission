@@ -1,4 +1,4 @@
-# CUBE: LAST RUN — GAMEPLAY & CONTROLS GUIDE (V1.1)
+# CUBE: LAST RUN — GAMEPLAY & CONTROLS GUIDE (V1.2)
 **Tagline: Run. Shoot. Survive. Don't Stop.**
 
 ---
@@ -6,25 +6,26 @@
 ## 1. Core Mechanics
 
 ### Automatic Running
-The cube survivor automatically charges rightward across the ruined apocalyptic city. Forward motion is continuous. Your focus is entirely on jumping, aiming in discrete directions, shooting, managing your 2 shotgun shells, and surviving hazard encounters.
+The cube survivor automatically charges rightward across the ruined apocalyptic city. Forward motion is continuous. Your focus is entirely on jumping, aiming in 360 degrees, shooting, managing your 2 shotgun shells, and surviving hazard encounters.
 
-### Double-Barrel Shotgun & Discrete Directional Aiming
-- **5 Discrete Aiming Directions:**
-  1. **Forward:** Straight horizontal ahead (`+X`).
-  2. **Diagonal Upward:** 45° angle upward ahead.
-  3. **Straight Upward:** 90° directly above (`-Y`).
-  4. **Diagonal Downward:** 45° angle downward ahead.
-  5. **Straight Downward:** 90° directly beneath (`+Y`).
-- **Aim Controls:** Move your **Mouse Cursor** in the forward hemisphere to snap automatically to the nearest discrete pose, or use **Keyboard Directional Keys (WASD / Arrows)** for direct snap aiming.
-- **Shooting:** Press **Left Mouse Button** or **X** to fire a burst of 6 buckshot pellets.
+### Double-Barrel Shotgun & Full 360-Degree Continuous Aiming
+- **Genuine 360-Degree Continuous Aiming:**
+  - The double-barrel shotgun smoothly and continuously tracks your **Mouse Cursor** in full 360 degrees around the survivor's hand grip.
+  - Zero snapping, zero sector quantization, zero angle clamping.
+  - Aim forward (0°), up (90°), backward into the pursuing horde (180°), straight down into the pavement (270°), or any fractional angle in between.
+- **Gamepad & Keyboard Aiming:**
+  - **Gamepad:** Right analog stick provides continuous 360° analog angular steering with smooth deadzone response.
+  - **Keyboard:** WASD / Arrow keys provide continuous angular guidance.
+- **Shooting:** Press **Left Mouse Button** or **X** to fire a burst of 6 buckshot pellets. Pellets disperse along the exact continuous aim direction from the moving barrel tip.
 - **Two-Shell Capacity:** The shotgun carries exactly 2 shells.
 - **Reloading:** Press **R** to manually reload early, or the survivor will automatically reload once both shells are expended (~0.80s duration). Firing during reload produces dry click feedback without breaking the reload cycle.
 
-### Tactical Mechanic: Shotgun Recoil Jump
-- **Straight Downward Firing:** Launches the survivor straight up with a powerful vertical recoil impulse (`-480 px/s`). Clears high platforms and double-jumps in midair!
-- **Diagonal Downward Firing:** Launches the survivor in a long, forward vaulting arc (`+140 px/s` forward boost, `-375 px/s` upward boost). Clears wide spike beds and concrete barricades!
+### Tactical Mechanic: 360° Shotgun Recoil Jump
+- **Straight Downward (270°):** Launches the survivor straight up with a powerful vertical recoil impulse (`-480 px/s`). Clears high platforms and double-jumps in midair!
+- **Diagonal Downward (e.g. 315°):** Launches the survivor in a long, forward vaulting arc (`+140 px/s` forward boost, `-375 px/s` upward boost). Clears wide spike beds and concrete barricades!
 - **Midair Recovery:** Firing downward while falling immediately cancels downward momentum and launches you upward, allowing clutch saves from fatal pits.
-- **The Core Tactical Dilemma:** Every shell you spend on an enemy ahead is one less shell available for movement and recoil jumping over hazards!
+- **Backward Firing (180°):** Blasts pellets into the pursuing rear horde while applying a forward push that helps you outrun the threat!
+- **The Core Tactical Dilemma:** Every shell you spend on an enemy ahead or the horde behind is one less shell available for movement and recoil jumping over hazards!
 
 ---
 
@@ -57,7 +58,7 @@ The cube survivor automatically charges rightward across the ruined apocalyptic 
 | Action | Primary Input (Mouse & Keyboard) | Secondary / Gamepad Input |
 |---|---|---|
 | **Jump** | `Spacebar` / `W` / `Up Arrow` | Joypad Button A / D-Pad Up |
-| **Aim** | `Mouse Cursor` (Quantized) or `WASD / Arrows` | D-Pad / Right Analog Stick |
+| **Aim (360° Continuous)** | `Mouse Cursor` (Full 360° World Tracking) | Right Analog Stick / Arrow Keys |
 | **Shoot** | `Left Mouse Button` / `X` / `J` | Joypad Right Trigger / Button X |
 | **Recoil Jump** | Aim `Downward` or `Diag-Down` + `Shoot` | Aim Down + Shoot |
 | **Reload** | `R` (Key) | Joypad Button B |

@@ -1,37 +1,37 @@
 # CHANGELOG — CUBE: LAST RUN
 
-## [v1.1.0] — 2026-11-13 (V1.1 Complete Audit, Repair & Premium Polish)
+## [v1.2.0] — 2026-11-13 (V1.2 Full 360° Continuous Aiming & Ultra-Smooth Shotgun Fix)
 
 ### Added
-- **Discrete 5-Directional Aiming System:**
-  - Added strict 5-pose aiming (`FORWARD`, `DIAGONAL_UPWARD`, `STRAIGHT_UPWARD`, `DIAGONAL_DOWNWARD`, `STRAIGHT_DOWNWARD`).
-  - Added discrete keyboard/gamepad aiming mapping (WASD / Arrows) alongside cursor direction quantization.
-  - Connected character animation and eye orientation to the active aim direction.
-- **Trauma-Based Screen Shake:**
-  - Added quadratic decay camera shake to `GameWorld`: subtle shake on standard shotgun blasts (0.18 trauma), heavy punch on downward recoil jumps (0.28 trauma), and sharp jolt on hazard damage (0.45 trauma).
-- **Procedural Generation Expansion:**
-  - Expanded level generator from 9 static patterns to **20 distinct modular encounter patterns** with difficulty gating.
-  - Added new encounters: Twin Runners, High Road Bridges, Barricade + Walker, Mutant & Spikes, Recoil Double Vault, Platform Cascade, High Ambush, and The Gauntlet.
-  - Implemented algorithmic fairness checks to prevent impossible obstacle combos (strictly forbids consecutive severe pits or barricade walls).
-- **Pause Menu Audio Settings:**
-  - Added real-time SFX and Music toggle controls directly to the in-game Pause menu overlay.
-- **Automated QA Test Suite:**
-  - Created 25-point automated QA test runner (`scenes/tools/test_runner.tscn` and `scripts/tools/test_harness.gd`). All 25 test cases passed with 100% success rate.
-- **Comprehensive Documentation Suite:**
-  - Added `documentation/QA_REPORT.md`, `documentation/PERFORMANCE_REPORT.md`, and `CHANGELOG.md`.
+- **True Unrestricted 360-Degree Aiming:**
+  - Removed the 5-direction quantization system, angle snapping, and directional sector steps.
+  - Implemented continuous 360-degree aiming tracking the mouse cursor in world coordinates (`get_global_mouse_position()`) with zero input lag.
+  - Added support for all intermediate angles (0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°, and every angle in between).
+- **Dedicated WeaponVisuals Container & Clean Vertical Flipping:**
+  - Placed shotgun sprites, muzzle marker, ejection port, and muzzle flash inside a unified `WeaponVisuals` child node.
+  - Implemented automatic vertical flipping (`scale.y = -1.0` when aiming into the left hemisphere `aim_direction.x < -0.01`), preventing the weapon from ever appearing awkwardly upside down while maintaining continuous rotation.
+- **Continuous 360-Degree Recoil Physics:**
+  - Refactored recoil impulse calculation into a continuous vector formula:
+    - Downward shots (`aim_direction.y > 0.15`) apply an upward impulse proportional to the vertical angle component (`-aim_direction.y * recoil_jump_strength`).
+    - Diagonal downward-forward shots deliver forward vaulting velocity (`+140.0 px/s * aim_direction.x`).
+    - Horizontal and backward shots provide standard opposing recoil kicks.
+- **Continuous 360-Degree Pellet Spreading:**
+  - Buckshot pellets now spawn precisely from the moving barrel tip marker (`muzzle.global_position`) and disperse along the continuous aim vector.
+- **360° Automated QA Verification Suite:**
+  - Updated 25-point automated QA test runner to verify 360° angular sweeps, backward firing at 180°, downward recoil jumping at 270°, and weapon grip integrity.
+- **New Release Executable:**
+  - Exported `Cube_LastRun_V1.2.exe` to Downloads (`C:\Users\Lenovo\Downloads\Cube_LastRun_V1.2.exe` and `Cube_LastRun.exe`).
+  - Preserved V1.1 as `Cube_LastRun_v1.1_backup.exe`.
 
-### Changed & Optimized
-- **Renderer Migration:** Switched `project.godot` rendering engine from Forward Plus (D3D12) to **GL Compatibility (`gl_compatibility`)**, specifically optimized for Intel N100 / Intel UHD Graphics and Linux Mesa drivers.
-- **Chunk Node Optimization:** Refactored terrain chunk generation from individual `Sprite2D` nodes to custom `_draw()` batched texture rendering, slashing node count per chunk from 74 down to 2 nodes (97% reduction) and eliminating GC churn.
-- **Reload System Refinement:** Resolved conflict between manual reload (`R`) and auto-reload on empty; ensured atomic reload lock and dry click audio feedback during reload attempts.
-- **Recoil Jump Tuning:** Added upward velocity clamping (`-540.0 px/s`) and fall momentum cancellation to ensure snappy, predictable jumps that stay within camera framing.
-- **Scene Routing Safeguard:** Implemented deferred scene transitions (`call_deferred("change_scene_to_file", ...)`) in `GameManager` to prevent `remove_child: Parent node is busy` engine warnings.
-- **Audio Voice Anti-Spam:** Added 0.045s cooldown per sound name in `AudioManager` to eliminate voice clipping during crowd pellet penetrations.
+---
 
-### Fixed
-- Fixed `InputEventMouseMotion` crash in `pause_menu.gd` by switching to `event.is_action_pressed("pause") and not event.is_echo()`.
-- Corrected controls documentation in `main_menu.tscn` to reflect discrete 5-directional aiming.
-- Preserved V1.0 executable backup (`Cube_LastRun_v1.0_backup.exe`) prior to V1.1 deployment.
+## [v1.1.0] — 2026-11-13 (V1.1 Complete Audit, Repair & Premium Polish)
+- Discrete 5-directional aiming system.
+- Trauma-based screen shake on shotgun blasts and hazard damage.
+- Procedural generation overhaul: expanded from 9 to 20 modular encounter patterns with difficulty gating and fairness filters.
+- Switched rendering to GL Compatibility (`gl_compatibility`) for Intel N100 / Intel UHD Graphics.
+- Optimized chunk rendering via custom `_draw()`, reducing node overhead by 97%.
+- Atomic reload state machine and 25-point automated QA test runner.
 
 ---
 

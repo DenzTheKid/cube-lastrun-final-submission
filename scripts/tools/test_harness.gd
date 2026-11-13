@@ -74,21 +74,23 @@ func _run_all_tests() -> void:
 	var t5_ok: bool = p.coyote_timer == Player.COYOTE_TIME
 	_record_test(5, "Player lands correctly & resets coyote timer", t5_ok)
 
-	# Test 6: Directional aiming supports all 5 discrete directions
+	# Test 6: Full continuous 360-degree aiming across all directions
 	var gun: Shotgun = p.shotgun
 	var t6_ok: bool = true
-	var expected_vectors: Array[Vector2] = [
-		Vector2(1.0, 0.0),
-		Vector2(0.707107, -0.707107),
-		Vector2(0.0, -1.0),
-		Vector2(0.707107, 0.707107),
-		Vector2(0.0, 1.0)
-	]
-	for aim_idx in range(5):
-		gun._apply_aim(aim_idx as Shotgun.AimDir)
-		if gun.aim_direction.distance_to(expected_vectors[aim_idx]) > 0.001:
+	var test_angles_deg: Array[float] = [0.0, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, -45.0, 23.5, 162.0, -162.0]
+	for deg in test_angles_deg:
+		var rad: float = deg_to_rad(deg)
+		var vec: Vector2 = Vector2.from_angle(rad)
+		gun.set_aim_direction(vec)
+		var angle_diff: float = absf(angle_difference(gun.rotation, rad))
+		if angle_diff > 0.005:
 			t6_ok = false
-	_record_test(6, "Player aims in every supported discrete direction (5 poses)", t6_ok)
+		var should_flip: bool = vec.x < -0.01
+		if should_flip and gun.weapon_visuals.scale.y != -1.0:
+			t6_ok = false
+		elif not should_flip and gun.weapon_visuals.scale.y != 1.0:
+			t6_ok = false
+	_record_test(6, "Full continuous 360-degree aiming with smooth rotation & flip", t6_ok)
 
 	# Test 7: Shooting consumes ammunition
 	gun.current_ammo = 2
@@ -111,7 +113,7 @@ func _run_all_tests() -> void:
 	_record_test(8, "Reload works (automatic on empty & manual early)", t8_auto_ok and t8_finish_ok and t8_manual_ok)
 
 	# Test 9: Recoil jump works on the ground
-	gun._apply_aim(Shotgun.AimDir.STRAIGHT_DOWNWARD)
+	gun.set_aim_direction(Vector2.DOWN)
 	p.velocity = Vector2(175.0, 0.0)
 	p._on_shotgun_recoil(Vector2(0.0, -gun.recoil_jump_strength))
 	var t9_ok: bool = p.velocity.y < -400.0

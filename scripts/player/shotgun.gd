@@ -1,129 +1,116 @@
 extends Node2D
 class_name Shotgun
 
-# Double-barrel shotgun weapon system for CUBE: LAST RUN V1.1.
-# Implements discrete 5-directional aiming, 2-shell break-action chambering,
-# clean non-conflicting reload state, muzzle flash, shell ejection,
-# and physics-tuned recoil jump impulses.
+# Double-barrel shotgun weapon system for CUBE: LAST RUN V1.2.
+# Features:
+# - Full, unrestricted 360-degree continuous directional aiming.
+# - Responsive zero-latency mouse cursor world tracking.
+# - Gamepad analog stick and keyboard continuous steering.
+# - Vertical flip handling on WeaponVisuals container (no upside-down weapon).
+# - Pixel-accurate grip pivot and muzzle projectile alignment.
+# - Continuous recoil-jump vector physics across all angles.
+# - Atomic reload state machine with dry-fire click feedback.
 
 signal ammo_changed(current_ammo: int, max_ammo: int)
 signal reload_started(duration: float)
 signal reload_finished
 signal recoil_impulse(force: Vector2)
-signal aim_changed(aim_dir_enum: int, aim_vector: Vector2)
-
-enum AimDir {
-	FORWARD,           # 0: Horizontal forward (+X)
-	DIAGONAL_UPWARD,   # 1: 45° Up-Right
-	STRAIGHT_UPWARD,   # 2: 90° Up (-Y)
-	DIAGONAL_DOWNWARD, # 3: 45° Down-Right
-	STRAIGHT_DOWNWARD  # 4: 90° Down (+Y)
-}
+signal aim_changed(aim_angle: float, aim_vector: Vector2)
 
 @export var max_ammo: int = 2
 @export var reload_time: float = 0.80
 @export var pellet_count: int = 6
-@export var spread_angle_deg: float = 18.0
+@export var spread_angle_deg: float = 16.0
 @export var recoil_jump_strength: float = 480.0
 @export var horizontal_vault_boost: float = 140.0
+@export var standard_horizontal_kick: float = 75.0
 
 var current_ammo: int = 2
 var is_reloading: bool = false
 var reload_timer: float = 0.0
 
-var current_aim_enum: AimDir = AimDir.FORWARD
 var aim_direction: Vector2 = Vector2.RIGHT
+var target_rotation: float = 0.0
+var _using_gamepad_or_keys: bool = false
 
-@onready var gun_sprite: Sprite2D = $GunSprite
-@onready var muzzle: Marker2D = $Muzzle
-@onready var muzzle_flash: Sprite2D = $MuzzleFlash
+@onready var weapon_visuals: Node2D = $WeaponVisuals
+@onready var gun_sprite: Sprite2D = $WeaponVisuals/GunSprite
+@onready var muzzle: Marker2D = $WeaponVisuals/Muzzle
+@onready var muzzle_flash: Sprite2D = $WeaponVisuals/MuzzleFlash
+@onready var ejection_port: Marker2D = $WeaponVisuals/EjectionPort
 @onready var flash_timer: Timer = $FlashTimer
 
 const PELLET_SCENE: PackedScene = preload("res://scenes/player/shotgun_pellet.tscn")
-
-# Canonical discrete aiming vectors
-const AIM_VECTORS: Dictionary = {
-	AimDir.FORWARD: Vector2(1.0, 0.0),
-	AimDir.DIAGONAL_UPWARD: Vector2(0.707107, -0.707107),
-	AimDir.STRAIGHT_UPWARD: Vector2(0.0, -1.0),
-	AimDir.DIAGONAL_DOWNWARD: Vector2(0.707107, 0.707107),
-	AimDir.STRAIGHT_DOWNWARD: Vector2(0.0, 1.0),
-}
 
 func _ready() -> void:
 	current_ammo = max_ammo
 	muzzle_flash.visible = false
 	flash_timer.timeout.connect(func(): muzzle_flash.visible = false)
-	_apply_aim(AimDir.FORWARD)
+	set_aim_direction(Vector2.RIGHT)
 	ammo_changed.emit(current_ammo, max_ammo)
 
 func _process(delta: float) -> void:
-	_handle_aiming()
+	_handle_aiming(delta)
 	_handle_reloading(delta)
 
-func _handle_aiming() -> void:
-	var new_aim: AimDir = current_aim_enum
+func _handle_aiming(delta: float) -> void:
+	# 1. Check Gamepad right stick analog input
+	var gp_aim: Vector2 = Vector2.ZERO
+	gp_aim.x = Input.get_joy_axis(0, JOY_AXIS_RIGHT_X)
+	gp_aim.y = Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y)
 
-	# 1. Check keyboard / gamepad discrete inputs first
-	var up: bool = Input.is_action_pressed("ui_up")
-	var down: bool = Input.is_action_pressed("ui_down")
-	var right: bool = Input.is_action_pressed("ui_right")
-	var left: bool = Input.is_action_pressed("ui_left")
+	# 2. Check Keyboard directional keys
+	var kb_x: float = Input.get_axis("ui_left", "ui_right")
+	var kb_y: float = Input.get_axis("ui_up", "ui_down")
+	var kb_vec: Vector2 = Vector2(kb_x, kb_y)
 
-	if up and right:
-		new_aim = AimDir.DIAGONAL_UPWARD
-	elif down and right:
-		new_aim = AimDir.DIAGONAL_DOWNWARD
-	elif up and not down and not left:
-		new_aim = AimDir.STRAIGHT_UPWARD
-	elif down and not up and not left:
-		new_aim = AimDir.STRAIGHT_DOWNWARD
-	elif right and not up and not down:
-		new_aim = AimDir.FORWARD
+	if gp_aim.length_squared() > 0.06:
+		_using_gamepad_or_keys = true
+		aim_direction = gp_aim.normalized()
+		target_rotation = aim_direction.angle()
+		rotation = lerp_angle(rotation, target_rotation, 1.0 - exp(-30.0 * delta))
+	elif kb_vec.length_squared() > 0.06:
+		_using_gamepad_or_keys = true
+		aim_direction = kb_vec.normalized()
+		target_rotation = aim_direction.angle()
+		rotation = lerp_angle(rotation, target_rotation, 1.0 - exp(-25.0 * delta))
 	else:
-		# 2. Mouse cursor directional quantization
-		var mouse_pos: Vector2 = get_global_mouse_position()
-		var rel: Vector2 = mouse_pos - global_position
-		if rel.length_squared() > 16.0:
-			var angle_deg: float = rad_to_deg(rel.angle())
-			if angle_deg >= -22.5 and angle_deg < 22.5:
-				new_aim = AimDir.FORWARD
-			elif angle_deg >= -67.5 and angle_deg < -22.5:
-				new_aim = AimDir.DIAGONAL_UPWARD
-			elif angle_deg >= -112.5 and angle_deg < -67.5:
-				new_aim = AimDir.STRAIGHT_UPWARD
-			elif angle_deg >= 22.5 and angle_deg < 67.5:
-				new_aim = AimDir.DIAGONAL_DOWNWARD
-			elif angle_deg >= 67.5 and angle_deg < 112.5:
-				new_aim = AimDir.STRAIGHT_DOWNWARD
-			else:
-				# Mouse is behind player -> snap to nearest vertical or forward
-				if rel.y < -20.0:
-					new_aim = AimDir.STRAIGHT_UPWARD
-				elif rel.y > 20.0:
-					new_aim = AimDir.STRAIGHT_DOWNWARD
-				else:
-					new_aim = AimDir.FORWARD
+		_using_gamepad_or_keys = false
+		# 3. Direct mouse cursor world tracking (zero input lag, crisp 1:1 precision)
+		var mouse_world: Vector2 = get_global_mouse_position()
+		var to_mouse: Vector2 = mouse_world - global_position
+		if to_mouse.length_squared() > 1.0:
+			aim_direction = to_mouse.normalized()
+			target_rotation = aim_direction.angle()
+			rotation = target_rotation
 
-	if new_aim != current_aim_enum:
-		_apply_aim(new_aim)
+	# 4. Clean vertical flipping on WeaponVisuals when aiming backward/left
+	var is_aiming_left: bool = aim_direction.x < -0.01
+	if is_aiming_left:
+		weapon_visuals.scale.y = -1.0
+	else:
+		weapon_visuals.scale.y = 1.0
 
-func _apply_aim(aim: AimDir) -> void:
-	current_aim_enum = aim
-	aim_direction = AIM_VECTORS[aim]
-	rotation = aim_direction.angle()
-	gun_sprite.flip_v = false
-	muzzle.position.y = 0.0
-	aim_changed.emit(int(current_aim_enum), aim_direction)
+	aim_changed.emit(rotation, aim_direction)
+
+func set_aim_direction(dir: Vector2) -> void:
+	if dir.length_squared() > 0.001:
+		aim_direction = dir.normalized()
+		target_rotation = aim_direction.angle()
+		rotation = target_rotation
+		var is_aiming_left: bool = aim_direction.x < -0.01
+		if weapon_visuals:
+			weapon_visuals.scale.y = -1.0 if is_aiming_left else 1.0
+		aim_changed.emit(rotation, aim_direction)
 
 func _handle_reloading(delta: float) -> void:
 	if not is_reloading:
 		return
 	reload_timer += delta
 
-	# Subtle break-action gun tilt during reload
-	if reload_timer < reload_time * 0.7:
-		gun_sprite.rotation = deg_to_rad(15.0)
+	# Subtle break-action chamber tilt during reload
+	if reload_timer < reload_time * 0.65:
+		gun_sprite.rotation = deg_to_rad(12.0)
 	else:
 		gun_sprite.rotation = 0.0
 
@@ -142,7 +129,6 @@ func can_shoot() -> bool:
 
 func shoot() -> bool:
 	if is_reloading:
-		# Player attempted to fire during reload - play click feedback
 		if AudioManager:
 			AudioManager.play_sfx("empty", 0.05)
 		return false
@@ -160,35 +146,31 @@ func shoot() -> bool:
 	muzzle_flash.visible = true
 	flash_timer.start(0.06)
 
-	# Recoil calculation based on discrete aim direction
-	match current_aim_enum:
-		AimDir.STRAIGHT_DOWNWARD:
-			# Pure vertical high jump
-			recoil_impulse.emit(Vector2(0.0, -recoil_jump_strength))
-			if AudioManager:
-				AudioManager.play_sfx("recoil")
-		AimDir.DIAGONAL_DOWNWARD:
-			# Vault boost: High jump + forward velocity boost!
-			recoil_impulse.emit(Vector2(horizontal_vault_boost, -recoil_jump_strength * 0.78))
-			if AudioManager:
-				AudioManager.play_sfx("recoil")
-		AimDir.STRAIGHT_UPWARD:
-			# Downward kick into ground (stabilizing)
-			recoil_impulse.emit(Vector2(0.0, 60.0))
-			if AudioManager:
-				AudioManager.play_sfx("shotgun")
-		AimDir.DIAGONAL_UPWARD:
-			# Slight backward & downward kick
-			recoil_impulse.emit(Vector2(-50.0, 40.0))
-			if AudioManager:
-				AudioManager.play_sfx("shotgun")
-		AimDir.FORWARD:
-			# Horizontal kick
-			recoil_impulse.emit(Vector2(-70.0, 0.0))
-			if AudioManager:
-				AudioManager.play_sfx("shotgun")
+	# CONTINUOUS 360-DEGREE RECOIL CALCULATION
+	var recoil_force: Vector2 = Vector2.ZERO
 
-	# Spawn buckshot pellets
+	# 1. Vertical recoil: downward shooting (aim_direction.y > 0) launches player UPWARD
+	if aim_direction.y > 0.15:
+		# Continuous upward impulse proportional to downward angle component
+		recoil_force.y = -aim_direction.y * recoil_jump_strength
+		if AudioManager:
+			AudioManager.play_sfx("recoil")
+	else:
+		recoil_force.y = -aim_direction.y * 50.0
+		if AudioManager:
+			AudioManager.play_sfx("shotgun")
+
+	# 2. Horizontal recoil:
+	# If shooting diagonally downward and forward, provide forward vault momentum
+	if aim_direction.y > 0.25 and aim_direction.x > 0.15:
+		recoil_force.x = horizontal_vault_boost * aim_direction.x
+	else:
+		# Standard reactive kick opposite to firing direction
+		recoil_force.x = -aim_direction.x * standard_horizontal_kick
+
+	recoil_impulse.emit(recoil_force)
+
+	# Spawn buckshot pellets along continuous aim direction
 	_spawn_pellets()
 
 	# Visual kick tween
@@ -196,11 +178,11 @@ func shoot() -> bool:
 	gun_sprite.position.x = -5.0
 	tw.tween_property(gun_sprite, "position:x", 0.0, 0.10)
 
-	# Shell casing sound
+	# Eject shell casing sound
 	if AudioManager:
 		AudioManager.play_sfx("shell_eject", 0.1)
 
-	# Auto-reload if both shells expended
+	# Auto-reload if empty
 	if current_ammo == 0:
 		start_reload()
 

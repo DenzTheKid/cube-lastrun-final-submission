@@ -35,7 +35,8 @@ var _footstep_timer: float = 0.0
 var _anim_timer: float = 0.0
 var _anim_frame: int = 0
 var _was_on_floor: bool = true
-var _current_aim_enum: int = 0
+var current_aim_angle: float = 0.0
+var current_aim_vector: Vector2 = Vector2.RIGHT
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -119,8 +120,9 @@ func _perform_jump() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("jump")
 
-func _on_shotgun_aim_changed(aim_enum: int, _vec: Vector2) -> void:
-	_current_aim_enum = aim_enum
+func _on_shotgun_aim_changed(aim_angle: float, aim_vec: Vector2) -> void:
+	current_aim_angle = aim_angle
+	current_aim_vector = aim_vec
 
 func _on_shotgun_recoil(force: Vector2) -> void:
 	# Downward shot -> Upward boost
