@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/player/shotgun.gd" id="1_gun"]
+[ext_resource type="Texture2D" path="res://assets/weapons/shotgun.png" id="2_guntex"]
+[ext_resource type="Texture2D" path="res://assets/weapons/muzzle_flash.png" id="3_flashtex"]
+
+[node name="Shotgun" type="Node2D"]
+script = ExtResource("1_gun")
+
+[node name="GunSprite" type="Sprite2D" parent="."]
+texture = ExtResource("2_guntex")
+offset = Vector2(8, 0)
+
+[node name="Muzzle" type="Marker2D" parent="."]
+position = Vector2(20, -1)
+
+[node name="MuzzleFlash" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(28, -1)
+texture = ExtResource("3_flashtex")
+hframes = 2
+
+[node name="FlashTimer" type="Timer" parent="."]
+one_shot = true

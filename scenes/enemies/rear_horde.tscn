@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/rear_horde.gd" id="1_horde"]
+[ext_resource type="Texture2D" path="res://assets/zombies/horde_wall.png" id="2_hordetex"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(24, 340)
+
+[node name="RearHorde" type="Area2D"]
+collision_layer = 32
+collision_mask = 2
+script = ExtResource("1_horde")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_hordetex")
+offset = Vector2(-64, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-8, 0)
+shape = SubResource("RectangleShape2D_1")

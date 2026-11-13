@@ -1,0 +1,184 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/environment/parallax_sky.png" id="2_sky"]
+[ext_resource type="Texture2D" path="res://assets/environment/parallax_skyline_distant.png" id="3_dist"]
+[ext_resource type="Texture2D" path="res://assets/environment/parallax_buildings_mid.png" id="4_mid"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.1, 0.1, 0.14, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.3, 0.2, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="BgSky" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_sky")
+expand_mode = 1
+
+[node name="BgSkyline" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_dist")
+expand_mode = 1
+
+[node name="BgBuildings" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_mid")
+expand_mode = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Title" type="Label" parent="CenterContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.25, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 28
+text = "CUBE: LAST RUN"
+horizontal_alignment = 1
+
+[node name="Tagline" type="Label" parent="CenterContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 11
+text = "RUN. SHOOT. SURVIVE. DON'T STOP."
+horizontal_alignment = 1
+
+[node name="HighScoreLabel" type="Label" parent="CenterContainer/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
+theme_override_font_sizes/font_size = 10
+text = "HIGH SCORE: 0  |  RECORD: 0m"
+horizontal_alignment = 1
+
+[node name="ControlButtons" type="VBoxContainer" parent="CenterContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="PlayButton" type="Button" parent="CenterContainer/VBox/ControlButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 26)
+layout_mode = 2
+text = "PLAY"
+
+[node name="ControlsButton" type="Button" parent="CenterContainer/VBox/ControlButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CONTROLS"
+
+[node name="AudioRow" type="HBoxContainer" parent="CenterContainer/VBox/ControlButtons"]
+layout_mode = 2
+alignment = 1
+
+[node name="SfxCheckButton" type="CheckButton" parent="CenterContainer/VBox/ControlButtons/AudioRow"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "SFX"
+
+[node name="MusicCheckButton" type="CheckButton" parent="CenterContainer/VBox/ControlButtons/AudioRow"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "MUSIC"
+
+[node name="ExitButton" type="Button" parent="CenterContainer/VBox/ControlButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "EXIT"
+
+[node name="ControlsPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -170.0
+offset_top = -110.0
+offset_right = 170.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="Margin" type="MarginContainer" parent="ControlsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="ControlsPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="Label" parent="ControlsPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.3, 1)
+theme_override_font_sizes/font_size = 13
+text = "SURVIVOR CONTROLS"
+horizontal_alignment = 1
+
+[node name="Text" type="Label" parent="ControlsPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "• Auto-Run: Continuous rightward survival run
+• Jump: [SPACE] / [W] / [UP ARROW]
+• Aim: [MOUSE] 360° directional aiming
+• Shoot: [LEFT CLICK] / [X] (2-Shell Shotgun)
+• RECOIL JUMP: Shoot DOWNWARD to blast into the air!
+  Tactical: Save shells to recoil jump or blast zombies!
+• Reload: [R] (Auto-reloads when dry)
+• Pause: [ESC] / [P]"
+
+[node name="CloseControlsButton" type="Button" parent="ControlsPanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "BACK TO MENU"
