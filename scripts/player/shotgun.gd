@@ -41,6 +41,8 @@ var _using_gamepad_or_keys: bool = false
 @onready var flash_timer: Timer = $FlashTimer
 
 const PELLET_SCENE: PackedScene = preload("res://scenes/player/shotgun_pellet.tscn")
+const RECOIL_DUST_SCENE: PackedScene = preload("res://scenes/effects/recoil_dust.tscn")
+
 
 func _ready() -> void:
 	current_ammo = max_ammo
@@ -155,10 +157,16 @@ func shoot() -> bool:
 		recoil_force.y = -aim_direction.y * recoil_jump_strength
 		if AudioManager:
 			AudioManager.play_sfx("recoil")
+			AudioManager.play_sfx("shotgun_acoustic", 0.04)
+		# Spawn recoil dust puff at muzzle
+		var dust = RECOIL_DUST_SCENE.instantiate()
+		dust.global_position = muzzle.global_position
+		get_tree().current_scene.add_child(dust)
 	else:
 		recoil_force.y = -aim_direction.y * 50.0
 		if AudioManager:
 			AudioManager.play_sfx("shotgun")
+			AudioManager.play_sfx("shotgun_acoustic", 0.04)
 
 	# 2. Horizontal recoil:
 	# If shooting diagonally downward and forward, provide forward vault momentum

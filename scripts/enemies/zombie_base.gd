@@ -5,6 +5,8 @@ class_name ZombieBase
 # Handles movement towards the player, gravity, taking shotgun damage,
 # hurt flash, death effects, and damaging the player.
 
+const BLOOD_BURST_SCENE: PackedScene = preload("res://scenes/effects/blood_burst.tscn")
+
 @export var max_hp: int = 1
 @export var move_speed: float = 30.0
 @export var score_value: int = 100
@@ -59,6 +61,11 @@ func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 
 	if AudioManager:
 		AudioManager.play_sfx("zombie_hit", 0.1)
+		AudioManager.play_sfx("impact_flesh", 0.08)
+
+	var blood = BLOOD_BURST_SCENE.instantiate()
+	blood.global_position = global_position
+	get_tree().current_scene.add_child(blood)
 
 	# Flash white/red
 	var tw: Tween = create_tween()

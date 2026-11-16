@@ -3,6 +3,8 @@ class_name ShotgunPellet
 
 # Double-barrel shotgun buckshot pellet projectile.
 
+const SPARK_SCENE: PackedScene = preload("res://scenes/effects/bullet_spark.tscn")
+
 @export var speed: float = 650.0
 @export var damage: int = 1
 @export var lifetime: float = 0.35
@@ -45,5 +47,8 @@ func _on_area_entered(area: Area2D) -> void:
 	queue_free()
 
 func _spawn_impact() -> void:
-	# Subtle spark effect at impact point
-	pass
+	var spark = SPARK_SCENE.instantiate()
+	spark.global_position = global_position
+	get_tree().current_scene.add_child(spark)
+	if AudioManager:
+		AudioManager.play_sfx("impact_metal", 0.08)

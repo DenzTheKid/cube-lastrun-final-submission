@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/auto_destroy_particle.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/effects/spark.png" id="2_tex"]
+
+[node name="BulletSpark" type="CPUParticles2D"]
+emitting = false
+amount = 6
+lifetime = 0.22
+one_shot = true
+explosiveness = 0.95
+texture = ExtResource("2_tex")
+spread = 180.0
+gravity = Vector2(0, 200)
+initial_velocity_min = 60.0
+initial_velocity_max = 140.0
+scale_amount_min = 0.4
+scale_amount_max = 0.8
+color = Color(1.0, 0.85, 0.3, 1.0)
+script = ExtResource("1_script")

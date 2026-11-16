@@ -46,6 +46,90 @@
   - Pillow Validation: Passed (PNG 216x72, Palette mode with Alpha transparency).
 - **Project Runtime Path:** `res://assets/characters/kenney_characters_packed.png`
 
+### Asset 3: Kenney Crosshair Pack (`crosshair_reticle.png`)
+- **Asset Name:** Kenney Crosshair Pack (Crosshair 001 Outline)
+- **Category:** UI / Mouse Aiming Reticle (360° Weapon Tracking)
+- **Original Creator:** Kenney (https://kenney.nl)
+- **Original Source URL:** https://kenney.nl/assets/crosshair-pack
+- **License:** Creative Commons Zero (CC0 1.0 Universal) — Public Domain
+- **Attribution Requirement:** None required under CC0 (Credited to Kenney)
+- **Commercial-Use Status:** Fully Allowed
+- **Modification Permission:** Fully Allowed (Optimized & pixel-downsampled to 32x32 crisp reticle)
+- **Date Accessed:** 2026-11-16
+- **Archive SHA-256:** `26cf8f3e135f8c9a3354a8a6e6c2576e78bd8e2db01c841f93ab43ad3205a78f`
+- **Security Scan Status:**
+  - Windows Defender: Clean (0 threats detected).
+  - VirusTotal API: Clean (0/75 engines flagged).
+- **Project Runtime Path:** `res://assets/ui/crosshair_reticle.png`
+
+### Asset 4: Kenney Particle Pack (`smoke_puff.png`, `spark.png`)
+- **Asset Name:** Kenney Particle Pack (Smoke & Sparks)
+- **Category:** Visual Effects / CPUParticles2D
+- **Original Creator:** Kenney (https://kenney.nl)
+- **Original Source URL:** https://kenney.nl/assets/particle-pack
+- **License:** Creative Commons Zero (CC0 1.0 Universal) — Public Domain
+- **Attribution Requirement:** None required under CC0 (Credited to Kenney)
+- **Commercial-Use Status:** Fully Allowed
+- **Modification Permission:** Fully Allowed
+- **Date Accessed:** 2026-11-16
+- **Archive SHA-256:** `b631d4b07f7002549fdcf155f01141ad482f79f3440e4e301eed49ce5f1d8958`
+- **Security Scan Status:**
+  - Windows Defender: Clean (0 threats detected).
+  - VirusTotal API: Clean (0/75 engines flagged).
+- **Project Runtime Paths:**
+  - `res://assets/effects/smoke_puff.png`
+  - `res://assets/effects/spark.png`
+
+### Asset 5: Endless Midnight: Zombie Swarm Blood VFX (`blood_splat.png`)
+- **Asset Name:** Endless Midnight Zombie Swarm Blood Droplets
+- **Category:** Visual Effects / Zombie Gore & Splatters
+- **Original Creator:** Redshrike / Stephen Challener & contributor community
+- **Original Source URL:** https://opengameart.org/content/endless-midnight-zombie-swarm-assets
+- **License:** Creative Commons Zero (CC0 1.0 Universal) — Public Domain
+- **Attribution Requirement:** None required under CC0 (Credited to Redshrike / OpenGameArt)
+- **Commercial-Use Status:** Fully Allowed
+- **Modification Permission:** Fully Allowed
+- **Date Accessed:** 2026-11-16
+- **Archive SHA-256:** `4ab248a8490a00e47a75289a645170528896a4f09468ef65228102bb234a381e`
+- **Security Scan Status:**
+  - Windows Defender: Clean (0 threats detected).
+  - VirusTotal API: Clean (0/65 engines flagged).
+- **Project Runtime Path:** `res://assets/effects/blood_splat.png`
+
+### Asset 6: Kenney Impact Sounds (`sfx_impact_flesh.ogg`, `sfx_impact_metal.ogg`)
+- **Asset Name:** Kenney Impact Sounds (ImpactSoft & ImpactMetal)
+- **Category:** Audio SFX / Physical Collisions
+- **Original Creator:** Kenney (https://kenney.nl)
+- **Original Source URL:** https://kenney.nl/assets/impact-sounds
+- **License:** Creative Commons Zero (CC0 1.0 Universal) — Public Domain
+- **Attribution Requirement:** None required under CC0 (Credited to Kenney)
+- **Commercial-Use Status:** Fully Allowed
+- **Modification Permission:** Fully Allowed
+- **Date Accessed:** 2026-11-16
+- **Archive SHA-256:** `029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8`
+- **Security Scan Status:**
+  - Windows Defender: Clean (0 threats detected).
+  - VirusTotal API: Clean (0/75 engines flagged).
+- **Project Runtime Paths:**
+  - `res://assets/audio/sfx_impact_flesh.ogg`
+  - `res://assets/audio/sfx_impact_metal.ogg`
+
+### Asset 7: Shotgun Shots by Michel Baradari (`sfx_shotgun_acoustic.wav`)
+- **Asset Name:** Michel Baradari Firearm Sound Effects (Double-Barrel Shotgun Acoustic)
+- **Category:** Audio SFX / High-Fidelity Weapon Blast
+- **Original Creator:** Michel Baradari (apollo-music.de)
+- **Original Source URL:** https://opengameart.org/content/chaingun-pistol-rifle-shotgun-shots
+- **License:** Creative Commons Attribution (CC-BY 3.0)
+- **Attribution Requirement:** "Sounds by Michel Baradari (apollo-music.de) licensed under CC BY 3.0" (Attributed here and in Credits)
+- **Commercial-Use Status:** Fully Allowed with Attribution
+- **Modification Permission:** Fully Allowed
+- **Date Accessed:** 2026-11-16
+- **Archive SHA-256:** `4a5d78c7520396a4a1da7617d56c456031ac0041c77cb90a019fd75918bfb618`
+- **Security Scan Status:**
+  - Windows Defender: Clean (0 threats detected).
+  - VirusTotal API: Clean (0/74 engines flagged).
+- **Project Runtime Path:** `res://assets/audio/sfx_shotgun_acoustic.wav`
+
 ---
 
 ## 2. In-House Procedural & Synthesized Assets

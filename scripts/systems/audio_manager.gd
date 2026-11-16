@@ -31,6 +31,9 @@ const SFX_STREAMS: Dictionary = {
 	"player_hurt": preload("res://assets/audio/sfx_player_hurt.wav"),
 	"game_over": preload("res://assets/audio/sfx_game_over.wav"),
 	"ui_click": preload("res://assets/audio/sfx_ui_click.wav"),
+	"shotgun_acoustic": preload("res://assets/audio/sfx_shotgun_acoustic.wav"),
+	"impact_flesh": preload("res://assets/audio/sfx_impact_flesh.ogg"),
+	"impact_metal": preload("res://assets/audio/sfx_impact_metal.ogg"),
 }
 
 const MUSIC_STREAMS: Dictionary = {

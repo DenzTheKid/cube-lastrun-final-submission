@@ -23,6 +23,11 @@ const TRAUMA_DECAY: float = 2.2
 const MAX_SHAKE_OFFSET: float = 6.0
 
 func _ready() -> void:
+	# Set custom pixel crosshair reticle for 360° mouse aiming
+	var crosshair_tex = load("res://assets/ui/crosshair_reticle.png")
+	if crosshair_tex:
+		Input.set_custom_mouse_cursor(crosshair_tex, Input.CURSOR_ARROW, Vector2(16, 16))
+
 	if GameManager:
 		GameManager.start_game()
 
@@ -71,3 +76,7 @@ func _on_shotgun_recoil(force: Vector2) -> void:
 func _on_player_health_changed(hp: int, _max_hp: int) -> void:
 	if hp < player.max_hp:
 		add_shake(0.45) # Sharp impact shake on damage
+
+func _exit_tree() -> void:
+	Input.set_custom_mouse_cursor(null)
+
