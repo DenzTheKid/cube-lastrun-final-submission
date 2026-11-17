@@ -1,23 +1,23 @@
-[gd_resource type="Theme" format=3]
+[gd_resource type="Theme" format=3 uid="uid://lugdssqtsaab"]
 
-[ext_resource type="FontFile" path="res://assets/fonts/Silkscreen-Regular.ttf" id="1_body"]
-[ext_resource type="FontFile" path="res://assets/fonts/PressStart2P-Regular.ttf" id="2_display"]
-[ext_resource type="Texture2D" path="res://assets/ui/px_btn_primary_idle.png" id="3_pri_idle"]
-[ext_resource type="Texture2D" path="res://assets/ui/px_btn_primary_hover.png" id="4_pri_hover"]
-[ext_resource type="Texture2D" path="res://assets/ui/px_btn_primary_pressed.png" id="5_pri_pressed"]
-[ext_resource type="Texture2D" path="res://assets/ui/px_btn_secondary_idle.png" id="6_sec_idle"]
-[ext_resource type="Texture2D" path="res://assets/ui/px_btn_secondary_hover.png" id="7_sec_hover"]
-[ext_resource type="Texture2D" path="res://assets/ui/px_btn_secondary_pressed.png" id="8_sec_pressed"]
-[ext_resource type="Texture2D" path="res://assets/ui/px_btn_disabled.png" id="9_btn_dis"]
-[ext_resource type="Texture2D" path="res://assets/ui/px_panel_plate.png" id="10_panel"]
-[ext_resource type="Texture2D" path="res://assets/ui/px_empty.png" id="11_empty"]
+[ext_resource type="FontFile" uid="uid://bgkkm572oglqd" path="res://assets/fonts/Silkscreen-Regular.ttf" id="1_body"]
+[ext_resource type="FontFile" uid="uid://cuutrbqi8obcb" path="res://assets/fonts/PressStart2P-Regular.ttf" id="2_display"]
+[ext_resource type="Texture2D" uid="uid://044chw7spgkk" path="res://assets/ui/px_btn_primary_idle.png" id="3_pri_idle"]
+[ext_resource type="Texture2D" uid="uid://dsvmcsnblqteu" path="res://assets/ui/px_btn_primary_hover.png" id="4_pri_hover"]
+[ext_resource type="Texture2D" uid="uid://njxtvl25t28j" path="res://assets/ui/px_btn_primary_pressed.png" id="5_pri_pressed"]
+[ext_resource type="Texture2D" uid="uid://24leugotgx5h" path="res://assets/ui/px_btn_secondary_idle.png" id="6_sec_idle"]
+[ext_resource type="Texture2D" uid="uid://bypr81dt0nlpd" path="res://assets/ui/px_btn_secondary_hover.png" id="7_sec_hover"]
+[ext_resource type="Texture2D" uid="uid://b2gi0df0mgay7" path="res://assets/ui/px_btn_secondary_pressed.png" id="8_sec_pressed"]
+[ext_resource type="Texture2D" uid="uid://blgi4qlxakg5b" path="res://assets/ui/px_btn_disabled.png" id="9_btn_dis"]
+[ext_resource type="Texture2D" uid="uid://2yrsuel7dla2" path="res://assets/ui/px_panel_plate.png" id="10_panel"]
+[ext_resource type="Texture2D" uid="uid://tnyk28k210iu" path="res://assets/ui/px_empty.png" id="11_empty"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnIdle"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnDisabled"]
 content_margin_left = 11.0
 content_margin_top = 4.0
 content_margin_right = 8.0
 content_margin_bottom = 6.0
-texture = ExtResource("6_sec_idle")
+texture = ExtResource("9_btn_dis")
 texture_margin_left = 10.0
 texture_margin_top = 6.0
 texture_margin_right = 8.0
@@ -34,6 +34,17 @@ texture_margin_top = 6.0
 texture_margin_right = 8.0
 texture_margin_bottom = 7.0
 
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnIdle"]
+content_margin_left = 11.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+texture = ExtResource("6_sec_idle")
+texture_margin_left = 10.0
+texture_margin_top = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 7.0
+
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnPressed"]
 content_margin_left = 13.0
 content_margin_top = 6.0
@@ -45,12 +56,23 @@ texture_margin_top = 6.0
 texture_margin_right = 8.0
 texture_margin_bottom = 7.0
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnDisabled"]
-content_margin_left = 11.0
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_Panel"]
+content_margin_left = 9.0
+content_margin_top = 7.0
+content_margin_right = 9.0
+content_margin_bottom = 7.0
+texture = ExtResource("10_panel")
+texture_margin_left = 7.0
+texture_margin_top = 7.0
+texture_margin_right = 7.0
+texture_margin_bottom = 7.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriHover"]
+content_margin_left = 13.0
 content_margin_top = 4.0
-content_margin_right = 8.0
+content_margin_right = 6.0
 content_margin_bottom = 6.0
-texture = ExtResource("9_btn_dis")
+texture = ExtResource("4_pri_hover")
 texture_margin_left = 10.0
 texture_margin_top = 6.0
 texture_margin_right = 8.0
@@ -67,17 +89,6 @@ texture_margin_top = 6.0
 texture_margin_right = 8.0
 texture_margin_bottom = 7.0
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriHover"]
-content_margin_left = 13.0
-content_margin_top = 4.0
-content_margin_right = 6.0
-content_margin_bottom = 6.0
-texture = ExtResource("4_pri_hover")
-texture_margin_left = 10.0
-texture_margin_top = 6.0
-texture_margin_right = 8.0
-texture_margin_bottom = 7.0
-
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriPressed"]
 content_margin_left = 13.0
 content_margin_top = 6.0
@@ -87,17 +98,6 @@ texture = ExtResource("5_pri_pressed")
 texture_margin_left = 10.0
 texture_margin_top = 6.0
 texture_margin_right = 8.0
-texture_margin_bottom = 7.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_Panel"]
-content_margin_left = 9.0
-content_margin_top = 7.0
-content_margin_right = 9.0
-content_margin_bottom = 7.0
-texture = ExtResource("10_panel")
-texture_margin_left = 7.0
-texture_margin_top = 7.0
-texture_margin_right = 7.0
 texture_margin_bottom = 7.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_BarBg"]
