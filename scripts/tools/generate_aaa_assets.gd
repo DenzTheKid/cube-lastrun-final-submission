@@ -167,27 +167,19 @@ func _make_city_skylines() -> void:
 			dist.fill_rect(Rect2i(tx, by - th, 2, th), sil_col)
 			dist.fill_rect(Rect2i(tx, by - th - 2, 2, 2), Color("#e63962"))
 
-		# Structured floor grid: 3px wide x 3px tall windows, 6px column step, 7px floor step
+		# Mostly darkened post-apocalyptic distant towers; only 2 buildings retain a couple dim rooms
+		var dist_has_lights: bool = (b_seed == 1 or b_seed == 4)
 		var cols: int = (bw - 10) / 6
 		var floor_idx: int = 0
 		var wy: int = by + 8
 		while wy < 214:
-			# Deliberate floor pattern: some floors have a contiguous lit cluster of 2-4 windows
-			var lit_start: int = -1
-			var lit_len: int = 0
-			var use_cyan: bool = ((floor_idx + b_seed) % 4 == 0)
-			if (floor_idx * 3 + b_seed) % 3 == 0:
-				lit_start = (floor_idx + b_seed) % max(1, cols - 2)
-				lit_len = 3
-			elif (floor_idx + b_seed * 2) % 4 == 1:
-				lit_start = (b_seed) % max(1, cols - 1)
-				lit_len = 2
+			var lit_col: int = -1
+			if dist_has_lights and (floor_idx == 2 or floor_idx == 5):
+				lit_col = (floor_idx + b_seed) % max(1, cols)
 
 			for c in range(cols):
 				var wx: int = bx + 6 + c * 6
-				var wcol: Color = win_unlit
-				if c >= lit_start and c < lit_start + lit_len:
-					wcol = win_cyan_dim if use_cyan else win_amber_dim
+				var wcol: Color = win_amber_dim if c == lit_col else win_unlit
 				dist.fill_rect(Rect2i(wx, wy, 3, 3), wcol)
 			wy += 7
 			floor_idx += 1
@@ -253,7 +245,8 @@ func _make_city_skylines() -> void:
 			_draw_rect_outline(mid, bx + 8, by - 7, 16, 7, navy_dark, OUTLINE)
 			_draw_rect_outline(mid, bx + 28, by - 5, 12, 5, navy_dark, OUTLINE)
 
-		# Structured window grid: 4px wide x 6px tall windows, 8px column step, 10px floor step
+		# Most buildings keep dark unlit windows (blacked-out city); only a few buildings (idx 1 & 6) keep sparse lit rooms
+		var mid_has_lights: bool = (idx == 1 or idx == 6)
 		var cols: int = (bw - 10) / 8
 		var floor_num: int = 0
 		var wy: int = by + 8
@@ -261,42 +254,23 @@ func _make_city_skylines() -> void:
 			# Subtle horizontal floor divider line
 			mid.fill_rect(Rect2i(bx + 2, wy - 2, bw - 4, 1), bcol.darkened(0.15))
 
-			# Deliberate clustered window lighting per floor (2-3 adjacent lit rooms per cluster)
 			var c_start_a: int = -10
 			var c_len_a: int = 0
 			var c_col_a: Color = win_amber
 
-			var c_start_b: int = -10
-			var c_len_b: int = 0
-			var c_col_b: Color = win_cyan
-
-			var pat: int = (floor_num * 5 + idx * 3) % 7
-			if pat == 0:
-				c_start_a = 0
-				c_len_a = min(3, cols)
-			elif pat == 1:
-				c_start_a = max(0, cols - 3)
-				c_len_a = min(3, cols)
-			elif pat == 2:
-				c_start_b = 1
-				c_len_b = min(2, max(0, cols - 1))
-			elif pat == 3:
-				c_start_a = 0
-				c_len_a = 2
-				c_start_b = max(2, cols - 2)
-				c_len_b = 2
-			elif pat == 4:
-				c_start_a = max(0, (cols / 2) - 1)
-				c_len_a = 2
-			# pat 5 & 6: unlit floor for natural vertical rhythm
+			if mid_has_lights:
+				if (idx == 1 and (floor_num == 2 or floor_num == 6)):
+					c_start_a = 1 if floor_num == 2 else max(0, cols - 2)
+					c_len_a = min(2, cols)
+					c_col_a = win_amber if floor_num == 2 else win_cyan
+				elif (idx == 6 and (floor_num == 3 or floor_num == 7 or floor_num == 10)):
+					c_start_a = 2 if floor_num == 3 else 1
+					c_len_a = min(2, cols)
+					c_col_a = win_cyan if floor_num == 7 else win_amber
 
 			for c in range(cols):
 				var wx: int = bx + 6 + c * 8
-				var wcol: Color = mid_unlit
-				if c >= c_start_a and c < c_start_a + c_len_a:
-					wcol = c_col_a
-				elif c >= c_start_b and c < c_start_b + c_len_b:
-					wcol = c_col_b
+				var wcol: Color = c_col_a if (c >= c_start_a and c < c_start_a + c_len_a) else mid_unlit
 				mid.fill_rect(Rect2i(wx, wy, 4, 6), wcol)
 				# Subtle window sill shadow
 				mid.fill_rect(Rect2i(wx, wy + 6, 4, 1), OUTLINE)
