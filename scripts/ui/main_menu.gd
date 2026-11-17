@@ -139,13 +139,23 @@ func _on_play_pressed() -> void:
 	var fade := ColorRect.new()
 	fade.color = Color(0.04, 0.04, 0.08, 0.0)
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	fade.mouse_filter = Control.MOUSE_FILTER_STOP
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(fade)
 	var tw: Tween = create_tween()
 	tw.tween_property(fade, "color:a", 1.0, 0.18)
 	tw.tween_callback(func():
 		if GameManager:
 			GameManager.restart_game()
+	)
+	# Safety timeout fallback to prevent UI deadlock if scene load stalls
+	get_tree().create_timer(1.2, true, false, true).timeout.connect(func():
+		if _is_transitioning and is_instance_valid(play_btn) and is_inside_tree():
+			_is_transitioning = false
+			play_btn.disabled = false
+			controls_btn.disabled = false
+			exit_btn.disabled = false
+			if is_instance_valid(fade):
+				fade.queue_free()
 	)
 
 func _on_controls_pressed() -> void:

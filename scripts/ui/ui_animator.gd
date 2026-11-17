@@ -32,7 +32,9 @@ static func _set_btn_active(btn: Button, active: bool) -> void:
 	if not is_instance_valid(btn):
 		return
 	var base_text: String = str(btn.get_meta("base_text", btn.text))
-	btn.text = ("> " + base_text) if active else base_text
+	var target_text: String = ("> " + base_text) if active else base_text
+	if btn.text != target_text:
+		btn.text = target_text
 
 static func style_toggle_button(btn: Button, label_prefix: String) -> void:
 	if not btn:
