@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/px_icon_exit.png" id="13_iexit"]
 [ext_resource type="Texture2D" path="res://assets/ui/px_icon_trophy.png" id="14_itrophy"]
 [ext_resource type="Texture2D" path="res://assets/ui/px_hero_showcase.png" id="15_showcase"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_hero_backdrop.png" id="20_hbg"]
 [ext_resource type="Texture2D" path="res://assets/ui/px_icon_sfx_on.png" id="16_isfx"]
 [ext_resource type="Texture2D" path="res://assets/ui/px_icon_music_on.png" id="19_imusic"]
 [ext_resource type="Texture2D" path="res://assets/zombies/zombie_walker.png" id="17_walker"]
@@ -254,6 +255,17 @@ alignment = 2
 custom_minimum_size = Vector2(158, 60)
 layout_mode = 2
 mouse_filter = 2
+
+[node name="HeroBackdropRect" type="TextureRect" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/HeroShowcaseBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("20_hbg")
+stretch_mode = 5
 
 [node name="HeroShowcaseSprite" type="Sprite2D" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/HeroShowcaseBox"]
 unique_name_in_owner = true
