@@ -3,16 +3,13 @@
 [ext_resource type="Script" path="res://scripts/ui/game_over_menu.gd" id="1_over"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
-bg_color = Color(0.12, 0.05, 0.06, 0.92)
+bg_color = Color(0.063, 0.071, 0.129, 0.94)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.8, 0.2, 0.2, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+border_color = Color(0.902, 0.224, 0.384, 1)
+anti_aliasing = false
 
 [node name="GameOverMenu" type="CanvasLayer"]
 process_mode = 3
@@ -57,9 +54,9 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_colors/font_color = Color(0.949, 0.549, 0.22, 1)
 theme_override_font_sizes/font_size = 11
-text = "★ NEW HIGH SCORE RECORD! ★"
+text = "NEW HIGH SCORE RECORD!"
 horizontal_alignment = 1
 
 [node name="FinalScoreLabel" type="Label" parent="GameOverPanel/Margin/VBox"]
