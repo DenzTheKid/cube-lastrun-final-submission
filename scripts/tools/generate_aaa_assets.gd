@@ -11,6 +11,7 @@ func _init() -> void:
 	print("=== Generating AAA Indie 2.5D Voxel Pixel Art Assets via Godot 4.7 ===")
 	_make_light_textures()
 	_make_ui_pips()
+	_make_lobby_ui_plates()
 	_make_foreground_overpass()
 	_make_upgraded_sky_and_skylines()
 	_make_upgraded_player()
@@ -82,6 +83,129 @@ func _make_ui_pips() -> void:
 	for i in range(6):
 		_safe_px(empty, 4 + i, 3 + i, OUTLINE)
 	empty.save_png("res://assets/ui/hp_pip_empty.png")
+
+func _draw_chamfered_plate(img: Image, w: int, h: int, cut: int, bg_top: Color, bg_bot: Color, border_col: Color, accent_col: Color, is_hover: bool) -> void:
+	for y in range(h):
+		var ty: float = float(y) / float(max(1, h - 1))
+		var row_col: Color = bg_top.lerp(bg_bot, ty)
+		# Subtle horizontal scanline texture every 2px
+		if y % 2 == 1:
+			row_col = row_col.darkened(0.08)
+		for x in range(w):
+			# Chamfered 45-degree cut corners (top-left, top-right, bottom-left, bottom-right)
+			var d_tl: int = x + y
+			var d_tr: int = (w - 1 - x) + y
+			var d_bl: int = x + (h - 1 - y)
+			var d_br: int = (w - 1 - x) + (h - 1 - y)
+			if d_tl < cut or d_tr < cut or d_bl < cut or d_br < cut:
+				continue
+			# Outer dark outline
+			if x == 0 or x == w - 1 or y == 0 or y == h - 1 or d_tl == cut or d_tr == cut or d_bl == cut or d_br == cut:
+				img.set_pixel(x, y, OUTLINE)
+			# Glowing inner beveled border
+			elif x == 1 or x == w - 2 or y == 1 or y == h - 2 or d_tl == cut + 1 or d_tr == cut + 1 or d_bl == cut + 1 or d_br == cut + 1:
+				var bcol: Color = border_col.lightened(0.25) if (y == 1 or d_tl == cut + 1) else border_col
+				img.set_pixel(x, y, bcol)
+			else:
+				img.set_pixel(x, y, row_col)
+
+	# Left Tactical Hazard Stripe Bar (x = cut+2 .. cut+10)
+	for y in range(3, h - 3):
+		for x in range(cut + 2, cut + 9):
+			var stripe_phase: int = (x + y) % 6
+			var scol: Color = accent_col if stripe_phase < 3 else Color8(18, 20, 30, 255)
+			_safe_px(img, x, y, scol)
+		_safe_px(img, cut + 9, y, OUTLINE)
+
+	# Right Metallic Corner Rivets / Tech Notch
+	var rv_col: Color = accent_col if is_hover else Color8(180, 195, 215, 255)
+	for ry in [4, h - 5]:
+		_safe_px(img, w - cut - 4, ry, rv_col)
+		_safe_px(img, w - cut - 3, ry, rv_col)
+
+	# Glowing bottom accent bar on hover
+	if is_hover:
+		for x in range(cut + 12, w - cut - 6):
+			_safe_px(img, x, h - 3, accent_col)
+
+func _make_lobby_ui_plates() -> void:
+	# 1. Primary PLAY Button (160x28): Chamfered Crimson/Amber Tactical Plate
+	var p_norm := Image.create(160, 28, false, Image.FORMAT_RGBA8)
+	_draw_chamfered_plate(
+		p_norm, 160, 28, 5,
+		Color8(46, 22, 34, 248), Color8(24, 14, 24, 248),
+		Color8(235, 85, 45, 255), Color8(255, 185, 45, 255), false
+	)
+	p_norm.save_png("res://assets/ui/btn_primary_normal.png")
+
+	var p_hov := Image.create(160, 28, false, Image.FORMAT_RGBA8)
+	_draw_chamfered_plate(
+		p_hov, 160, 28, 5,
+		Color8(78, 32, 42, 255), Color8(42, 18, 28, 255),
+		Color8(255, 215, 65, 255), Color8(255, 235, 95, 255), true
+	)
+	p_hov.save_png("res://assets/ui/btn_primary_hover.png")
+
+	# 2. Secondary Button (150x24): Chamfered Dark-Slate/Cyan Tactical Plate
+	var s_norm := Image.create(150, 24, false, Image.FORMAT_RGBA8)
+	_draw_chamfered_plate(
+		s_norm, 150, 24, 4,
+		Color8(26, 32, 52, 242), Color8(16, 20, 34, 242),
+		Color8(85, 145, 195, 255), Color8(65, 215, 245, 255), false
+	)
+	s_norm.save_png("res://assets/ui/btn_secondary_normal.png")
+
+	var s_hov := Image.create(150, 24, false, Image.FORMAT_RGBA8)
+	_draw_chamfered_plate(
+		s_hov, 150, 24, 4,
+		Color8(42, 52, 82, 255), Color8(24, 30, 52, 255),
+		Color8(255, 190, 60, 255), Color8(255, 215, 75, 255), true
+	)
+	s_hov.save_png("res://assets/ui/btn_secondary_hover.png")
+
+	# 3. Audio Toggle Badges (72x22): SFX / MUSIC On & Off Plates
+	var t_on := Image.create(72, 22, false, Image.FORMAT_RGBA8)
+	_draw_chamfered_plate(
+		t_on, 72, 22, 4,
+		Color8(22, 42, 46, 245), Color8(14, 26, 32, 245),
+		Color8(55, 225, 165, 255), Color8(65, 255, 185, 255), true
+	)
+	t_on.save_png("res://assets/ui/btn_toggle_on.png")
+
+	var t_off := Image.create(72, 22, false, Image.FORMAT_RGBA8)
+	_draw_chamfered_plate(
+		t_off, 72, 22, 4,
+		Color8(32, 24, 32, 235), Color8(18, 14, 22, 235),
+		Color8(95, 75, 92, 255), Color8(185, 55, 65, 255), false
+	)
+	t_off.save_png("res://assets/ui/btn_toggle_off.png")
+
+	# 4. Title Banner Plate (310x62): Post-Apocalyptic Armored Header Crest
+	var banner := Image.create(310, 62, false, Image.FORMAT_RGBA8)
+	_draw_chamfered_plate(
+		banner, 310, 62, 8,
+		Color8(28, 18, 36, 235), Color8(14, 10, 22, 242),
+		Color8(235, 75, 52, 255), Color8(255, 180, 48, 255), true
+	)
+	# Top & bottom hazard stripe rails along banner
+	for x in range(24, 286):
+		var p: int = x % 10
+		var hcol: Color = Color8(245, 175, 42, 220) if p < 5 else Color8(22, 18, 28, 220)
+		banner.set_pixel(x, 3, hcol)
+		banner.set_pixel(x, 4, hcol)
+	banner.save_png("res://assets/ui/title_banner.png")
+
+	# 5. Lobby Highway Strip (480x46) for the live Main Menu diorama floor
+	var road := Image.create(480, 46, false, Image.FORMAT_RGBA8)
+	var tiles := Image.load_from_file("res://assets/environment/urban_tiles.png")
+	if tiles:
+		for i in range(30):
+			var tx: int = i * 16
+			var src_x: int = 16 if (i % 4) == 2 else 0
+			road.blit_rect(tiles, Rect2i(src_x, 0, 16, 16), Vector2i(tx, 0))
+			road.blit_rect(tiles, Rect2i(32, 0, 16, 16), Vector2i(tx, 16))
+			road.blit_rect(tiles, Rect2i(32, 0, 16, 16), Vector2i(tx, 32))
+	road.save_png("res://assets/ui/lobby_road.png")
 
 func _make_foreground_overpass() -> void:
 	var fore := Image.create(480, 270, false, Image.FORMAT_RGBA8)

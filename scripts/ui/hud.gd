@@ -12,6 +12,7 @@ class_name HUD
 const VIGNETTE_SHADER: Shader = preload("res://shaders/atmospheric_vignette.gdshader")
 const PIP_FULL_TEX: Texture2D = preload("res://assets/ui/hp_pip_full.png")
 const PIP_EMPTY_TEX: Texture2D = preload("res://assets/ui/hp_pip_empty.png")
+const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 
 @onready var root_control: Control = $RootControl
 @onready var score_label: Label = %ScoreLabel
@@ -64,9 +65,10 @@ func _setup_aaa_hud_visuals() -> void:
 	root_control.add_child(vig_rect)
 	root_control.move_child(vig_rect, 0)
 
-	# 2. Crisp Outlines & Drop Shadows on Top Bar Labels
+	# 2. Crisp Outlines & Tactical Pixel Font on Top Bar Labels
 	for lbl: Label in [score_label, distance_label, time_label, hp_label, reload_label, horde_warning]:
 		if lbl:
+			UI_ANIMATOR.apply_label_font(lbl, false, 11)
 			lbl.add_theme_color_override("font_outline_color", Color(0.05, 0.05, 0.09, 1.0))
 			lbl.add_theme_constant_override("outline_size", 2)
 

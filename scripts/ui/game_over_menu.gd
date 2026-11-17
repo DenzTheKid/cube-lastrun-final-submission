@@ -20,6 +20,9 @@ func _ready() -> void:
 	panel.visible = false
 	UI_ANIMATOR.style_button(retry_btn, true)
 	UI_ANIMATOR.style_button(menu_btn, false)
+	for lbl: Label in [score_lbl, dist_lbl, time_lbl, kills_lbl, record_banner]:
+		if lbl:
+			UI_ANIMATOR.apply_label_font(lbl, false, 10)
 	if GameManager:
 		GameManager.game_over.connect(_on_game_over)
 	retry_btn.pressed.connect(_on_retry_pressed)

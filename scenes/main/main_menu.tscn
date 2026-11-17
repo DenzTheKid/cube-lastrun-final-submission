@@ -4,27 +4,98 @@
 [ext_resource type="Texture2D" path="res://assets/environment/parallax_sky.png" id="2_sky"]
 [ext_resource type="Texture2D" path="res://assets/environment/parallax_skyline_distant.png" id="3_dist"]
 [ext_resource type="Texture2D" path="res://assets/environment/parallax_buildings_mid.png" id="4_mid"]
+[ext_resource type="Texture2D" path="res://assets/environment/parallax_overpass_fore.png" id="5_fore"]
+[ext_resource type="Texture2D" path="res://assets/ui/lobby_road.png" id="6_road"]
+[ext_resource type="Texture2D" path="res://assets/ui/title_banner.png" id="7_banner"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_primary_normal.png" id="8_pnorm"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_primary_hover.png" id="9_phov"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_secondary_normal.png" id="10_snorm"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_secondary_hover.png" id="11_shov"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_toggle_on.png" id="12_togon"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_Banner"]
+texture = ExtResource("7_banner")
+texture_margin_left = 18.0
+texture_margin_top = 8.0
+texture_margin_right = 18.0
+texture_margin_bottom = 8.0
+content_margin_left = 18.0
+content_margin_top = 6.0
+content_margin_right = 18.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriNorm"]
+texture = ExtResource("8_pnorm")
+texture_margin_left = 16.0
+texture_margin_top = 6.0
+texture_margin_right = 12.0
+texture_margin_bottom = 6.0
+content_margin_left = 18.0
+content_margin_top = 4.0
+content_margin_right = 14.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriHov"]
+texture = ExtResource("9_phov")
+texture_margin_left = 16.0
+texture_margin_top = 6.0
+texture_margin_right = 12.0
+texture_margin_bottom = 6.0
+content_margin_left = 18.0
+content_margin_top = 4.0
+content_margin_right = 14.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_SecNorm"]
+texture = ExtResource("10_snorm")
+texture_margin_left = 16.0
+texture_margin_top = 6.0
+texture_margin_right = 12.0
+texture_margin_bottom = 6.0
+content_margin_left = 18.0
+content_margin_top = 3.0
+content_margin_right = 14.0
+content_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_SecHov"]
+texture = ExtResource("11_shov")
+texture_margin_left = 16.0
+texture_margin_top = 6.0
+texture_margin_right = 12.0
+texture_margin_bottom = 6.0
+content_margin_left = 18.0
+content_margin_top = 3.0
+content_margin_right = 14.0
+content_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_TogOn"]
+texture = ExtResource("12_togon")
+texture_margin_left = 14.0
+texture_margin_top = 4.0
+texture_margin_right = 10.0
+texture_margin_bottom = 4.0
+content_margin_left = 14.0
+content_margin_top = 3.0
+content_margin_right = 8.0
+content_margin_bottom = 3.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
-bg_color = Color(0.1, 0.1, 0.14, 0.95)
-border_width_left = 2
+bg_color = Color(0.08, 0.07, 0.14, 0.96)
+border_width_left = 3
 border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.85, 0.3, 0.2, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.95, 0.42, 0.22, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="MainMenu" type="Control"]
-custom_minimum_size = Vector2(480, 270)
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+anchors_preset = 0
+offset_right = 480.0
+offset_bottom = 270.0
 script = ExtResource("1_menu")
 
 [node name="BgSky" type="TextureRect" parent="."]
@@ -57,80 +128,148 @@ grow_vertical = 2
 texture = ExtResource("4_mid")
 expand_mode = 1
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="BgOverpass" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+texture = ExtResource("5_fore")
+expand_mode = 1
+
+[node name="LobbyRoad" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -46.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("6_road")
+expand_mode = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -12.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 5
 alignment = 1
 
-[node name="Title" type="Label" parent="CenterContainer/VBox"]
+[node name="TitleBanner" type="PanelContainer" parent="CenterContainer/VBox"]
+custom_minimum_size = Vector2(300, 56)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.25, 0.2, 1)
+theme_override_styles/panel = SubResource("StyleBoxTexture_Banner")
+
+[node name="TitleBox" type="VBoxContainer" parent="CenterContainer/VBox/TitleBanner"]
+layout_mode = 2
+theme_override_constants/separation = 1
+alignment = 1
+
+[node name="Title" type="Label" parent="CenterContainer/VBox/TitleBanner/TitleBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.32, 0.22, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.09, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
-theme_override_font_sizes/font_size = 28
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 24
 text = "CUBE: LAST RUN"
 horizontal_alignment = 1
 
-[node name="Tagline" type="Label" parent="CenterContainer/VBox"]
+[node name="Tagline" type="Label" parent="CenterContainer/VBox/TitleBanner/TitleBox"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
-theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(1, 0.86, 0.35, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.09, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 9
 text = "RUN. SHOOT. SURVIVE. DON'T STOP."
 horizontal_alignment = 1
 
 [node name="HighScoreLabel" type="Label" parent="CenterContainer/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
+theme_override_colors/font_color = Color(0.55, 0.92, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.09, 1)
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 10
-text = "HIGH SCORE: 0  |  RECORD: 0m"
+text = "★ HIGH SCORE: 0  |  RECORD: 0m ★"
 horizontal_alignment = 1
 
 [node name="ControlButtons" type="VBoxContainer" parent="CenterContainer/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 6
+ size_flags_horizontal = 4
+theme_override_constants/separation = 5
 alignment = 1
 
 [node name="PlayButton" type="Button" parent="CenterContainer/VBox/ControlButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(140, 26)
+custom_minimum_size = Vector2(168, 28)
 layout_mode = 2
-text = "PLAY"
+theme_override_styles/normal = SubResource("StyleBoxTexture_PriNorm")
+theme_override_styles/hover = SubResource("StyleBoxTexture_PriHov")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_PriHov")
+theme_override_styles/focus = SubResource("StyleBoxTexture_PriHov")
+text = "PLAY MISSION"
 
 [node name="ControlsButton" type="Button" parent="CenterContainer/VBox/ControlButtons"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(168, 24)
 layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_SecNorm")
+theme_override_styles/hover = SubResource("StyleBoxTexture_SecHov")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_SecHov")
+theme_override_styles/focus = SubResource("StyleBoxTexture_SecHov")
 text = "CONTROLS"
 
 [node name="AudioRow" type="HBoxContainer" parent="CenterContainer/VBox/ControlButtons"]
 layout_mode = 2
+theme_override_constants/separation = 8
 alignment = 1
 
 [node name="SfxCheckButton" type="CheckButton" parent="CenterContainer/VBox/ControlButtons/AudioRow"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 22)
 layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_TogOn")
+theme_override_styles/hover = SubResource("StyleBoxTexture_TogOn")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_TogOn")
+theme_override_styles/focus = SubResource("StyleBoxTexture_TogOn")
 button_pressed = true
-text = "SFX"
+text = "SFX: ON"
 
 [node name="MusicCheckButton" type="CheckButton" parent="CenterContainer/VBox/ControlButtons/AudioRow"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 22)
 layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_TogOn")
+theme_override_styles/hover = SubResource("StyleBoxTexture_TogOn")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_TogOn")
+theme_override_styles/focus = SubResource("StyleBoxTexture_TogOn")
 button_pressed = true
-text = "MUSIC"
+text = "BGM: ON"
 
 [node name="ExitButton" type="Button" parent="CenterContainer/VBox/ControlButtons"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(168, 24)
 layout_mode = 2
-text = "EXIT"
+theme_override_styles/normal = SubResource("StyleBoxTexture_SecNorm")
+theme_override_styles/hover = SubResource("StyleBoxTexture_SecHov")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_SecHov")
+theme_override_styles/focus = SubResource("StyleBoxTexture_SecHov")
+text = "EXIT GAME"
 
 [node name="ControlsPanel" type="PanelContainer" parent="."]
 unique_name_in_owner = true
@@ -141,10 +280,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -170.0
-offset_top = -110.0
-offset_right = 170.0
-offset_bottom = 110.0
+offset_left = -175.0
+offset_top = -112.0
+offset_right = 175.0
+offset_bottom = 112.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
@@ -181,5 +320,10 @@ text = "• Auto-Run: Continuous rightward survival run
 
 [node name="CloseControlsButton" type="Button" parent="ControlsPanel/Margin/VBox"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 26)
 layout_mode = 2
-text = "BACK TO MENU"
+theme_override_styles/normal = SubResource("StyleBoxTexture_PriNorm")
+theme_override_styles/hover = SubResource("StyleBoxTexture_PriHov")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_PriHov")
+theme_override_styles/focus = SubResource("StyleBoxTexture_PriHov")
+text = "BACK TO LOBBY"

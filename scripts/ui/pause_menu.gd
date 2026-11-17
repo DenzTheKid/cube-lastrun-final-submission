@@ -18,6 +18,10 @@ func _ready() -> void:
 	UI_ANIMATOR.style_button(resume_btn, true)
 	UI_ANIMATOR.style_button(restart_btn, false)
 	UI_ANIMATOR.style_button(menu_btn, false)
+	if sfx_check:
+		UI_ANIMATOR.style_toggle_button(sfx_check, "SFX")
+	if music_check:
+		UI_ANIMATOR.style_toggle_button(music_check, "BGM")
 	resume_btn.pressed.connect(_on_resume_pressed)
 	restart_btn.pressed.connect(_on_restart_pressed)
 	menu_btn.pressed.connect(_on_menu_pressed)
