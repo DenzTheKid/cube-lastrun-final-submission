@@ -252,7 +252,7 @@ theme_override_constants/separation = 3
 alignment = 2
 
 [node name="HeroShowcaseBox" type="Control" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn"]
-custom_minimum_size = Vector2(158, 60)
+custom_minimum_size = Vector2(158, 62)
 layout_mode = 2
 mouse_filter = 2
 
