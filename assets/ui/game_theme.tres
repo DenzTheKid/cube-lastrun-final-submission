@@ -12,92 +12,92 @@
 [ext_resource type="Texture2D" path="res://assets/ui/px_panel_plate.png" id="10_panel"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnIdle"]
-content_margin_left = 8.0
+content_margin_left = 11.0
 content_margin_top = 4.0
 content_margin_right = 8.0
-content_margin_bottom = 5.0
+content_margin_bottom = 6.0
 texture = ExtResource("6_sec_idle")
-texture_margin_left = 6.0
+texture_margin_left = 10.0
 texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 7.0
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnHover"]
-content_margin_left = 10.0
+content_margin_left = 13.0
 content_margin_top = 4.0
 content_margin_right = 6.0
-content_margin_bottom = 5.0
+content_margin_bottom = 6.0
 texture = ExtResource("7_sec_hover")
-texture_margin_left = 6.0
+texture_margin_left = 10.0
 texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 7.0
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnPressed"]
-content_margin_left = 10.0
+content_margin_left = 13.0
 content_margin_top = 6.0
 content_margin_right = 6.0
-content_margin_bottom = 3.0
+content_margin_bottom = 4.0
 texture = ExtResource("8_sec_pressed")
-texture_margin_left = 6.0
+texture_margin_left = 10.0
 texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 7.0
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnDisabled"]
-content_margin_left = 8.0
+content_margin_left = 11.0
 content_margin_top = 4.0
 content_margin_right = 8.0
-content_margin_bottom = 5.0
+content_margin_bottom = 6.0
 texture = ExtResource("9_btn_dis")
-texture_margin_left = 6.0
+texture_margin_left = 10.0
 texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 7.0
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriIdle"]
-content_margin_left = 8.0
+content_margin_left = 11.0
 content_margin_top = 4.0
 content_margin_right = 8.0
 content_margin_bottom = 6.0
 texture = ExtResource("3_pri_idle")
-texture_margin_left = 6.0
+texture_margin_left = 10.0
 texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 7.0
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriHover"]
-content_margin_left = 10.0
+content_margin_left = 13.0
 content_margin_top = 4.0
 content_margin_right = 6.0
 content_margin_bottom = 6.0
 texture = ExtResource("4_pri_hover")
-texture_margin_left = 6.0
+texture_margin_left = 10.0
 texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 7.0
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriPressed"]
-content_margin_left = 10.0
+content_margin_left = 13.0
 content_margin_top = 6.0
 content_margin_right = 6.0
 content_margin_bottom = 4.0
 texture = ExtResource("5_pri_pressed")
-texture_margin_left = 6.0
+texture_margin_left = 10.0
 texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 7.0
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_Panel"]
-content_margin_left = 8.0
-content_margin_top = 6.0
-content_margin_right = 8.0
-content_margin_bottom = 6.0
+content_margin_left = 9.0
+content_margin_top = 7.0
+content_margin_right = 9.0
+content_margin_bottom = 7.0
 texture = ExtResource("10_panel")
-texture_margin_left = 6.0
-texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
+texture_margin_left = 7.0
+texture_margin_top = 7.0
+texture_margin_right = 7.0
+texture_margin_bottom = 7.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_BarBg"]
 bg_color = Color(0.039, 0.043, 0.078, 0.95)
@@ -121,6 +121,7 @@ Button/colors/font_focus_color = Color(0.949, 0.549, 0.22, 1)
 Button/colors/font_hover_color = Color(0.949, 0.549, 0.22, 1)
 Button/colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
 Button/colors/font_pressed_color = Color(0.22, 0.847, 0.949, 1)
+Button/constants/h_separation = 5
 Button/constants/outline_size = 2
 Button/font_sizes/font_size = 8
 Button/fonts/font = ExtResource("1_body")
@@ -142,11 +143,12 @@ Label/font_sizes/font_size = 8
 Label/fonts/font = ExtResource("1_body")
 PanelContainer/styles/panel = SubResource("StyleBoxTexture_Panel")
 PrimaryButton/base_type = &"Button"
-PrimaryButton/colors/font_color = Color(0.949, 0.549, 0.22, 1)
+PrimaryButton/colors/font_color = Color(1, 0.953, 0.69, 1)
 PrimaryButton/colors/font_focus_color = Color(0.949, 0.957, 0.98, 1)
 PrimaryButton/colors/font_hover_color = Color(0.949, 0.957, 0.98, 1)
 PrimaryButton/colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
 PrimaryButton/colors/font_pressed_color = Color(0.949, 0.549, 0.22, 1)
+PrimaryButton/constants/h_separation = 5
 PrimaryButton/constants/outline_size = 2
 PrimaryButton/font_sizes/font_size = 8
 PrimaryButton/fonts/font = ExtResource("1_body")

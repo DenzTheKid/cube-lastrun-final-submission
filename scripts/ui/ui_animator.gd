@@ -2,10 +2,14 @@ extends RefCounted
 class_name UIAnimator
 
 # Shared UI interaction helper for CUBE: LAST RUN.
-# Relies on res://assets/ui/game_theme.tres for all fonts and StyleBox definitions
-# so fonts and styles are defined in one place rather than per-label by hand.
+# Relies on res://assets/ui/game_theme.tres for fonts & 9-slice keycap StyleBoxes
+# and attaches crisp nearest-filtered 12x12 pixel icons.
 
 const PALETTE = preload("res://scripts/ui/theme_palette.gd")
+const ICON_SFX_ON: Texture2D = preload("res://assets/ui/px_icon_sfx_on.png")
+const ICON_SFX_OFF: Texture2D = preload("res://assets/ui/px_icon_sfx_off.png")
+const ICON_MUSIC_ON: Texture2D = preload("res://assets/ui/px_icon_music_on.png")
+const ICON_MUSIC_OFF: Texture2D = preload("res://assets/ui/px_icon_music_off.png")
 
 static func style_button(btn: Button, is_primary: bool = false) -> void:
 	if not btn:
@@ -15,9 +19,10 @@ static func style_button(btn: Button, is_primary: bool = false) -> void:
 	btn.set_meta("base_text", raw_text)
 	btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.expand_icon = false
 	btn.theme_type_variation = &"PrimaryButton" if is_primary else &"Button"
 
-	btn.text = "  " + raw_text
+	btn.text = raw_text
 	btn.mouse_entered.connect(func(): _set_btn_active(btn, true))
 	btn.mouse_exited.connect(func(): _set_btn_active(btn, btn.has_focus()))
 	btn.focus_entered.connect(func(): _set_btn_active(btn, true))
@@ -27,7 +32,7 @@ static func _set_btn_active(btn: Button, active: bool) -> void:
 	if not is_instance_valid(btn):
 		return
 	var base_text: String = str(btn.get_meta("base_text", btn.text))
-	btn.text = ("> " if active else "  ") + base_text
+	btn.text = ("> " + base_text) if active else base_text
 
 static func style_toggle_button(btn: Button, label_prefix: String) -> void:
 	if not btn:
@@ -40,6 +45,7 @@ static func style_toggle_button(btn: Button, label_prefix: String) -> void:
 	btn.add_theme_icon_override("checked_disabled", empty_tex)
 	btn.add_theme_icon_override("unchecked_disabled", empty_tex)
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.expand_icon = false
 	btn.theme_type_variation = &"Button"
 	_update_toggle_visual(btn, btn.button_pressed, false)
 	btn.toggled.connect(func(on: bool): _update_toggle_visual(btn, on, btn.has_focus()))
@@ -52,9 +58,11 @@ static func _update_toggle_visual(btn: Button, is_on: bool, is_focused: bool) ->
 	if not is_instance_valid(btn):
 		return
 	var prefix: String = str(btn.get_meta("toggle_prefix", "SFX"))
-	var sq: String = "■" if is_on else "□"
-	var arrow: String = "> " if is_focused else "  "
-	btn.text = "%s%s %s:%s" % [arrow, sq, prefix, "ON" if is_on else "OFF"]
+	if prefix == "SFX":
+		btn.icon = ICON_SFX_ON if is_on else ICON_SFX_OFF
+	else:
+		btn.icon = ICON_MUSIC_ON if is_on else ICON_MUSIC_OFF
+	btn.text = "%s:%s" % [prefix, "ON" if is_on else "OFF"]
 
 	var col: Color = PALETTE.ACCENT_CYAN if is_on else PALETTE.TEXT_DIM
 	btn.add_theme_color_override("font_color", col)

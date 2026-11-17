@@ -9,11 +9,13 @@ extends SceneTree
 const OUTLINE := Color8(10, 11, 20, 255)
 
 func _init() -> void:
-	print("=== Generating City Skylines, Clustered Windows, Street Lamps, Horde & Pixel UI Plates ===")
+	print("=== Generating City Skylines, Clustered Windows, Street Lamps, Horde & AAA Pixel UI Art ===")
 	_make_clean_horde_wall()
 	_make_foreground_overpass()
 	_make_city_skylines()
 	_make_pixel_button_plates()
+	_make_pixel_icons()
+	_make_title_logo_and_ribbon()
 	print("=== Asset Generation Complete ===")
 	quit(0)
 
@@ -304,127 +306,524 @@ func _make_city_skylines() -> void:
 
 	mid.save_png("res://assets/environment/parallax_buildings_mid.png")
 
-func _draw_pixel_keycap_plate(w: int, h: int, top_col: Color, bot_col: Color, hi_rim: Color, sh_rim: Color, border_col: Color, bracket_col: Color, pressed: bool) -> Image:
+func _draw_pixel_keycap_plate(
+	w: int, h: int, top_col: Color, bot_col: Color, hi_rim: Color, sh_rim: Color,
+	border_col: Color, clasp_hi: Color, clasp_lo: Color, pressed: bool, has_clasp: bool = true
+) -> Image:
 	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
 	var mid_y: int = h / 2
 	for y in range(h):
 		for x in range(w):
-			# 1px pixel-notched corners (classic 16-bit chamfered pixel corner, not rounded)
-			if (x == 0 or x == w - 1) and (y == 0 or y == h - 1):
+			# 4px stepped 45-degree octagonal pixel chamfer corners (distinct non-boxy arcade badge silhouette)
+			var dx: int = mini(x, w - 1 - x)
+			var dy: int = mini(y, h - 1 - y)
+			if dx + dy <= 2:
 				continue
-			# Outer dark outline
-			var on_outer_edge: bool = (x == 0 or x == w - 1 or y == 0 or y == h - 1)
-			var on_inner_corner: bool = ((x == 1 or x == w - 2) and (y == 1 or y == h - 2))
-			if on_outer_edge or on_inner_corner:
+			if dx + dy == 3:
 				img.set_pixel(x, y, OUTLINE)
 				continue
 
-			# Border frame (1px inside outer outline)
-			if x == 1 or x == w - 2 or y == 1 or y == h - 2:
+			# Crisp 1px obsidian outer frame + 1px inner edge
+			if x == 0 or x == w - 1 or y == 0 or y == h - 1:
+				img.set_pixel(x, y, OUTLINE)
+				continue
+			if x == 1 or x == w - 2 or y == 1 or y == h - 2 or dx + dy == 4:
 				img.set_pixel(x, y, border_col)
 				continue
 
 			if not pressed:
-				# Top 1px bright specular pixel bevel
+				# Bottom 3px thick 3D extruded keycap front lip + 1px shadow crease
+				if y >= h - 4 and x >= 2 and x <= w - 3:
+					img.set_pixel(x, y, sh_rim if y > h - 4 else sh_rim.darkened(0.28))
+					continue
+				# Left vertical power clasp tab (solid glowing LED spine, zero hazard stripes)
+				if has_clasp and x >= 3 and x <= 5 and y >= 3 and y <= h - 6:
+					img.set_pixel(x, y, clasp_hi if y < mid_y else clasp_lo)
+					continue
+				if has_clasp and x == 6 and y >= 3 and y <= h - 6:
+					img.set_pixel(x, y, OUTLINE)
+					continue
+				# Top 1px specular catchlight
 				if y == 2 and x >= 2 and x <= w - 3:
 					img.set_pixel(x, y, hi_rim)
-				# Bottom 2px thick 3D keycap shadow lip
-				elif y >= h - 4 and x >= 2 and x <= w - 3:
-					img.set_pixel(x, y, sh_rim)
+				elif y == mid_y and x > (6 if has_clasp else 2) and x <= w - 4:
+					img.set_pixel(x, y, bot_col.darkened(0.12))
 				else:
-					# Stepped 2-tone pixel fill
 					img.set_pixel(x, y, top_col if y < mid_y else bot_col)
 			else:
-				# Pressed state: top shadow lip, flat compressed body
+				# Pressed state: top shadow drop + sunk interior
 				if y <= 3 and x >= 2 and x <= w - 3:
 					img.set_pixel(x, y, sh_rim)
-				elif y == h - 3 and x >= 2 and x <= w - 3:
-					img.set_pixel(x, y, hi_rim.darkened(0.25))
+					continue
+				if has_clasp and x >= 3 and x <= 5 and y >= 4 and y <= h - 4:
+					img.set_pixel(x, y, clasp_lo)
+					continue
+				if has_clasp and x == 6 and y >= 4 and y <= h - 4:
+					img.set_pixel(x, y, OUTLINE)
+					continue
+				if y == h - 3 and x >= 2 and x <= w - 3:
+					img.set_pixel(x, y, hi_rim.darkened(0.3))
 				else:
-					img.set_pixel(x, y, bot_col.darkened(0.15))
+					img.set_pixel(x, y, bot_col.darkened(0.18))
 
-	# Hand-pixelled L-shaped corner brackets / rivets inside plate for crisp mechanical look
-	var b_top: int = 3 if pressed else 2
-	var b_bot: int = h - 3 if pressed else h - 5
-	for dx in [2, 3, 4]:
-		_safe_px(img, dx, b_top, bracket_col)
-		_safe_px(img, w - 1 - dx, b_top, bracket_col)
-		_safe_px(img, dx, b_bot, bracket_col)
-		_safe_px(img, w - 1 - dx, b_bot, bracket_col)
-	for dy in range(b_top, min(b_top + 3, h - 2)):
-		_safe_px(img, 2, dy, bracket_col)
-		_safe_px(img, w - 3, dy, bracket_col)
-	for dy in range(max(2, b_bot - 2), b_bot + 1):
-		_safe_px(img, 2, dy, bracket_col)
-		_safe_px(img, w - 3, dy, bracket_col)
+	# Twin precision pixel rivets on right edge (below 1px specular catchlight)
+	var r_top: int = 5 if pressed else 4
+	var r_bot: int = h - 4 if pressed else h - 6
+	_safe_px(img, w - 5, r_top, clasp_hi)
+	_safe_px(img, w - 5, r_bot, clasp_lo)
+	if not has_clasp:
+		_safe_px(img, 4, r_top, clasp_hi)
+		_safe_px(img, 4, r_bot, clasp_lo)
+		for rx in [4, 5, w - 6, w - 5]:
+			_safe_px(img, rx, r_top, clasp_hi)
 
 	return img
 
 func _make_pixel_button_plates() -> void:
-	# Primary Action Button Plates (PLAY MISSION / RESUME / TRY AGAIN) — Amber/Crimson accent
+	# Primary Action Button Plates (PLAY MISSION / RESUME / TRY AGAIN) — Warm Amber & Crimson 3D cartridge keycap
 	var pri_idle := _draw_pixel_keycap_plate(
-		64, 24,
-		Color("#2e1c2b"), Color("#1e1324"),
-		Color("#f2a85c"), Color("#7a2832"),
-		Color("#f28c38"), Color("#fff3b0"), false
+		72, 26,
+		Color("#341b2c"), Color("#221224"),
+		Color("#fff3b0"), Color("#6b1e2c"),
+		Color("#f28c38"), Color("#fff3b0"), Color("#f28c38"), false, true
 	)
 	pri_idle.save_png("res://assets/ui/px_btn_primary_idle.png")
 
 	var pri_hover := _draw_pixel_keycap_plate(
-		64, 24,
-		Color("#4a2534"), Color("#2c1626"),
-		Color("#fff3b0"), Color("#9e323c"),
-		Color("#fff3b0"), Color("#f28c38"), false
+		72, 26,
+		Color("#4f2433"), Color("#331727"),
+		Color("#fff8d6"), Color("#8c2838"),
+		Color("#fff3b0"), Color("#fff8d6"), Color("#f28c38"), false, true
 	)
 	pri_hover.save_png("res://assets/ui/px_btn_primary_hover.png")
 
 	var pri_pressed := _draw_pixel_keycap_plate(
-		64, 24,
-		Color("#2a1624"), Color("#190d1a"),
-		Color("#f28c38"), Color("#521b24"),
-		Color("#f28c38"), Color("#fff3b0"), true
+		72, 26,
+		Color("#2b1523"), Color("#1b0d1b"),
+		Color("#f28c38"), Color("#42121d"),
+		Color("#f28c38"), Color("#f28c38"), Color("#a84824"), true, true
 	)
 	pri_pressed.save_png("res://assets/ui/px_btn_primary_pressed.png")
 
-	# Secondary Action Button Plates (CONTROLS / EXIT GAME / MAIN MENU) — Dark Navy Slate
+	# Secondary Action Button Plates (CONTROLS / SFX / BGM / EXIT) — Brushed Steel-Indigo with Cyan clasp
 	var sec_idle := _draw_pixel_keycap_plate(
-		64, 24,
-		Color("#1c2240"), Color("#12162b"),
-		Color("#4a588a"), Color("#0a0c18"),
-		Color("#2e3659"), Color("#5c6d9e"), false
+		72, 26,
+		Color("#222a4d"), Color("#151a33"),
+		Color("#6979b0"), Color("#090b16"),
+		Color("#39446e"), Color("#38d8f2"), Color("#1e7e9c"), false, true
 	)
 	sec_idle.save_png("res://assets/ui/px_btn_secondary_idle.png")
 
 	var sec_hover := _draw_pixel_keycap_plate(
-		64, 24,
-		Color("#283056"), Color("#191e3a"),
-		Color("#f2a85c"), Color("#0e1020"),
-		Color("#f28c38"), Color("#fff3b0"), false
+		72, 26,
+		Color("#2d3661"), Color("#1d2342"),
+		Color("#f2a85c"), Color("#0d101f"),
+		Color("#f28c38"), Color("#fff3b0"), Color("#f28c38"), false, true
 	)
 	sec_hover.save_png("res://assets/ui/px_btn_secondary_hover.png")
 
 	var sec_pressed := _draw_pixel_keycap_plate(
-		64, 24,
-		Color("#141930"), Color("#0e1121"),
-		Color("#38d8f2"), Color("#070812"),
-		Color("#38d8f2"), Color("#f2f4fa"), true
+		72, 26,
+		Color("#161b33"), Color("#0e1121"),
+		Color("#38d8f2"), Color("#06070f"),
+		Color("#38d8f2"), Color("#f2f4fa"), Color("#38d8f2"), true, true
 	)
 	sec_pressed.save_png("res://assets/ui/px_btn_secondary_pressed.png")
 
 	var btn_dis := _draw_pixel_keycap_plate(
-		64, 24,
-		Color("#121422"), Color("#0d0f1a"),
-		Color("#232946"), Color("#080912"),
-		Color("#232946"), Color("#2e3659"), true
+		72, 26,
+		Color("#141729"), Color("#0e101c"),
+		Color("#2b324f"), Color("#080912"),
+		Color("#232946"), Color("#3b4466"), Color("#232946"), true, true
 	)
 	btn_dis.save_png("res://assets/ui/px_btn_disabled.png")
 
-	# Clean Framed Pixel Panel Plate (for Record Card, Menu Backdrop, Modals)
+	# Unified Chamfered Panel Plate (Modals, HUD Plates, Controls)
 	var panel_plate := _draw_pixel_keycap_plate(
-		64, 32,
-		Color("#101221"), Color("#0c0e1b"),
-		Color("#39446e"), Color("#080912"),
-		Color("#2e3659"), Color("#38d8f2"), false
+		64, 36,
+		Color("#121526"), Color("#0b0d19"),
+		Color("#4a588a"), Color("#070810"),
+		Color("#2e3659"), Color("#38d8f2"), Color("#1e7e9c"), false, false
 	)
 	panel_plate.save_png("res://assets/ui/px_panel_plate.png")
+
+	# Survivor Record Armored Plaque (Chamfered Terminal Badge with glowing cyan crest)
+	var record_card := _draw_pixel_keycap_plate(
+		64, 40,
+		Color("#14182b"), Color("#0c0e1a"),
+		Color("#38d8f2"), Color("#070810"),
+		Color("#39446e"), Color("#fff3b0"), Color("#f28c38"), false, false
+	)
+	for x in range(8, 56):
+		_safe_px(record_card, x, 5, Color("#1f2747"))
+		_safe_px(record_card, x, 6, Color("#080912"))
+	record_card.save_png("res://assets/ui/px_record_card.png")
+
+func _draw_bitmap_icon(rows: PackedStringArray, col_map: Dictionary) -> Image:
+	var h: int = rows.size()
+	var w: int = rows[0].length()
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	for y in range(h):
+		var line: String = rows[y]
+		for x in range(w):
+			var ch: String = line.substr(x, 1)
+			if col_map.has(ch):
+				img.set_pixel(x, y, col_map[ch])
+	return img
+
+func _make_pixel_icons() -> void:
+	# 1. Play Mission Chevron + Shell Spark (12x12)
+	var play_map := {"o": OUTLINE, "*": Color("#fff3b0"), "#": Color("#f28c38"), "s": Color("#c9384a")}
+	_draw_bitmap_icon(PackedStringArray([
+		"..oo........",
+		".o*#o.......",
+		".o**#oo.....",
+		".o***##oo...",
+		".o****###oo.",
+		".o***######o",
+		".o***####soo",
+		".o**###ssoo.",
+		".o*##ssoo...",
+		".o#ssoo.....",
+		"..ooo.......",
+		"............"
+	]), play_map).save_png("res://assets/ui/px_icon_play.png")
+
+	# 2. Controls Crosshair / Tactical D-Pad (12x12)
+	var ctrl_map := {"o": OUTLINE, "*": Color("#f2f4fa"), "#": Color("#38d8f2"), "s": Color("#1e7e9c")}
+	_draw_bitmap_icon(PackedStringArray([
+		"....oooo....",
+		"...o****o...",
+		"...o*##*o...",
+		".ooo*##*ooo.",
+		"o**##oo##**o",
+		"o*#s*##*s#*o",
+		"o**##oo##**o",
+		".ooos##sooo.",
+		"...o####o...",
+		"...osssso...",
+		"....oooo....",
+		"............"
+	]), ctrl_map).save_png("res://assets/ui/px_icon_controls.png")
+
+	# 3. SFX On & Off (12x12)
+	var sfx_on_map := {"o": OUTLINE, "*": Color("#f2f4fa"), "#": Color("#38d8f2"), "s": Color("#1e7e9c"), "a": Color("#fff3b0")}
+	_draw_bitmap_icon(PackedStringArray([
+		".....oo.....",
+		"....o*#o.oo.",
+		"..ooo*#o..ao",
+		".o**##*o.o.a",
+		"o**####oo.oa",
+		"o**####o..oa",
+		"o*#####oo.oa",
+		".oss###o.o.a",
+		"..ooos#o..ao",
+		"....os#o.oo.",
+		".....oo.....",
+		"............"
+	]), sfx_on_map).save_png("res://assets/ui/px_icon_sfx_on.png")
+
+	var off_map := {"o": OUTLINE, "*": Color("#707a9c"), "#": Color("#464f70"), "x": Color("#e63962")}
+	_draw_bitmap_icon(PackedStringArray([
+		".....oo.....",
+		"....o*#o....",
+		"..ooo*#o.o.o",
+		".o**##*ooxxo",
+		"o**####ooxxo",
+		"o**####o.xx.",
+		"o*#####ooxxo",
+		".oss###ooxxo",
+		"..ooos#o.o.o",
+		"....os#o....",
+		".....oo.....",
+		"............"
+	]), off_map).save_png("res://assets/ui/px_icon_sfx_off.png")
+
+	# 4. BGM Music Note On & Off (12x12)
+	_draw_bitmap_icon(PackedStringArray([
+		"....ooooooo.",
+		"...o*******o",
+		"...o#######o",
+		"...o##oo##o.",
+		"...o#o..o#o.",
+		"..oo#o..o#o.",
+		".o*##o.oo#o.",
+		"o***#oo*##o.",
+		"o*###oo***o.",
+		".oooo..ooo..",
+		"............",
+		"............"
+	]), sfx_on_map).save_png("res://assets/ui/px_icon_music_on.png")
+
+	_draw_bitmap_icon(PackedStringArray([
+		"o...ooooooo.",
+		"xo.o*******o",
+		"oxo#######o.",
+		".oxo##oo##o.",
+		"..oxo#o.o#o.",
+		"..oo#oxo#o..",
+		".o*##ooxoo..",
+		"o***#o.oxo..",
+		"o*###o..oxo.",
+		".oooo....oo.",
+		"............",
+		"............"
+	]), off_map).save_png("res://assets/ui/px_icon_music_off.png")
+
+	# 5. Exit Doorway + Arrow (12x12)
+	var exit_map := {"o": OUTLINE, "*": Color("#ffb3c6"), "#": Color("#e63962"), "s": Color("#7a2832"), "w": Color("#5c6d9e")}
+	_draw_bitmap_icon(PackedStringArray([
+		".oooooo.....",
+		"owwwwwwo....",
+		"ow.oo..o..o.",
+		"ow.o*##oooo.",
+		"ow.o***####o",
+		"ow.o***####o",
+		"ow.o#ssoooo.",
+		"ow.oo..o..o.",
+		"owwwwwwo....",
+		".oooooo.....",
+		"............",
+		"............"
+	]), exit_map).save_png("res://assets/ui/px_icon_exit.png")
+
+	# 6. Trophy Medallion Icon for SURVIVOR RECORD (14x14)
+	var cup_map := {"o": OUTLINE, "*": Color("#fff8d6"), "#": Color("#f28c38"), "d": Color("#b85822"), "g": Color("#e63962")}
+	_draw_bitmap_icon(PackedStringArray([
+		"..oooooooooo..",
+		".o**********o.",
+		"oo*########*oo",
+		"o*#o*####*o#*o",
+		"oo#o*#gg#*o#oo",
+		".oo.*####*.oo.",
+		"...oo####oo...",
+		".....o##o.....",
+		".....o##o.....",
+		"....o*##do....",
+		"...oo****oo...",
+		"..o########o..",
+		"..oooooooooo..",
+		".............."
+	]), cup_map).save_png("res://assets/ui/px_icon_trophy.png")
+
+func _make_title_logo_and_ribbon() -> void:
+	# A. Sleek tapered hexagonal ribbon for Tagline ("RUN. SHOOT. SURVIVE. DON'T STOP.")
+	var rw: int = 276
+	var rh: int = 16
+	var rib := Image.create(rw, rh, false, Image.FORMAT_RGBA8)
+	var mid_ry: int = rh / 2
+	for y in range(rh):
+		var inset: int = absi(y - mid_ry)
+		if y == 0 or y == rh - 1:
+			inset += 2
+		for x in range(inset, rw - inset):
+			var dist_edge: int = mini(x - inset, (rw - inset - 1) - x)
+			if y == 0 or y == rh - 1 or dist_edge == 0:
+				rib.set_pixel(x, y, OUTLINE)
+			elif y == 1 or y == rh - 2 or dist_edge == 1:
+				rib.set_pixel(x, y, Color("#7a2832") if dist_edge > 6 else Color("#f28c38"))
+			else:
+				rib.set_pixel(x, y, Color("#130e20") if y < mid_ry else Color("#0c0916"))
+	# Tapered chevron wing studs on left & right ribbon tips
+	for y in range(4, 12):
+		var dx: int = absi(y - 7)
+		_safe_px(rib, 9 - dx, y, Color("#fff3b0"))
+		_safe_px(rib, 10 - dx, y, Color("#f28c38"))
+		_safe_px(rib, rw - 10 + dx, y, Color("#fff3b0"))
+		_safe_px(rib, rw - 11 + dx, y, Color("#f28c38"))
+	rib.save_png("res://assets/ui/px_tagline_ribbon.png")
+
+	# B. Hero Title Crest Sprite (px_title_logo.png, 276x54): Winged Armored Steel Badge + CUBE: + 3D Fiery LAST RUN
+	var lw: int = 276
+	var lh: int = 54
+	var logo := Image.create(lw, lh, false, Image.FORMAT_RGBA8)
+
+	# 1. Tactical Armored Hex Backplate behind LAST RUN (stepped diagonal wings, NOT a flat box)
+	for y in range(13, 52):
+		var wing_inset: int = 16
+		if y < 20:
+			wing_inset = 16 + (20 - y) * 2
+		elif y > 45:
+			wing_inset = 16 + (y - 45) * 2
+		for x in range(wing_inset, lw - wing_inset):
+			var ex: int = mini(x - wing_inset, lw - wing_inset - 1 - x)
+			if y == 13 or y == 51 or ex <= 1:
+				logo.set_pixel(x, y, OUTLINE)
+			elif y == 14 or y == 50 or ex == 2:
+				logo.set_pixel(x, y, Color("#39446e") if y < 32 else Color("#232946"))
+			elif y == 15:
+				logo.set_pixel(x, y, Color("#f28c38") if (x < 52 or x > lw - 53) else Color("#5c6d9e"))
+			else:
+				logo.set_pixel(x, y, Color("#121526") if y < 34 else Color("#0c0e1a"))
+
+	# Flared orange-gold kinetic speed chevrons protruding past the wings
+	for row in range(3):
+		var sy: int = 24 + row * 7
+		for k in range(14 - row * 2):
+			_safe_px(logo, 4 + row * 2 + k, sy, OUTLINE)
+			_safe_px(logo, 4 + row * 2 + k, sy + 1, Color("#f28c38") if k < 6 else Color("#fff3b0"))
+			_safe_px(logo, 4 + row * 2 + k, sy + 2, Color("#7a2832"))
+			_safe_px(logo, 4 + row * 2 + k, sy + 3, OUTLINE)
+			_safe_px(logo, lw - 5 - row * 2 - k, sy, OUTLINE)
+			_safe_px(logo, lw - 5 - row * 2 - k, sy + 1, Color("#f28c38") if k < 6 else Color("#fff3b0"))
+			_safe_px(logo, lw - 5 - row * 2 - k, sy + 2, Color("#7a2832"))
+			_safe_px(logo, lw - 5 - row * 2 - k, sy + 3, OUTLINE)
+
+	# 2. Top CUBE: Badge Header Plate + Twin Shotgun Shell Studs
+	for y in range(1, 16):
+		var top_cut: int = maxi(0, 5 - y)
+		var x0: int = 84 + top_cut
+		var x1: int = lw - 84 - top_cut
+		for x in range(x0, x1):
+			if y == 1 or x == x0 or x == x1 - 1:
+				logo.set_pixel(x, y, OUTLINE)
+			elif y == 2 or x == x0 + 1 or x == x1 - 2:
+				logo.set_pixel(x, y, Color("#38d8f2"))
+			else:
+				logo.set_pixel(x, y, Color("#19203d") if y < 9 else Color("#101429"))
+
+	# Twin Horizontal Shotgun Shell Studs inside the top header wings (left & right of "CUBE:")
+	for side_x in [93, lw - 103]:
+		_draw_rect_outline(logo, side_x, 5, 10, 6, Color("#e63962"), OUTLINE)
+		logo.fill_rect(Rect2i(side_x + 1, 6, 3, 4), Color("#f28c38"))
+		logo.fill_rect(Rect2i(side_x + 4, 6, 4, 1), Color("#fff3b0"))
+
+	# Draw "CUBE:" in chunky metallic sky-cyan pixels (2x crisp blocks)
+	var cube_glyphs := {
+		"C": PackedStringArray([".####", "##...", "##...", "##...", ".####"]),
+		"U": PackedStringArray(["##.##", "##.##", "##.##", "##.##", ".###."]),
+		"B": PackedStringArray(["####.", "##.##", "####.", "##.##", "####."]),
+		"E": PackedStringArray(["#####", "##...", "####.", "##...", "#####"]),
+		":": PackedStringArray(["..", "##", "..", "##", ".."]),
+	}
+	var cx: int = 110
+	for ch in ["C", "U", "B", "E", ":"]:
+		var g: PackedStringArray = cube_glyphs[ch]
+		for gy in range(g.size()):
+			var line: String = g[gy]
+			for gx in range(line.length()):
+				if line.substr(gx, 1) == "#":
+					var px: int = cx + gx * 2
+					var py: int = 4 + gy * 2
+					for oy in range(-1, 3):
+						for ox in range(-1, 3):
+							_safe_px(logo, px + ox, py + oy, OUTLINE)
+		for gy in range(g.size()):
+			var line: String = g[gy]
+			for gx in range(line.length()):
+				if line.substr(gx, 1) == "#":
+					var col: Color = Color("#f2f4fa") if gy <= 1 else (Color("#38d8f2") if gy <= 3 else Color("#1e7e9c"))
+					logo.fill_rect(Rect2i(cx + gx * 2, 4 + gy * 2, 2, 2), col)
+		cx += (4 if ch == ":" else 10) + 2
+
+	# 3. Hero Monument Typography: "LAST RUN" (bold 2x chamfer-smoothed pixel lettering with 3D extrusion!)
+	var hero_glyphs := {
+		"L": PackedStringArray(["###.....", "###.....", "###.....", "###.....", "###.....", "###.....", "###.....", "###.....", "###...##", "########", "########"]),
+		"A": PackedStringArray(["..#####..", ".#######.", "###...###", "###...###", "###...###", "#########", "#########", "###...###", "###...###", "###...###", "###...###"]),
+		"S": PackedStringArray([".#######.", "#########", "###...###", "###......", ".######..", "..######.", "......###", "......###", "###...###", "#########", ".#######."]),
+		"T": PackedStringArray(["#########", "#########", "##.###.##", "...###...", "...###...", "...###...", "...###...", "...###...", "...###...", "...###...", "...###..."]),
+		"R": PackedStringArray(["#######..", "########.", "###...###", "###...###", "###..###.", "#######..", "########.", "###..###.", "###...###", "###...###", "###...###"]),
+		"U": PackedStringArray(["###...###", "###...###", "###...###", "###...###", "###...###", "###...###", "###...###", "###...###", "###...###", "#########", ".#######."]),
+		"N": PackedStringArray(["###...###", "####..###", "#####.###", "#########", "#########", "###.#####", "###..####", "###...###", "###...###", "###...###", "###...###"])
+	}
+	var word: Array[String] = ["L", "A", "S", "T", " ", "R", "U", "N"]
+	# Compute total advance to center horizontally
+	var total_w: int = 0
+	for ch in word:
+		if ch == " ":
+			total_w += 10
+		else:
+			total_w += hero_glyphs[ch][0].length() * 2 + 3
+	total_w -= 3
+
+	var start_x: int = (lw - total_w) / 2
+	var start_y: int = 20
+
+	# First build a crisp binary mask (2x scaled + 1px Scale2X corner chamfers for each glyph)
+	var mask := Image.create(lw, lh, false, Image.FORMAT_RGBA8)
+	var cur_x: int = start_x
+	for ch in word:
+		if ch == " ":
+			cur_x += 10
+			continue
+		var g: PackedStringArray = hero_glyphs[ch]
+		var gh: int = g.size()
+		var gw: int = g[0].length()
+		for gy in range(gh):
+			for gx in range(gw):
+				var on: bool = g[gy].substr(gx, 1) == "#"
+				if on:
+					var up_on: bool = gy > 0 and g[gy - 1].substr(gx, 1) == "#"
+					var dn_on: bool = gy + 1 < gh and g[gy + 1].substr(gx, 1) == "#"
+					var lf_on: bool = gx > 0 and g[gy].substr(gx - 1, 1) == "#"
+					var rt_on: bool = gx + 1 < gw and g[gy].substr(gx + 1, 1) == "#"
+					for sy in range(2):
+						for sx in range(2):
+							var trim_tl: bool = (sx == 0 and sy == 0 and not up_on and not lf_on and dn_on and rt_on)
+							var trim_tr: bool = (sx == 1 and sy == 0 and not up_on and not rt_on and dn_on and lf_on)
+							var trim_bl: bool = (sx == 0 and sy == 1 and not dn_on and not lf_on and up_on and rt_on)
+							var trim_br: bool = (sx == 1 and sy == 1 and not dn_on and not rt_on and up_on and lf_on)
+							if not (trim_tl or trim_tr or trim_bl or trim_br):
+								_safe_px(mask, cur_x + gx * 2 + sx, start_y + gy * 2 + sy, Color.WHITE)
+		# Add diagonal inner-corner pixel fills where diagonals step cleanly
+		for gy in range(gh - 1):
+			for gx in range(gw - 1):
+				var a: bool = g[gy].substr(gx, 1) == "#"
+				var b: bool = g[gy].substr(gx + 1, 1) == "#"
+				var c: bool = g[gy + 1].substr(gx, 1) == "#"
+				var d: bool = g[gy + 1].substr(gx + 1, 1) == "#"
+				if a and d and not b and not c:
+					_safe_px(mask, cur_x + gx * 2 + 2, start_y + gy * 2 + 1, Color.WHITE)
+					_safe_px(mask, cur_x + gx * 2 + 1, start_y + gy * 2 + 2, Color.WHITE)
+				elif b and c and not a and not d:
+					_safe_px(mask, cur_x + gx * 2 + 1, start_y + gy * 2 + 1, Color.WHITE)
+					_safe_px(mask, cur_x + gx * 2 + 2, start_y + gy * 2 + 2, Color.WHITE)
+		cur_x += gw * 2 + 3
+
+	# Pass 1: 3D Extruded Deep Crimson-Plum Drop Shadow Block (dx +1..+3, dy +2..+4) + Obsidian Outline
+	for y in range(lh):
+		for x in range(lw):
+			if mask.get_pixel(x, y).a > 0.5:
+				for ez in [3, 2, 1]:
+					_safe_px(logo, x + ez - 1, y + ez + 1, OUTLINE)
+					_safe_px(logo, x + ez, y + ez + 1, OUTLINE)
+	for y in range(lh):
+		for x in range(lw):
+			if mask.get_pixel(x, y).a > 0.5:
+				_safe_px(logo, x + 2, y + 3, Color("#4f1826"))
+				_safe_px(logo, x + 1, y + 2, Color("#7a2832"))
+
+	# Pass 2: Bold 1px Obsidian Outline around foreground letters
+	for y in range(lh):
+		for x in range(lw):
+			if mask.get_pixel(x, y).a > 0.5:
+				for oy in range(-1, 2):
+					for ox in range(-1, 2):
+						if ox != 0 or oy != 0:
+							_safe_px(logo, x + ox, y + oy, OUTLINE)
+
+	# Pass 3: 4-Stop Fiery Sunset Pixel Fill + Top Cream Specular Rim
+	for y in range(lh):
+		for x in range(lw):
+			if mask.get_pixel(x, y).a > 0.5:
+				var rel_y: int = y - start_y
+				var is_top_edge: bool = (y > 0 and mask.get_pixel(x, y - 1).a < 0.5)
+				var is_bot_edge: bool = (y + 1 < lh and mask.get_pixel(x, y + 1).a < 0.5)
+				var col: Color
+				if is_top_edge:
+					col = Color("#fff8d6")
+				elif rel_y <= 4:
+					col = Color("#fff3b0")
+				elif rel_y <= 10:
+					col = Color("#f7b267") if rel_y <= 6 else Color("#f28c38")
+				elif rel_y <= 16:
+					col = Color("#e63962")
+				else:
+					col = Color("#a8223d")
+				if is_bot_edge and not is_top_edge:
+					col = Color("#7a2832")
+				logo.set_pixel(x, y, col)
+
+	logo.save_png("res://assets/ui/px_title_logo.png")
+
 

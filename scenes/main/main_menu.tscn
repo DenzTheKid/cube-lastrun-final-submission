@@ -7,8 +7,30 @@
 [ext_resource type="Texture2D" path="res://assets/environment/parallax_overpass_fore.png" id="5_fore"]
 [ext_resource type="Texture2D" path="res://assets/ui/lobby_road.png" id="6_road"]
 [ext_resource type="Theme" path="res://assets/ui/game_theme.tres" id="7_theme"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_title_logo.png" id="8_logo"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_tagline_ribbon.png" id="9_ribbon"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_record_card.png" id="10_reccard"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_icon_play.png" id="11_iplay"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_icon_controls.png" id="12_ictrl"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_icon_exit.png" id="13_iexit"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_icon_trophy.png" id="14_itrophy"]
+[ext_resource type="Texture2D" path="res://assets/characters/cube_player.png" id="15_hero"]
+[ext_resource type="Texture2D" path="res://assets/weapons/shotgun.png" id="16_gun"]
+[ext_resource type="Texture2D" path="res://assets/zombies/zombie_walker.png" id="17_walker"]
+[ext_resource type="Texture2D" path="res://assets/zombies/zombie_runner.png" id="18_runner"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_MenuRow"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_RecordCard"]
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 9.0
+texture = ExtResource("10_reccard")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
 
 [node name="MainMenu" type="Control"]
 texture_filter = 1
@@ -73,19 +95,60 @@ grow_vertical = 0
 texture = ExtResource("6_road")
 expand_mode = 1
 
+[node name="DioramaLeft" type="Control" parent="LobbyRoad"]
+layout_mode = 1
+anchors_preset = 0
+offset_right = 90.0
+offset_bottom = 10.0
+mouse_filter = 2
+
+[node name="LobbyWalker" type="Sprite2D" parent="LobbyRoad/DioramaLeft"]
+unique_name_in_owner = true
+position = Vector2(22, -12)
+texture = ExtResource("17_walker")
+hframes = 4
+
+[node name="LobbyRunner" type="Sprite2D" parent="LobbyRoad/DioramaLeft"]
+unique_name_in_owner = true
+position = Vector2(46, -12)
+texture = ExtResource("18_runner")
+hframes = 4
+
+[node name="DioramaRight" type="Control" parent="LobbyRoad"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -90.0
+offset_bottom = 10.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="LobbyHero" type="Sprite2D" parent="LobbyRoad/DioramaRight"]
+unique_name_in_owner = true
+position = Vector2(54, -12)
+texture = ExtResource("15_hero")
+hframes = 6
+vframes = 8
+frame = 6
+
+[node name="LobbyShotgun" type="Sprite2D" parent="LobbyRoad/DioramaRight/LobbyHero"]
+position = Vector2(2, 4)
+texture = ExtResource("16_gun")
+
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -6.0
-offset_bottom = -32.0
+offset_top = -12.0
+offset_bottom = -34.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="TitleBanner" type="VBoxContainer" parent="CenterContainer/VBox"]
@@ -93,8 +156,39 @@ layout_mode = 2
 theme_override_constants/separation = 3
 alignment = 1
 
+[node name="TitleLogo" type="TextureRect" parent="CenterContainer/VBox/TitleBanner"]
+custom_minimum_size = Vector2(276, 54)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+texture = ExtResource("8_logo")
+stretch_mode = 5
+
+[node name="TaglineRibbon" type="TextureRect" parent="CenterContainer/VBox/TitleBanner"]
+custom_minimum_size = Vector2(276, 16)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+texture = ExtResource("9_ribbon")
+stretch_mode = 5
+
+[node name="Tagline" type="Label" parent="CenterContainer/VBox/TitleBanner/TaglineRibbon"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.953, 0.69, 1)
+text = "RUN. SHOOT. SURVIVE. DON'T STOP."
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="TitlePrefix" type="Label" parent="CenterContainer/VBox/TitleBanner"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 theme_type_variation = &"TitleSub"
 text = "CUBE:"
@@ -102,16 +196,10 @@ horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="CenterContainer/VBox/TitleBanner"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 theme_type_variation = &"TitleMain"
 text = "LAST RUN"
-horizontal_alignment = 1
-
-[node name="Tagline" type="Label" parent="CenterContainer/VBox/TitleBanner"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.549, 0.22, 1)
-text = "RUN. SHOOT. SURVIVE. DON'T STOP."
 horizontal_alignment = 1
 
 [node name="MenuBackdrop" type="PanelContainer" parent="CenterContainer/VBox"]
@@ -120,70 +208,86 @@ theme_override_styles/panel = SubResource("StyleBoxEmpty_MenuRow")
 
 [node name="MainContentRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop"]
 layout_mode = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 30
 alignment = 1
 
-[node name="ButtonsPlate" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
-layout_mode = 2
-size_flags_vertical = 8
-
-[node name="ControlButtons" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate"]
+[node name="ControlButtons" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1
 
-[node name="PlayButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons"]
+[node name="PlayButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(158, 24)
+custom_minimum_size = Vector2(166, 25)
 layout_mode = 2
 theme_type_variation = &"PrimaryButton"
 text = "PLAY MISSION"
+icon = ExtResource("11_iplay")
 
-[node name="ControlsButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons"]
+[node name="ControlsButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(158, 22)
+custom_minimum_size = Vector2(166, 23)
 layout_mode = 2
 text = "CONTROLS"
+icon = ExtResource("12_ictrl")
 
-[node name="AudioRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons"]
+[node name="AudioRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1
 
-[node name="SfxCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons/AudioRow"]
+[node name="SfxCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons/AudioRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(76, 22)
+custom_minimum_size = Vector2(80, 23)
 layout_mode = 2
 button_pressed = true
 text = "SFX:ON"
 
-[node name="MusicCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons/AudioRow"]
+[node name="MusicCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons/AudioRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(76, 22)
+custom_minimum_size = Vector2(80, 23)
 layout_mode = 2
 button_pressed = true
 text = "BGM:ON"
 
-[node name="ExitButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons"]
+[node name="ExitButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(158, 22)
+custom_minimum_size = Vector2(166, 23)
 layout_mode = 2
 text = "EXIT GAME"
+icon = ExtResource("13_iexit")
 
 [node name="RecordPanel" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
-custom_minimum_size = Vector2(148, 0)
+custom_minimum_size = Vector2(158, 0)
 layout_mode = 2
 size_flags_vertical = 8
+theme_override_styles/panel = SubResource("StyleBoxTexture_RecordCard")
 
 [node name="RecordBox" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 5
 
-[node name="RecordHeader" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox"]
+[node name="RecordHeaderRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="TrophyIcon" type="TextureRect" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox/RecordHeaderRow"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("14_itrophy")
+stretch_mode = 5
+
+[node name="RecordHeader" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox/RecordHeaderRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
 text = "SURVIVOR RECORD"
+
+[node name="Divider" type="ColorRect" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+color = Color(0.22, 0.847, 0.949, 0.35)
 
 [node name="HighScoreLabel" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox"]
 unique_name_in_owner = true
@@ -260,7 +364,8 @@ text = "- AUTO-RUN: CONTINUOUS RIGHTWARD RUN
 
 [node name="CloseControlsButton" type="Button" parent="ControlsPanel/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(158, 22)
+custom_minimum_size = Vector2(166, 24)
 layout_mode = 2
 theme_type_variation = &"PrimaryButton"
 text = "BACK TO MENU"
+icon = ExtResource("11_iplay")
