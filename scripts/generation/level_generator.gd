@@ -337,6 +337,12 @@ class ChunkNode extends Node2D:
 					src_rect = Rect2(0, 0, 16, 16)  # Dark asphalt curb
 				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y, 16, 16), src_rect)
 
+				# Dusk horizon warm specular highlight on curb top & wet asphalt puddles
+				draw_rect(Rect2(tx, ground_y, 16, 1), Color(0.95, 0.55, 0.25, 0.28), true)
+				if (i % 7) == 4:
+					draw_rect(Rect2(tx + 2.0, ground_y + 11.0, 11.0, 2.0), Color(0.45, 0.72, 0.95, 0.32), true)
+					draw_rect(Rect2(tx + 4.0, ground_y + 11.0, 6.0, 1.0), Color(1.0, 0.65, 0.30, 0.45), true)
+
 				# Dirt/concrete sub-layer
 				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y + 16, 16, 16), Rect2(32, 0, 16, 16))
 				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y + 32, 16, 16), Rect2(32, 0, 16, 16))

@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://assets/environment/parallax_sky.png" id="2_sky"]
 [ext_resource type="Texture2D" path="res://assets/environment/parallax_skyline_distant.png" id="3_dist"]
 [ext_resource type="Texture2D" path="res://assets/environment/parallax_buildings_mid.png" id="4_mid"]
+[ext_resource type="Texture2D" path="res://assets/environment/parallax_overpass_fore.png" id="4_fore"]
 [ext_resource type="Script" path="res://scripts/generation/level_generator.gd" id="5_gen"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="6_player"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/rear_horde.tscn" id="7_horde"]
@@ -15,7 +16,7 @@
 script = ExtResource("1_world")
 
 [node name="ParallaxSky" type="Parallax2D" parent="."]
-scroll_scale = Vector2(0.05, 0)
+scroll_scale = Vector2(0.02, 0)
 repeat_size = Vector2(480, 0)
 repeat_times = 3
 
@@ -24,7 +25,7 @@ texture = ExtResource("2_sky")
 centered = false
 
 [node name="ParallaxDistant" type="Parallax2D" parent="."]
-scroll_scale = Vector2(0.2, 0)
+scroll_scale = Vector2(0.1, 0)
 repeat_size = Vector2(480, 0)
 repeat_times = 3
 
@@ -33,12 +34,21 @@ texture = ExtResource("3_dist")
 centered = false
 
 [node name="ParallaxMid" type="Parallax2D" parent="."]
-scroll_scale = Vector2(0.5, 0)
+scroll_scale = Vector2(0.25, 0)
 repeat_size = Vector2(480, 0)
 repeat_times = 3
 
 [node name="Sprite2D" type="Sprite2D" parent="ParallaxMid"]
 texture = ExtResource("4_mid")
+centered = false
+
+[node name="ParallaxFore" type="Parallax2D" parent="."]
+scroll_scale = Vector2(0.6, 0)
+repeat_size = Vector2(480, 0)
+repeat_times = 3
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxFore"]
+texture = ExtResource("4_fore")
 centered = false
 
 [node name="LevelGenerator" type="Node2D" parent="."]

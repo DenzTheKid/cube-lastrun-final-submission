@@ -13,9 +13,13 @@ class_name GameOverMenu
 @onready var retry_btn: Button = %RetryButton
 @onready var menu_btn: Button = %MenuButton
 
+const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	panel.visible = false
+	UI_ANIMATOR.style_button(retry_btn, true)
+	UI_ANIMATOR.style_button(menu_btn, false)
 	if GameManager:
 		GameManager.game_over.connect(_on_game_over)
 	retry_btn.pressed.connect(_on_retry_pressed)

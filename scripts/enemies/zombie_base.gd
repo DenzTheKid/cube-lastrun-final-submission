@@ -1,11 +1,16 @@
 extends CharacterBody2D
 class_name ZombieBase
 
-# Base class for front-facing zombie enemies.
-# Handles movement towards the player, gravity, taking shotgun damage,
-# hurt flash, death effects, and damaging the player.
+# Base class for front-facing zombie enemies (AAA Indie Overhaul).
+# Features:
+# - Pure white 2-frame hit-flash shader (hit_flash.gdshader)
+# - Directional knockback + squash-and-stretch impact reaction
+# - Armor spark shower when shooting Brute riot armor
+# - 25ms micro-hitstop, voxel debris burst, road splatter decal, and floating score popups on death
 
 const BLOOD_BURST_SCENE: PackedScene = preload("res://scenes/effects/blood_burst.tscn")
+const SPARK_SCENE: PackedScene = preload("res://scenes/effects/bullet_spark.tscn")
+const HIT_FLASH_SHADER: Shader = preload("res://shaders/hit_flash.gdshader")
 
 @export var max_hp: int = 1
 @export var move_speed: float = 30.0
@@ -17,6 +22,8 @@ var current_hp: int = 1
 var is_dead: bool = false
 var _anim_timer: float = 0.0
 var _anim_frame: int = 0
+var _shader_mat: ShaderMaterial = null
+var _visual_scale: Vector2 = Vector2.ONE
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -29,11 +36,15 @@ func _ready() -> void:
 	if hitbox:
 		hitbox.body_entered.connect(_on_hitbox_body_entered)
 
+	if sprite:
+		_shader_mat = ShaderMaterial.new()
+		_shader_mat.shader = HIT_FLASH_SHADER
+		sprite.material = _shader_mat
+
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
-	# Move toward the player (to the left)
 	velocity.x = -move_speed
 	if not is_on_floor():
 		velocity.y += gravity * delta
@@ -41,11 +52,17 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_animation(delta)
 
+	# Smoothly recover impact squash & stretch
+	_visual_scale = _visual_scale.lerp(Vector2.ONE, 1.0 - exp(-16.0 * delta))
+	if sprite:
+		sprite.scale = _visual_scale
+
 	# Despawn if far behind player / horde
 	var root: Node = get_tree().current_scene
-	var player: Node2D = root.find_child("Player", true, false) as Node2D
-	if player and global_position.x < player.global_position.x - 320.0:
-		queue_free()
+	if root:
+		var player: Node2D = root.find_child("Player", true, false) as Node2D
+		if player and global_position.x < player.global_position.x - 320.0:
+			queue_free()
 
 func _update_animation(delta: float) -> void:
 	_anim_timer += delta
@@ -63,18 +80,30 @@ func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 		AudioManager.play_sfx("zombie_hit", 0.1)
 		AudioManager.play_sfx("impact_flesh", 0.08)
 
-	var blood = BLOOD_BURST_SCENE.instantiate()
-	blood.global_position = global_position
-	get_tree().current_scene.add_child(blood)
+	var root: Node = get_tree().current_scene
+	if root:
+		var blood = BLOOD_BURST_SCENE.instantiate()
+		blood.global_position = global_position
+		root.add_child(blood)
 
-	# Flash white/red
-	var tw: Tween = create_tween()
-	sprite.modulate = Color(2.5, 0.4, 0.4, 1.0)
-	tw.tween_property(sprite, "modulate", Color.WHITE, 0.12)
+		# Brute Riot Armor sparks when shot
+		if max_hp >= 4:
+			var sp = SPARK_SCENE.instantiate()
+			sp.global_position = global_position + Vector2(-4.0, -2.0)
+			root.add_child(sp)
 
-	# Knockback
+	# Pure white 2-frame hit-flash via hit_flash.gdshader
+	if _shader_mat:
+		_shader_mat.set_shader_parameter("flash_modifier", 1.0)
+		var tw: Tween = create_tween()
+		tw.tween_method(func(v: float): _shader_mat.set_shader_parameter("flash_modifier", v), 1.0, 0.0, 0.09)
+
+	_visual_scale = Vector2(0.80, 1.24)
+
+	# Directional Knockback
 	if knockback_dir != Vector2.ZERO:
-		velocity.x += knockback_dir.x * 60.0
+		velocity.x += knockback_dir.x * 75.0
+		global_position.x += signf(knockback_dir.x) * 3.5
 
 	if current_hp <= 0:
 		die()
@@ -90,13 +119,49 @@ func die() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("zombie_death", 0.15)
 
+	var mult: int = 1
 	if GameManager:
-		GameManager.add_kill(score_value)
+		var next_c: int = GameManager.combo_count + 1
+		if next_c >= 5:
+			mult = 5
+		elif next_c >= 3:
+			mult = 3
+		elif next_c >= 2:
+			mult = 2
+		GameManager.add_kill(score_value * mult)
+
+	# 25ms micro-hitstop, medium trauma shake, voxel debris chunks & floating score popup
+	if GameFeel:
+		GameFeel.hitstop(0.025, 0.08)
+		GameFeel.camera_shake(0.35)
+
+		var debris_col := Color(0.35, 0.65, 0.35)
+		if max_hp >= 4:
+			debris_col = Color(0.45, 0.55, 0.65)
+		elif move_speed >= 80.0:
+			debris_col = Color(0.75, 0.18, 0.22)
+		elif max_hp == 2:
+			debris_col = Color(0.35, 0.85, 0.25)
+		GameFeel.spawn_voxel_debris(global_position, debris_col, 7)
+
+		var total_pts: int = score_value * mult
+		var popup_txt: String = "+%d" % total_pts
+		var popup_col: Color = Color(1.0, 0.88, 0.28)
+		var popup_scale: float = 1.0
+		if mult >= 3:
+			popup_txt = "+%d x%d CRIT!" % [total_pts, mult]
+			popup_col = Color(1.0, 0.38, 0.22)
+			popup_scale = 1.22
+		elif mult == 2:
+			popup_txt = "+%d x2!" % total_pts
+			popup_col = Color(1.0, 0.68, 0.22)
+			popup_scale = 1.10
+		GameFeel.spawn_floating_text(global_position + Vector2(0, -10), popup_txt, popup_col, popup_scale)
 
 	# Death tween: squash, fade out, queue_free
 	var tw: Tween = create_tween()
-	tw.tween_property(sprite, "scale", Vector2(1.3, 0.2), 0.1)
-	tw.tween_property(sprite, "modulate:a", 0.0, 0.1)
+	tw.tween_property(sprite, "scale", Vector2(1.45, 0.18), 0.10)
+	tw.tween_property(sprite, "modulate:a", 0.0, 0.10)
 	tw.tween_callback(queue_free)
 
 func _on_hitbox_body_entered(body: Node2D) -> void:

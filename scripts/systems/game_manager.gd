@@ -8,6 +8,7 @@ signal game_over(final_score: int, distance: float, survival_time: float, kills:
 signal score_updated(new_score: int)
 signal distance_updated(distance_meters: float)
 signal zombie_killed(total_kills: int)
+signal combo_updated(combo_count: int, multiplier: int)
 signal horde_proximity_changed(proximity: float) # 0.0 (far) to 1.0 (caught)
 
 enum State { MENU, PLAYING, PAUSED, GAME_OVER }
@@ -18,6 +19,10 @@ var score: int = 0
 var distance: float = 0.0 # world units / 10 = meters
 var survival_time: float = 0.0
 var zombie_kills: int = 0
+var combo_count: int = 0
+var combo_multiplier: int = 1
+var combo_timer: float = 0.0
+const COMBO_WINDOW: float = 3.2
 var high_score: int = 0
 var max_distance: float = 0.0
 
@@ -37,6 +42,10 @@ func _process(delta: float) -> void:
 		# Difficulty increases slowly over distance and time
 		difficulty_factor = 1.0 + (distance / 500.0) + (survival_time / 90.0)
 		difficulty_factor = clampf(difficulty_factor, 1.0, 2.5)
+		if combo_count > 0:
+			combo_timer -= delta
+			if combo_timer <= 0.0:
+				reset_combo()
 
 func start_game() -> void:
 	current_state = State.PLAYING
@@ -44,9 +53,13 @@ func start_game() -> void:
 	distance = 0.0
 	survival_time = 0.0
 	zombie_kills = 0
+	combo_count = 0
+	combo_multiplier = 1
+	combo_timer = 0.0
 	difficulty_factor = 1.0
 	get_tree().paused = false
 	game_started.emit()
+	combo_updated.emit(combo_count, combo_multiplier)
 	if AudioManager:
 		AudioManager.play_music("gameplay")
 
@@ -62,9 +75,27 @@ func add_kill(kill_score: int = 100) -> void:
 	if current_state != State.PLAYING:
 		return
 	zombie_kills += 1
+	combo_count += 1
+	combo_timer = COMBO_WINDOW
+	if combo_count >= 5:
+		combo_multiplier = 5
+	elif combo_count >= 3:
+		combo_multiplier = 3
+	elif combo_count >= 2:
+		combo_multiplier = 2
+	else:
+		combo_multiplier = 1
 	score += kill_score
 	zombie_killed.emit(zombie_kills)
+	combo_updated.emit(combo_count, combo_multiplier)
 	score_updated.emit(score)
+
+func reset_combo() -> void:
+	if combo_count > 0 or combo_multiplier > 1:
+		combo_count = 0
+		combo_multiplier = 1
+		combo_timer = 0.0
+		combo_updated.emit(combo_count, combo_multiplier)
 
 func update_horde_proximity(proximity: float) -> void:
 	if current_state == State.PLAYING:

@@ -1,15 +1,14 @@
 extends Node2D
 class_name Shotgun
 
-# Double-barrel shotgun weapon system for CUBE: LAST RUN V1.2.
+# Double-barrel shotgun weapon system for CUBE: LAST RUN (AAA Indie Overhaul).
 # Features:
-# - Full, unrestricted 360-degree continuous directional aiming.
-# - Responsive zero-latency mouse cursor world tracking.
-# - Gamepad analog stick and keyboard continuous steering.
-# - Vertical flip handling on WeaponVisuals container (no upside-down weapon).
-# - Pixel-accurate grip pivot and muzzle projectile alignment.
-# - Continuous recoil-jump vector physics across all angles.
-# - Atomic reload state machine with dry-fire click feedback.
+# - Full, unrestricted 360-degree continuous directional aiming
+# - Responsive zero-latency mouse cursor world tracking + gamepad/keyboard support
+# - Vertical flip handling on WeaponVisuals container (no upside-down weapon)
+# - Dynamic PointLight2D muzzle flash lighting spike
+# - Spinning brass shell casing ejection & recoil kickback animation
+# - Continuous 360-degree recoil-jump vector physics
 
 signal ammo_changed(current_ammo: int, max_ammo: int)
 signal reload_started(duration: float)
@@ -32,6 +31,7 @@ var reload_timer: float = 0.0
 var aim_direction: Vector2 = Vector2.RIGHT
 var target_rotation: float = 0.0
 var _using_gamepad_or_keys: bool = false
+var _muzzle_light: PointLight2D = null
 
 @onready var weapon_visuals: Node2D = $WeaponVisuals
 @onready var gun_sprite: Sprite2D = $WeaponVisuals/GunSprite
@@ -42,26 +42,44 @@ var _using_gamepad_or_keys: bool = false
 
 const PELLET_SCENE: PackedScene = preload("res://scenes/player/shotgun_pellet.tscn")
 const RECOIL_DUST_SCENE: PackedScene = preload("res://scenes/effects/recoil_dust.tscn")
-
+const LIGHT_TEXTURE: Texture2D = preload("res://assets/environment/point_light_radial.png")
 
 func _ready() -> void:
 	current_ammo = max_ammo
 	muzzle_flash.visible = false
-	flash_timer.timeout.connect(func(): muzzle_flash.visible = false)
+
+	# Dynamic PointLight2D for instantaneous muzzle flash illumination
+	_muzzle_light = PointLight2D.new()
+	_muzzle_light.name = "MuzzleLight"
+	_muzzle_light.texture = LIGHT_TEXTURE
+	_muzzle_light.texture_scale = 2.2
+	_muzzle_light.color = Color(1.0, 0.72, 0.28, 1.0)
+	_muzzle_light.energy = 0.0
+	_muzzle_light.enabled = false
+	muzzle.add_child(_muzzle_light)
+
+	flash_timer.timeout.connect(func():
+		muzzle_flash.visible = false
+		if _muzzle_light:
+			_muzzle_light.enabled = false
+			_muzzle_light.energy = 0.0
+	)
 	set_aim_direction(Vector2.RIGHT)
 	ammo_changed.emit(current_ammo, max_ammo)
 
 func _process(delta: float) -> void:
 	_handle_aiming(delta)
 	_handle_reloading(delta)
+	if _muzzle_light and _muzzle_light.enabled:
+		_muzzle_light.energy = maxf(0.0, _muzzle_light.energy - delta * 38.0)
+		if flash_timer.time_left < 0.03:
+			muzzle_flash.frame = 1
 
 func _handle_aiming(delta: float) -> void:
-	# 1. Check Gamepad right stick analog input
 	var gp_aim: Vector2 = Vector2.ZERO
 	gp_aim.x = Input.get_joy_axis(0, JOY_AXIS_RIGHT_X)
 	gp_aim.y = Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y)
 
-	# 2. Check Keyboard directional keys
 	var kb_x: float = Input.get_axis("ui_left", "ui_right")
 	var kb_y: float = Input.get_axis("ui_up", "ui_down")
 	var kb_vec: Vector2 = Vector2(kb_x, kb_y)
@@ -78,7 +96,6 @@ func _handle_aiming(delta: float) -> void:
 		rotation = lerp_angle(rotation, target_rotation, 1.0 - exp(-25.0 * delta))
 	else:
 		_using_gamepad_or_keys = false
-		# 3. Direct mouse cursor world tracking (zero input lag, crisp 1:1 precision)
 		var mouse_world: Vector2 = get_global_mouse_position()
 		var to_mouse: Vector2 = mouse_world - global_position
 		if to_mouse.length_squared() > 1.0:
@@ -86,7 +103,6 @@ func _handle_aiming(delta: float) -> void:
 			target_rotation = aim_direction.angle()
 			rotation = target_rotation
 
-	# 4. Clean vertical flipping on WeaponVisuals when aiming backward/left
 	var is_aiming_left: bool = aim_direction.x < -0.01
 	if is_aiming_left:
 		weapon_visuals.scale.y = -1.0
@@ -110,9 +126,9 @@ func _handle_reloading(delta: float) -> void:
 		return
 	reload_timer += delta
 
-	# Subtle break-action chamber tilt during reload
+	# Break-action chamber tilt during reload
 	if reload_timer < reload_time * 0.65:
-		gun_sprite.rotation = deg_to_rad(12.0)
+		gun_sprite.rotation = deg_to_rad(14.0)
 	else:
 		gun_sprite.rotation = 0.0
 
@@ -144,21 +160,25 @@ func shoot() -> bool:
 	current_ammo -= 1
 	ammo_changed.emit(current_ammo, max_ammo)
 
-	# Sound & Muzzle flash
+	# Multi-frame star muzzle flash + instantaneous PointLight2D spike
 	muzzle_flash.visible = true
+	muzzle_flash.frame = 0
+	muzzle_flash.scale = Vector2(1.25, 1.25)
+	var ftw: Tween = create_tween()
+	ftw.tween_property(muzzle_flash, "scale", Vector2.ONE, 0.06)
+	if _muzzle_light:
+		_muzzle_light.enabled = true
+		_muzzle_light.energy = 2.4
 	flash_timer.start(0.06)
 
 	# CONTINUOUS 360-DEGREE RECOIL CALCULATION
 	var recoil_force: Vector2 = Vector2.ZERO
 
-	# 1. Vertical recoil: downward shooting (aim_direction.y > 0) launches player UPWARD
 	if aim_direction.y > 0.15:
-		# Continuous upward impulse proportional to downward angle component
 		recoil_force.y = -aim_direction.y * recoil_jump_strength
 		if AudioManager:
 			AudioManager.play_sfx("recoil")
 			AudioManager.play_sfx("shotgun_acoustic", 0.04)
-		# Spawn recoil dust puff at muzzle
 		var dust = RECOIL_DUST_SCENE.instantiate()
 		dust.global_position = muzzle.global_position
 		get_tree().current_scene.add_child(dust)
@@ -168,29 +188,32 @@ func shoot() -> bool:
 			AudioManager.play_sfx("shotgun")
 			AudioManager.play_sfx("shotgun_acoustic", 0.04)
 
-	# 2. Horizontal recoil:
-	# If shooting diagonally downward and forward, provide forward vault momentum
 	if aim_direction.y > 0.25 and aim_direction.x > 0.15:
 		recoil_force.x = horizontal_vault_boost * aim_direction.x
 	else:
-		# Standard reactive kick opposite to firing direction
 		recoil_force.x = -aim_direction.x * standard_horizontal_kick
 
 	recoil_impulse.emit(recoil_force)
 
-	# Spawn buckshot pellets along continuous aim direction
+	# Spawn high-velocity tracer buckshot pellets
 	_spawn_pellets()
 
-	# Visual kick tween
-	var tw: Tween = create_tween()
-	gun_sprite.position.x = -5.0
-	tw.tween_property(gun_sprite, "position:x", 0.0, 0.10)
+	# Eject spinning brass shell casing from breech
+	if GameFeel and ejection_port:
+		var eject_vec := Vector2(-aim_direction.x if absf(aim_direction.x) > 0.2 else -1.0, -1.0).normalized()
+		GameFeel.spawn_shell_casing(ejection_port.global_position, eject_vec)
 
-	# Eject shell casing sound
+	# Crisp weapon recoil kickback snap
+	var tw: Tween = create_tween()
+	gun_sprite.position.x = -6.5
+	gun_sprite.scale = Vector2(0.85, 1.18)
+	tw.set_parallel(true)
+	tw.tween_property(gun_sprite, "position:x", 0.0, 0.11).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(gun_sprite, "scale", Vector2.ONE, 0.11)
+
 	if AudioManager:
 		AudioManager.play_sfx("shell_eject", 0.1)
 
-	# Auto-reload if empty
 	if current_ammo == 0:
 		start_reload()
 
@@ -201,6 +224,9 @@ func start_reload() -> void:
 		return
 	is_reloading = true
 	reload_timer = 0.0
+	# Eject spent shells on break-action open
+	if GameFeel and ejection_port:
+		GameFeel.spawn_shell_casing(ejection_port.global_position, Vector2(-0.8, -1.0))
 	reload_started.emit(reload_time)
 
 func _spawn_pellets() -> void:

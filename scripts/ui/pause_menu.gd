@@ -10,9 +10,14 @@ class_name PauseMenu
 @onready var sfx_check: CheckButton = %PauseSfxCheck
 @onready var music_check: CheckButton = %PauseMusicCheck
 
+const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	panel.visible = false
+	UI_ANIMATOR.style_button(resume_btn, true)
+	UI_ANIMATOR.style_button(restart_btn, false)
+	UI_ANIMATOR.style_button(menu_btn, false)
 	resume_btn.pressed.connect(_on_resume_pressed)
 	restart_btn.pressed.connect(_on_restart_pressed)
 	menu_btn.pressed.connect(_on_menu_pressed)
