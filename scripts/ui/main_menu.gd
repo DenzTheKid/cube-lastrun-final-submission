@@ -21,6 +21,7 @@ const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 @onready var bg_skyline: TextureRect = $BgSkyline
 @onready var bg_buildings: TextureRect = $BgBuildings
 @onready var bg_overpass: TextureRect = $BgOverpass
+@onready var center_container: CenterContainer = $CenterContainer
 
 var _sfx_enabled: bool = true
 var _music_enabled: bool = true
@@ -77,9 +78,9 @@ func _setup_layout_and_background() -> void:
 	_time_of_day.name = "TimeOfDay"
 	add_child(_time_of_day)
 	_time_of_day.bind_layers(sky_mat, bg_skyline, bg_buildings, bg_overpass)
-	# Default lobby background to dusk with the sun low and setting behind the skyline
+	# Default lobby background to dusk with the sun low and setting cleanly in the right sky gap
 	if not _time_of_day._debug_override_active:
-		_time_of_day.set_fixed_time(0.42)
+		_time_of_day.set_fixed_time(0.36)
 
 func _setup_buttons_and_focus() -> void:
 	UI_ANIMATOR.style_button(play_btn, true)
@@ -110,6 +111,9 @@ func _on_play_pressed() -> void:
 	if _is_transitioning:
 		return
 	_is_transitioning = true
+	play_btn.disabled = true
+	controls_btn.disabled = true
+	exit_btn.disabled = true
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
 
@@ -129,6 +133,8 @@ func _on_play_pressed() -> void:
 func _on_controls_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
+	if center_container:
+		center_container.visible = false
 	controls_panel.visible = true
 	close_controls_btn.grab_focus()
 
@@ -136,6 +142,8 @@ func _on_close_controls_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
 	controls_panel.visible = false
+	if center_container:
+		center_container.visible = true
 	controls_btn.grab_focus()
 
 func _on_sfx_toggled(toggled_on: bool) -> void:

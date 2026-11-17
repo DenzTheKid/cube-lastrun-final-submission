@@ -34,7 +34,9 @@ var is_invulnerable: bool = false
 # Jump helpers
 var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
-var _spawn_input_grace_frames: int = 2
+var _spawn_input_grace_frames: int = 6
+var _wait_shoot_release: bool = false
+var _wait_jump_release: bool = false
 const COYOTE_TIME: float = 0.12
 const JUMP_BUFFER_TIME: float = 0.12
 
@@ -69,6 +71,9 @@ var _visor_light: PointLight2D = null
 @onready var invuln_timer: Timer = $InvulnTimer
 
 func _ready() -> void:
+	velocity = Vector2.ZERO
+	_wait_shoot_release = Input.is_action_pressed("shoot")
+	_wait_jump_release = Input.is_action_pressed("jump")
 	current_hp = max_hp
 	health_changed.emit(current_hp, max_hp)
 
@@ -175,12 +180,21 @@ func _physics_process(delta: float) -> void:
 
 	_was_on_floor = is_on_floor()
 
+	if _wait_shoot_release and not Input.is_action_pressed("shoot"):
+		_wait_shoot_release = false
+	if _wait_jump_release and not Input.is_action_pressed("jump"):
+		_wait_jump_release = false
+
 	if _spawn_input_grace_frames > 0:
 		_spawn_input_grace_frames -= 1
 		jump_buffer_timer = 0.0
+		if Input.is_action_pressed("shoot"):
+			_wait_shoot_release = true
+		if Input.is_action_pressed("jump"):
+			_wait_jump_release = true
 	else:
 		# Jump buffering
-		if Input.is_action_just_pressed("jump"):
+		if not _wait_jump_release and Input.is_action_just_pressed("jump"):
 			jump_buffer_timer = JUMP_BUFFER_TIME
 		else:
 			jump_buffer_timer -= delta
@@ -194,7 +208,7 @@ func _physics_process(delta: float) -> void:
 			velocity.y = jump_velocity * 0.45
 
 		# Shooting input
-		if Input.is_action_just_pressed("shoot"):
+		if not _wait_shoot_release and Input.is_action_just_pressed("shoot"):
 			shotgun.shoot()
 
 		# Manual reload input

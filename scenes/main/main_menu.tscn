@@ -8,44 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/lobby_road.png" id="6_road"]
 [ext_resource type="Theme" path="res://assets/ui/game_theme.tres" id="7_theme"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_MenuCol"]
-content_margin_left = 12.0
-content_margin_top = 10.0
-content_margin_right = 12.0
-content_margin_bottom = 10.0
-bg_color = Color(0.039, 0.043, 0.078, 0.86)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.18, 0.212, 0.349, 1)
-anti_aliasing = false
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_RecordCard"]
-content_margin_left = 10.0
-content_margin_top = 8.0
-content_margin_right = 10.0
-content_margin_bottom = 8.0
-bg_color = Color(0.063, 0.071, 0.129, 0.94)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.18, 0.212, 0.349, 1)
-anti_aliasing = false
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Modal"]
-content_margin_left = 12.0
-content_margin_top = 10.0
-content_margin_right = 12.0
-content_margin_bottom = 10.0
-bg_color = Color(0.063, 0.071, 0.129, 0.98)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.949, 0.549, 0.22, 1)
-anti_aliasing = false
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_MenuRow"]
 
 [node name="MainMenu" type="Control"]
 texture_filter = 1
@@ -153,61 +116,64 @@ horizontal_alignment = 1
 
 [node name="MenuBackdrop" type="PanelContainer" parent="CenterContainer/VBox"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_MenuCol")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_MenuRow")
 
 [node name="MainContentRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 24
 alignment = 1
 
-[node name="ControlButtons" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
+[node name="ButtonsPlate" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="ControlButtons" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate"]
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1
 
-[node name="PlayButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
+[node name="PlayButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(156, 22)
+custom_minimum_size = Vector2(158, 24)
 layout_mode = 2
 theme_type_variation = &"PrimaryButton"
 text = "PLAY MISSION"
 
-[node name="ControlsButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
+[node name="ControlsButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(156, 20)
+custom_minimum_size = Vector2(158, 22)
 layout_mode = 2
 text = "CONTROLS"
 
-[node name="AudioRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
+[node name="AudioRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons"]
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1
 
-[node name="SfxCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons/AudioRow"]
+[node name="SfxCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons/AudioRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(75, 20)
+custom_minimum_size = Vector2(76, 22)
 layout_mode = 2
 button_pressed = true
 text = "SFX:ON"
 
-[node name="MusicCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons/AudioRow"]
+[node name="MusicCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons/AudioRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(75, 20)
+custom_minimum_size = Vector2(76, 22)
 layout_mode = 2
 button_pressed = true
 text = "BGM:ON"
 
-[node name="ExitButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
+[node name="ExitButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ButtonsPlate/ControlButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(156, 20)
+custom_minimum_size = Vector2(158, 22)
 layout_mode = 2
 text = "EXIT GAME"
 
 [node name="RecordPanel" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
-size_flags_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_RecordCard")
+size_flags_vertical = 8
 
 [node name="RecordBox" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel"]
 layout_mode = 2
@@ -270,7 +236,6 @@ offset_right = 180.0
 offset_bottom = 108.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_Modal")
 
 [node name="VBox" type="VBoxContainer" parent="ControlsPanel"]
 layout_mode = 2
@@ -295,7 +260,7 @@ text = "- AUTO-RUN: CONTINUOUS RIGHTWARD RUN
 
 [node name="CloseControlsButton" type="Button" parent="ControlsPanel/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(156, 20)
+custom_minimum_size = Vector2(158, 22)
 layout_mode = 2
 theme_type_variation = &"PrimaryButton"
 text = "BACK TO MENU"

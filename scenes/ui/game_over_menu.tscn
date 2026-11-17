@@ -3,19 +3,6 @@
 [ext_resource type="Script" path="res://scripts/ui/game_over_menu.gd" id="1_over"]
 [ext_resource type="Theme" path="res://assets/ui/game_theme.tres" id="2_theme"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
-content_margin_left = 16.0
-content_margin_top = 12.0
-content_margin_right = 16.0
-content_margin_bottom = 12.0
-bg_color = Color(0.063, 0.071, 0.129, 0.96)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.902, 0.224, 0.384, 1)
-anti_aliasing = false
-
 [node name="GameOverMenu" type="CanvasLayer"]
 process_mode = 3
 layer = 15
@@ -36,7 +23,6 @@ offset_bottom = 95.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_theme")
-theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 
 [node name="VBox" type="VBoxContainer" parent="GameOverPanel"]
 layout_mode = 2

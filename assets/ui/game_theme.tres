@@ -2,110 +2,102 @@
 
 [ext_resource type="FontFile" path="res://assets/fonts/Silkscreen-Regular.ttf" id="1_body"]
 [ext_resource type="FontFile" path="res://assets/fonts/PressStart2P-Regular.ttf" id="2_display"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_btn_primary_idle.png" id="3_pri_idle"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_btn_primary_hover.png" id="4_pri_hover"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_btn_primary_pressed.png" id="5_pri_pressed"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_btn_secondary_idle.png" id="6_sec_idle"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_btn_secondary_hover.png" id="7_sec_hover"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_btn_secondary_pressed.png" id="8_sec_pressed"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_btn_disabled.png" id="9_btn_dis"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_panel_plate.png" id="10_panel"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_BtnIdle"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnIdle"]
 content_margin_left = 8.0
 content_margin_top = 4.0
 content_margin_right = 8.0
-content_margin_bottom = 4.0
-bg_color = Color(0.063, 0.071, 0.129, 0.96)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.18, 0.212, 0.349, 1)
-anti_aliasing = false
+content_margin_bottom = 5.0
+texture = ExtResource("6_sec_idle")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_BtnHover"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnHover"]
 content_margin_left = 10.0
 content_margin_top = 4.0
 content_margin_right = 6.0
-content_margin_bottom = 4.0
-bg_color = Color(0.106, 0.122, 0.22, 0.98)
-border_width_left = 2
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.949, 0.549, 0.22, 1)
-anti_aliasing = false
+content_margin_bottom = 5.0
+texture = ExtResource("7_sec_hover")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_BtnPressed"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnPressed"]
 content_margin_left = 10.0
-content_margin_top = 5.0
+content_margin_top = 6.0
 content_margin_right = 6.0
 content_margin_bottom = 3.0
-bg_color = Color(0.039, 0.043, 0.078, 1)
-border_width_left = 2
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.22, 0.847, 0.949, 1)
-anti_aliasing = false
+texture = ExtResource("8_sec_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_BtnDisabled"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnDisabled"]
 content_margin_left = 8.0
 content_margin_top = 4.0
 content_margin_right = 8.0
-content_margin_bottom = 4.0
-bg_color = Color(0.045, 0.05, 0.09, 0.6)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.137, 0.161, 0.275, 1)
-anti_aliasing = false
+content_margin_bottom = 5.0
+texture = ExtResource("9_btn_dis")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_PriIdle"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriIdle"]
 content_margin_left = 8.0
-content_margin_top = 5.0
+content_margin_top = 4.0
 content_margin_right = 8.0
-content_margin_bottom = 5.0
-bg_color = Color(0.118, 0.09, 0.169, 0.98)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.949, 0.549, 0.22, 1)
-anti_aliasing = false
+content_margin_bottom = 6.0
+texture = ExtResource("3_pri_idle")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_PriHover"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriHover"]
 content_margin_left = 10.0
-content_margin_top = 5.0
+content_margin_top = 4.0
 content_margin_right = 6.0
-content_margin_bottom = 5.0
-bg_color = Color(0.165, 0.114, 0.208, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.949, 0.549, 0.22, 1)
-anti_aliasing = false
+content_margin_bottom = 6.0
+texture = ExtResource("4_pri_hover")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_PriPressed"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_PriPressed"]
 content_margin_left = 10.0
 content_margin_top = 6.0
 content_margin_right = 6.0
 content_margin_bottom = 4.0
-bg_color = Color(0.055, 0.045, 0.09, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.949, 0.549, 0.22, 1)
-anti_aliasing = false
+texture = ExtResource("5_pri_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Panel"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_Panel"]
 content_margin_left = 8.0
 content_margin_top = 6.0
 content_margin_right = 8.0
 content_margin_bottom = 6.0
-bg_color = Color(0.063, 0.071, 0.129, 0.92)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.18, 0.212, 0.349, 1)
-anti_aliasing = false
+texture = ExtResource("10_panel")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_BarBg"]
 bg_color = Color(0.039, 0.043, 0.078, 0.95)
@@ -132,11 +124,11 @@ Button/colors/font_pressed_color = Color(0.22, 0.847, 0.949, 1)
 Button/constants/outline_size = 2
 Button/font_sizes/font_size = 8
 Button/fonts/font = ExtResource("1_body")
-Button/styles/disabled = SubResource("StyleBoxFlat_BtnDisabled")
-Button/styles/focus = SubResource("StyleBoxFlat_BtnHover")
-Button/styles/hover = SubResource("StyleBoxFlat_BtnHover")
-Button/styles/normal = SubResource("StyleBoxFlat_BtnIdle")
-Button/styles/pressed = SubResource("StyleBoxFlat_BtnPressed")
+Button/styles/disabled = SubResource("StyleBoxTexture_BtnDisabled")
+Button/styles/focus = SubResource("StyleBoxTexture_BtnHover")
+Button/styles/hover = SubResource("StyleBoxTexture_BtnHover")
+Button/styles/normal = SubResource("StyleBoxTexture_BtnIdle")
+Button/styles/pressed = SubResource("StyleBoxTexture_BtnPressed")
 HeaderLabel/base_type = &"Label"
 HeaderLabel/colors/font_color = Color(0.22, 0.847, 0.949, 1)
 HeaderLabel/colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
@@ -148,7 +140,7 @@ Label/colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
 Label/constants/outline_size = 2
 Label/font_sizes/font_size = 8
 Label/fonts/font = ExtResource("1_body")
-PanelContainer/styles/panel = SubResource("StyleBoxFlat_Panel")
+PanelContainer/styles/panel = SubResource("StyleBoxTexture_Panel")
 PrimaryButton/base_type = &"Button"
 PrimaryButton/colors/font_color = Color(0.949, 0.549, 0.22, 1)
 PrimaryButton/colors/font_focus_color = Color(0.949, 0.957, 0.98, 1)
@@ -158,11 +150,11 @@ PrimaryButton/colors/font_pressed_color = Color(0.949, 0.549, 0.22, 1)
 PrimaryButton/constants/outline_size = 2
 PrimaryButton/font_sizes/font_size = 8
 PrimaryButton/fonts/font = ExtResource("1_body")
-PrimaryButton/styles/disabled = SubResource("StyleBoxFlat_BtnDisabled")
-PrimaryButton/styles/focus = SubResource("StyleBoxFlat_PriHover")
-PrimaryButton/styles/hover = SubResource("StyleBoxFlat_PriHover")
-PrimaryButton/styles/normal = SubResource("StyleBoxFlat_PriIdle")
-PrimaryButton/styles/pressed = SubResource("StyleBoxFlat_PriPressed")
+PrimaryButton/styles/disabled = SubResource("StyleBoxTexture_BtnDisabled")
+PrimaryButton/styles/focus = SubResource("StyleBoxTexture_PriHover")
+PrimaryButton/styles/hover = SubResource("StyleBoxTexture_PriHover")
+PrimaryButton/styles/normal = SubResource("StyleBoxTexture_PriIdle")
+PrimaryButton/styles/pressed = SubResource("StyleBoxTexture_PriPressed")
 ProgressBar/styles/background = SubResource("StyleBoxFlat_BarBg")
 ProgressBar/styles/fill = SubResource("StyleBoxFlat_BarFill")
 TitleMain/base_type = &"Label"

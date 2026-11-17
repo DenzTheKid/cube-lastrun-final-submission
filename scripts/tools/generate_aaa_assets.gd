@@ -9,10 +9,11 @@ extends SceneTree
 const OUTLINE := Color8(10, 11, 20, 255)
 
 func _init() -> void:
-	print("=== Generating City Skylines, Clustered Windows, Street Lamps & Horde Assets ===")
+	print("=== Generating City Skylines, Clustered Windows, Street Lamps, Horde & Pixel UI Plates ===")
 	_make_clean_horde_wall()
 	_make_foreground_overpass()
 	_make_city_skylines()
+	_make_pixel_button_plates()
 	print("=== Asset Generation Complete ===")
 	quit(0)
 
@@ -302,3 +303,128 @@ func _make_city_skylines() -> void:
 			floor_num += 1
 
 	mid.save_png("res://assets/environment/parallax_buildings_mid.png")
+
+func _draw_pixel_keycap_plate(w: int, h: int, top_col: Color, bot_col: Color, hi_rim: Color, sh_rim: Color, border_col: Color, bracket_col: Color, pressed: bool) -> Image:
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var mid_y: int = h / 2
+	for y in range(h):
+		for x in range(w):
+			# 1px pixel-notched corners (classic 16-bit chamfered pixel corner, not rounded)
+			if (x == 0 or x == w - 1) and (y == 0 or y == h - 1):
+				continue
+			# Outer dark outline
+			var on_outer_edge: bool = (x == 0 or x == w - 1 or y == 0 or y == h - 1)
+			var on_inner_corner: bool = ((x == 1 or x == w - 2) and (y == 1 or y == h - 2))
+			if on_outer_edge or on_inner_corner:
+				img.set_pixel(x, y, OUTLINE)
+				continue
+
+			# Border frame (1px inside outer outline)
+			if x == 1 or x == w - 2 or y == 1 or y == h - 2:
+				img.set_pixel(x, y, border_col)
+				continue
+
+			if not pressed:
+				# Top 1px bright specular pixel bevel
+				if y == 2 and x >= 2 and x <= w - 3:
+					img.set_pixel(x, y, hi_rim)
+				# Bottom 2px thick 3D keycap shadow lip
+				elif y >= h - 4 and x >= 2 and x <= w - 3:
+					img.set_pixel(x, y, sh_rim)
+				else:
+					# Stepped 2-tone pixel fill
+					img.set_pixel(x, y, top_col if y < mid_y else bot_col)
+			else:
+				# Pressed state: top shadow lip, flat compressed body
+				if y <= 3 and x >= 2 and x <= w - 3:
+					img.set_pixel(x, y, sh_rim)
+				elif y == h - 3 and x >= 2 and x <= w - 3:
+					img.set_pixel(x, y, hi_rim.darkened(0.25))
+				else:
+					img.set_pixel(x, y, bot_col.darkened(0.15))
+
+	# Hand-pixelled L-shaped corner brackets / rivets inside plate for crisp mechanical look
+	var b_top: int = 3 if pressed else 2
+	var b_bot: int = h - 3 if pressed else h - 5
+	for dx in [2, 3, 4]:
+		_safe_px(img, dx, b_top, bracket_col)
+		_safe_px(img, w - 1 - dx, b_top, bracket_col)
+		_safe_px(img, dx, b_bot, bracket_col)
+		_safe_px(img, w - 1 - dx, b_bot, bracket_col)
+	for dy in range(b_top, min(b_top + 3, h - 2)):
+		_safe_px(img, 2, dy, bracket_col)
+		_safe_px(img, w - 3, dy, bracket_col)
+	for dy in range(max(2, b_bot - 2), b_bot + 1):
+		_safe_px(img, 2, dy, bracket_col)
+		_safe_px(img, w - 3, dy, bracket_col)
+
+	return img
+
+func _make_pixel_button_plates() -> void:
+	# Primary Action Button Plates (PLAY MISSION / RESUME / TRY AGAIN) — Amber/Crimson accent
+	var pri_idle := _draw_pixel_keycap_plate(
+		64, 24,
+		Color("#2e1c2b"), Color("#1e1324"),
+		Color("#f2a85c"), Color("#7a2832"),
+		Color("#f28c38"), Color("#fff3b0"), false
+	)
+	pri_idle.save_png("res://assets/ui/px_btn_primary_idle.png")
+
+	var pri_hover := _draw_pixel_keycap_plate(
+		64, 24,
+		Color("#4a2534"), Color("#2c1626"),
+		Color("#fff3b0"), Color("#9e323c"),
+		Color("#fff3b0"), Color("#f28c38"), false
+	)
+	pri_hover.save_png("res://assets/ui/px_btn_primary_hover.png")
+
+	var pri_pressed := _draw_pixel_keycap_plate(
+		64, 24,
+		Color("#2a1624"), Color("#190d1a"),
+		Color("#f28c38"), Color("#521b24"),
+		Color("#f28c38"), Color("#fff3b0"), true
+	)
+	pri_pressed.save_png("res://assets/ui/px_btn_primary_pressed.png")
+
+	# Secondary Action Button Plates (CONTROLS / EXIT GAME / MAIN MENU) — Dark Navy Slate
+	var sec_idle := _draw_pixel_keycap_plate(
+		64, 24,
+		Color("#1c2240"), Color("#12162b"),
+		Color("#4a588a"), Color("#0a0c18"),
+		Color("#2e3659"), Color("#5c6d9e"), false
+	)
+	sec_idle.save_png("res://assets/ui/px_btn_secondary_idle.png")
+
+	var sec_hover := _draw_pixel_keycap_plate(
+		64, 24,
+		Color("#283056"), Color("#191e3a"),
+		Color("#f2a85c"), Color("#0e1020"),
+		Color("#f28c38"), Color("#fff3b0"), false
+	)
+	sec_hover.save_png("res://assets/ui/px_btn_secondary_hover.png")
+
+	var sec_pressed := _draw_pixel_keycap_plate(
+		64, 24,
+		Color("#141930"), Color("#0e1121"),
+		Color("#38d8f2"), Color("#070812"),
+		Color("#38d8f2"), Color("#f2f4fa"), true
+	)
+	sec_pressed.save_png("res://assets/ui/px_btn_secondary_pressed.png")
+
+	var btn_dis := _draw_pixel_keycap_plate(
+		64, 24,
+		Color("#121422"), Color("#0d0f1a"),
+		Color("#232946"), Color("#080912"),
+		Color("#232946"), Color("#2e3659"), true
+	)
+	btn_dis.save_png("res://assets/ui/px_btn_disabled.png")
+
+	# Clean Framed Pixel Panel Plate (for Record Card, Menu Backdrop, Modals)
+	var panel_plate := _draw_pixel_keycap_plate(
+		64, 32,
+		Color("#101221"), Color("#0c0e1b"),
+		Color("#39446e"), Color("#080912"),
+		Color("#2e3659"), Color("#38d8f2"), false
+	)
+	panel_plate.save_png("res://assets/ui/px_panel_plate.png")
+
