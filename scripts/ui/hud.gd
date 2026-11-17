@@ -5,8 +5,8 @@ class_name HUD
 # Uses the shared res://assets/ui/game_theme.tres Theme resource and ThemePalette
 # while keeping all telemetry values, signals, and update rules unchanged.
 
-const PIP_FULL_TEX: Texture2D = preload("res://assets/ui/hp_pip_full.png")
-const PIP_EMPTY_TEX: Texture2D = preload("res://assets/ui/hp_pip_empty.png")
+const PIP_FULL_TEX: Texture2D = preload("res://assets/ui/px_heart_full.png")
+const PIP_EMPTY_TEX: Texture2D = preload("res://assets/ui/px_heart_empty.png")
 const PALETTE = preload("res://scripts/ui/theme_palette.gd")
 
 @onready var root_control: Control = $RootControl
@@ -21,18 +21,16 @@ const PALETTE = preload("res://scripts/ui/theme_palette.gd")
 @onready var horde_bar: ProgressBar = %HordeBar
 @onready var horde_warning: Label = %HordeWarning
 @onready var hp_label: Label = %HpLabel
+@onready var _hp_pip_1: TextureRect = %Heart1
+@onready var _hp_pip_2: TextureRect = %Heart2
 
 var _is_reloading: bool = false
 var _reload_duration: float = 0.80
 var _reload_elapsed: float = 0.0
 var _warning_pulse_timer: float = 0.0
-
-var _hp_pip_1: TextureRect = null
-var _hp_pip_2: TextureRect = null
+var _last_hp: int = 2
 
 func _ready() -> void:
-	_setup_hud_pips()
-
 	if GameManager:
 		GameManager.score_updated.connect(_on_score_updated)
 		GameManager.distance_updated.connect(_on_distance_updated)
@@ -42,24 +40,6 @@ func _ready() -> void:
 	reload_bar.visible = false
 	reload_label.visible = false
 	horde_warning.visible = false
-
-func _setup_hud_pips() -> void:
-	var top_hbox := hp_label.get_parent() as HBoxContainer
-	if top_hbox:
-		var pip_box := HBoxContainer.new()
-		pip_box.name = "HpPipsBox"
-		pip_box.add_theme_constant_override("separation", 3)
-		_hp_pip_1 = TextureRect.new()
-		_hp_pip_1.custom_minimum_size = Vector2(12, 12)
-		_hp_pip_1.texture = PIP_FULL_TEX
-		_hp_pip_1.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_hp_pip_2 = TextureRect.new()
-		_hp_pip_2.custom_minimum_size = Vector2(12, 12)
-		_hp_pip_2.texture = PIP_FULL_TEX
-		_hp_pip_2.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		pip_box.add_child(_hp_pip_1)
-		pip_box.add_child(_hp_pip_2)
-		top_hbox.add_child(pip_box)
 
 func _process(delta: float) -> void:
 	if GameManager and GameManager.current_state == GameManager.State.PLAYING:
@@ -91,11 +71,18 @@ func _on_distance_updated(dist: float) -> void:
 	distance_label.text = "DIST: %dm" % int(dist)
 
 func _on_health_changed(hp: int, max_hp: int) -> void:
-	hp_label.text = "HP: %d/%d" % [hp, max_hp]
+	hp_label.text = "%d/%d" % [hp, max_hp]
 	if _hp_pip_1:
 		_hp_pip_1.texture = PIP_FULL_TEX if hp >= 1 else PIP_EMPTY_TEX
 	if _hp_pip_2:
 		_hp_pip_2.texture = PIP_FULL_TEX if hp >= 2 else PIP_EMPTY_TEX
+
+	if hp < _last_hp and hp == 1 and _hp_pip_2:
+		_hp_pip_2.pivot_offset = Vector2(7.0, 6.0)
+		_hp_pip_2.scale = Vector2(1.35, 1.35)
+		var tw: Tween = create_tween()
+		tw.tween_property(_hp_pip_2, "scale", Vector2.ONE, 0.16)
+	_last_hp = hp
 
 	if hp == 1:
 		hp_label.modulate = PALETTE.ACCENT_MAGENTA

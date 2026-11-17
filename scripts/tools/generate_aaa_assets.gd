@@ -17,6 +17,7 @@ func _init() -> void:
 	_make_pixel_icons()
 	_make_title_logo_and_ribbon()
 	_make_empty_and_hero_showcase()
+	_make_pixel_hearts()
 	print("=== Asset Generation Complete ===")
 	quit(0)
 
@@ -1027,6 +1028,51 @@ func _make_empty_and_hero_showcase() -> void:
 	_safe_px(hero, 34, 26, Color("#f28c38"))
 
 	hero.save_png("res://assets/ui/px_hero_showcase.png")
+
+func _make_pixel_hearts() -> void:
+	# 14x12 crisp hand-pixelled Heart icons for top-left HUD HP display
+	var full_map := {
+		"o": OUTLINE,
+		"w": Color("#fff8e8"),
+		"*": Color("#ff85a3"),
+		"#": Color("#e63962"),
+		"s": Color("#8f1c37")
+	}
+	_draw_bitmap_icon(PackedStringArray([
+		"..oooo..oooo..",
+		".o*##*oo*##*o.",
+		"oww###**####so",
+		"oww#########so",
+		"ow##########so",
+		"o*#########sso",
+		".o########sso.",
+		"..o######sso..",
+		"..oo####ssoo..",
+		"....o##sso....",
+		".....osso.....",
+		"......oo......"
+	]), full_map).save_png("res://assets/ui/px_heart_full.png")
+
+	var empty_map := {
+		"o": OUTLINE,
+		"r": Color("#39446e"),
+		"e": Color("#12162b"),
+		"d": Color("#0b0d19")
+	}
+	_draw_bitmap_icon(PackedStringArray([
+		"..oooo..oooo..",
+		".orrrroorrrro.",
+		"orreeeooeeeero",
+		"oreeeoeeeeedro",
+		"oreeoeeeeeedro",
+		"oreeoeoeeeedro",
+		".oreoeeeeddro.",
+		"..oroeeeeddo..",
+		"..oooeeddooo..",
+		"....oeddoo....",
+		".....oooo.....",
+		"......oo......"
+	]), empty_map).save_png("res://assets/ui/px_heart_empty.png")
 
 
 
