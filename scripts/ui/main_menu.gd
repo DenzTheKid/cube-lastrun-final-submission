@@ -60,6 +60,19 @@ func _ready() -> void:
 	play_btn.grab_focus()
 
 func _setup_live_background_and_typography() -> void:
+	# Ensure exact 480x270 full-rect alignment whether run as main scene or child of Node2D
+	if get_parent() is Window:
+		set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	else:
+		size = Vector2(480.0, 270.0)
+
+	if bg_skyline:
+		bg_skyline.offset_left = -12.0
+		bg_skyline.offset_right = 12.0
+	if bg_buildings:
+		bg_buildings.offset_left = -16.0
+		bg_buildings.offset_right = 16.0
+
 	# 1. Atmospheric Dusk Sky Shader on BgSky
 	if bg_sky:
 		var sky_mat := ShaderMaterial.new()
@@ -117,9 +130,9 @@ func _process(delta: float) -> void:
 	_menu_time += delta
 	# Gentle live camera sway on skyline layers
 	if bg_skyline:
-		bg_skyline.position.x = sin(_menu_time * 0.45) * 6.0
+		bg_skyline.position.x = -12.0 + sin(_menu_time * 0.45) * 6.0
 	if bg_buildings:
-		bg_buildings.position.x = sin(_menu_time * 0.75 + 1.0) * 12.0
+		bg_buildings.position.x = -16.0 + sin(_menu_time * 0.75 + 1.0) * 10.0
 	# Rhythmic breathing scale on title typography
 	if title_label:
 		title_label.pivot_offset = title_label.size * 0.5
