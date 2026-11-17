@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/px_btn_secondary_pressed.png" id="8_sec_pressed"]
 [ext_resource type="Texture2D" path="res://assets/ui/px_btn_disabled.png" id="9_btn_dis"]
 [ext_resource type="Texture2D" path="res://assets/ui/px_panel_plate.png" id="10_panel"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_empty.png" id="11_empty"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_BtnIdle"]
 content_margin_left = 11.0
@@ -130,6 +131,11 @@ Button/styles/focus = SubResource("StyleBoxTexture_BtnHover")
 Button/styles/hover = SubResource("StyleBoxTexture_BtnHover")
 Button/styles/normal = SubResource("StyleBoxTexture_BtnIdle")
 Button/styles/pressed = SubResource("StyleBoxTexture_BtnPressed")
+CheckButton/constants/h_separation = 5
+CheckButton/icons/checked = ExtResource("11_empty")
+CheckButton/icons/checked_disabled = ExtResource("11_empty")
+CheckButton/icons/unchecked = ExtResource("11_empty")
+CheckButton/icons/unchecked_disabled = ExtResource("11_empty")
 HeaderLabel/base_type = &"Label"
 HeaderLabel/colors/font_color = Color(0.22, 0.847, 0.949, 1)
 HeaderLabel/colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)

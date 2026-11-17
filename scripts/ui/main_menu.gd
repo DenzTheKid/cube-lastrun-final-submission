@@ -22,7 +22,7 @@ const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 @onready var bg_buildings: TextureRect = $BgBuildings
 @onready var bg_overpass: TextureRect = $BgOverpass
 @onready var center_container: CenterContainer = $CenterContainer
-@onready var lobby_hero: Sprite2D = %LobbyHero
+@onready var hero_showcase: Sprite2D = %HeroShowcaseSprite
 @onready var lobby_walker: Sprite2D = %LobbyWalker
 @onready var lobby_runner: Sprite2D = %LobbyRunner
 
@@ -31,8 +31,6 @@ var _music_enabled: bool = true
 var _time_of_day: Node = null
 var _is_transitioning: bool = false
 var _diorama_timer: float = 0.0
-var _diorama_scarf: Line2D = null
-var _hero_step: int = 0
 var _zombie_step: int = 0
 
 func _ready() -> void:
@@ -58,17 +56,11 @@ func _ready() -> void:
 	music_btn.toggled.connect(_on_music_toggled)
 
 	controls_panel.visible = false
-	_setup_lobby_diorama_scarf()
 	_update_high_score()
 	play_btn.grab_focus()
 
 func _process(delta: float) -> void:
 	_diorama_timer += delta
-	var next_hero: int = int(_diorama_timer * 9.0) % 6
-	if next_hero != _hero_step:
-		_hero_step = next_hero
-		if lobby_hero:
-			lobby_hero.frame = 6 + _hero_step
 	var next_zombie: int = int(_diorama_timer * 6.0) % 4
 	if next_zombie != _zombie_step:
 		_zombie_step = next_zombie
@@ -76,24 +68,9 @@ func _process(delta: float) -> void:
 			lobby_walker.frame = _zombie_step
 		if lobby_runner:
 			lobby_runner.frame = (_zombie_step + 2) % 4
-	if _diorama_scarf:
-		var pts := PackedVector2Array()
-		for i in range(6):
-			var wave: float = sin(_diorama_timer * 10.0 - float(i) * 0.9) * (0.8 + float(i) * 0.35)
-			pts.append(Vector2(-5.0 - float(i) * 2.3, -3.0 + wave))
-		_diorama_scarf.points = pts
-
-func _setup_lobby_diorama_scarf() -> void:
-	if not lobby_hero:
-		return
-	_diorama_scarf = Line2D.new()
-	_diorama_scarf.z_index = -1
-	_diorama_scarf.width = 3.0
-	var grad := Gradient.new()
-	grad.set_color(0, Color(0.92, 0.18, 0.25, 1.0))
-	grad.set_color(1, Color(1.0, 0.42, 0.32, 0.85))
-	_diorama_scarf.gradient = grad
-	lobby_hero.add_child(_diorama_scarf)
+	if hero_showcase:
+		# Subtle 1px crisp pixel breathing idle bob without shifting RecordPanel layout
+		hero_showcase.position.y = -1.0 if int(_diorama_timer * 2.2) % 2 == 1 else 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if controls_panel and controls_panel.visible:

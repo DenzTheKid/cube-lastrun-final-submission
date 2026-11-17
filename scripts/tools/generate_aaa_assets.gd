@@ -16,6 +16,7 @@ func _init() -> void:
 	_make_pixel_button_plates()
 	_make_pixel_icons()
 	_make_title_logo_and_ribbon()
+	_make_empty_and_hero_showcase()
 	print("=== Asset Generation Complete ===")
 	quit(0)
 
@@ -799,5 +800,176 @@ func _make_title_logo_and_ribbon() -> void:
 				logo.set_pixel(x, y, col)
 
 	logo.save_png("res://assets/ui/px_title_logo.png")
+
+func _make_empty_and_hero_showcase() -> void:
+	# 1x1 transparent placeholder so CheckButton hides Godot's default pill toggle even in Editor preview
+	var empty_img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+	empty_img.save_png("res://assets/ui/px_empty.png")
+
+	# Flagship Right-Side Hero Action Showcase (158 x 60 native 1x pixel art)
+	# Positioned on right half (x = 76..152) so left half (x = 0..72) leaves open sky for the setting dusk sun!
+	var sw: int = 158
+	var sh: int = 60
+	var hero := Image.create(sw, sh, false, Image.FORMAT_RGBA8)
+
+	# 1. Stepped Asphalt Curb Pedestal at Hero's Feet (y = 50..59, x = 78..150)
+	for y in range(50, 60):
+		var inset: int = 0
+		if y == 50 or y == 59:
+			inset = 2
+		elif y == 51 or y == 58:
+			inset = 1
+		for x in range(78 + inset, 151 - inset):
+			var ex: int = mini(x - (78 + inset), (150 - inset) - x)
+			if y == 50 or y == 59 or ex == 0:
+				hero.set_pixel(x, y, OUTLINE)
+			elif y == 51:
+				hero.set_pixel(x, y, Color("#4e629c") if x > 92 else Color("#38d8f2"))
+			elif y == 52:
+				hero.set_pixel(x, y, Color("#232946"))
+			elif y >= 57:
+				hero.set_pixel(x, y, Color("#0a0c18"))
+			else:
+				hero.set_pixel(x, y, Color("#151a30"))
+	# Yellow highway dash accent on pedestal front
+	hero.fill_rect(Rect2i(98, 53, 14, 3), Color("#f28c38"))
+	hero.fill_rect(Rect2i(99, 53, 12, 1), Color("#fff3b0"))
+
+	# Two spent red/brass shotgun shells resting at his boots
+	_draw_rect_outline(hero, 85, 48, 6, 3, Color("#e63962"), OUTLINE)
+	hero.fill_rect(Rect2i(89, 49, 1, 1), Color("#f28c38"))
+	_draw_rect_outline(hero, 134, 48, 6, 3, Color("#e63962"), OUTLINE)
+	hero.fill_rect(Rect2i(135, 49, 1, 1), Color("#f28c38"))
+
+	# 2. Striding Action Legs & Combat Boots (y = 40..50)
+	# Left forward leg
+	_draw_rect_outline(hero, 100, 41, 7, 9, Color("#161b33"), OUTLINE)
+	hero.fill_rect(Rect2i(101, 42, 2, 5), Color("#39446e"))
+	hero.fill_rect(Rect2i(99, 47, 8, 3), Color("#0d101f"))
+	_draw_rect_outline(hero, 98, 46, 9, 5, Color("#0d101f"), OUTLINE)
+	hero.fill_rect(Rect2i(99, 47, 5, 1), Color("#39446e"))
+	# Right planted leg
+	_draw_rect_outline(hero, 118, 41, 7, 9, Color("#101429"), OUTLINE)
+	hero.fill_rect(Rect2i(119, 42, 2, 5), Color("#232d52"))
+	_draw_rect_outline(hero, 118, 46, 9, 5, Color("#0a0c18"), OUTLINE)
+	hero.fill_rect(Rect2i(119, 47, 5, 1), Color("#28325c"))
+
+	# 3. Trailing Headband Ribbon Tails waving dynamically rightward (behind head, x = 130..153)
+	for dy in range(2):
+		for k in range(18):
+			var wave_y: int = 15 + dy * 4 + int(sin(float(k) * 0.45 + float(dy)) * 2.0)
+			var rx: int = 131 + k
+			var rcol: Color = Color("#e63962") if k < 11 else Color("#7a2832")
+			if k < 4:
+				rcol = Color("#f28c38")
+			_safe_px(hero, rx, wave_y - 1, OUTLINE)
+			_safe_px(hero, rx, wave_y, Color("#ff7597") if dy == 0 and k < 8 else rcol)
+			_safe_px(hero, rx, wave_y + 1, rcol)
+			_safe_px(hero, rx, wave_y + 2, OUTLINE)
+
+	# 4. Main Beveled Heroic Cube Torso/Head (x = 92..133, y = 10..42, 3/4 facing left)
+	var bx0: int = 92
+	var bx1: int = 133
+	var by0: int = 10
+	var by1: int = 42
+	for y in range(by0, by1 + 1):
+		for x in range(bx0, bx1 + 1):
+			var dx: int = mini(x - bx0, bx1 - x)
+			var dy: int = mini(y - by0, by1 - y)
+			if dx == 0 and dy == 0:
+				continue
+			if x == bx0 or x == bx1 or y == by0 or y == by1 or (dx == 1 and dy == 1):
+				hero.set_pixel(x, y, OUTLINE)
+				continue
+			if x == bx0 + 1:
+				# Bright warm sun/cyan rim light along left silhouette
+				hero.set_pixel(x, y, Color("#38d8f2") if y > 22 else Color("#fff3b0"))
+			elif y == by0 + 1:
+				hero.set_pixel(x, y, Color("#5c6d9e"))
+			elif x >= 122:
+				# 3/4 shaded right flank wall
+				hero.set_pixel(x, y, Color("#0f1429") if y < 28 else Color("#0b0f1f"))
+			else:
+				hero.set_pixel(x, y, Color("#202a4d") if y < 27 else Color("#161f3b"))
+
+	# Subtle armor panel seam & belt + golden buckle
+	hero.fill_rect(Rect2i(94, 37, 28, 2), Color("#0a0c18"))
+	hero.fill_rect(Rect2i(102, 36, 6, 4), Color("#f28c38"))
+	hero.fill_rect(Rect2i(103, 37, 4, 2), Color("#fff3b0"))
+
+	# 5. Signature Crimson Headband Across Forehead (y = 13..18)
+	for y in range(13, 19):
+		for x in range(92, 133):
+			if y == 13 or y == 18:
+				hero.set_pixel(x, y, OUTLINE)
+			elif x == 93:
+				hero.set_pixel(x, y, Color("#fff3b0"))
+			elif x >= 122:
+				hero.set_pixel(x, y, Color("#7a2832"))
+			elif y == 14:
+				hero.set_pixel(x, y, Color("#ff7597"))
+			else:
+				hero.set_pixel(x, y, Color("#e63962"))
+	# Knot stud on right temple
+	_draw_rect_outline(hero, 129, 13, 5, 6, Color("#e63962"), OUTLINE)
+	hero.fill_rect(Rect2i(130, 14, 2, 2), Color("#ff7597"))
+
+	# 6. Recessed Dark Visor & Glowing Twin Cyan Eyes (x = 95..117, y = 20..29)
+	_draw_rect_outline(hero, 95, 20, 22, 9, Color("#070912"), OUTLINE)
+	hero.fill_rect(Rect2i(96, 21, 20, 1), Color("#151c36"))
+	# Left & Right glowing cyan eyes looking toward PLAY MISSION
+	for ex in [98, 108]:
+		hero.fill_rect(Rect2i(ex, 22, 5, 5), Color("#38d8f2"))
+		hero.fill_rect(Rect2i(ex + 1, 23, 2, 2), Color("#f2f4fa"))
+		_safe_px(hero, ex, 22, Color("#fff8d6"))
+
+	# 7. Heavy Combat Double-Barrel Shotgun (angled -15 deg pointing forward-left across chest)
+	# Barrels (from x=72,y=25 down-right to receiver x=106,y=31)
+	for i in range(36):
+		var gx: int = 72 + i
+		var gy: int = 24 + int(float(i) * 0.16)
+		_safe_px(hero, gx, gy - 1, OUTLINE)
+		_safe_px(hero, gx, gy, Color("#f2f4fa") if i < 26 else Color("#8e9ec7"))
+		_safe_px(hero, gx, gy + 1, Color("#8e9ec7"))
+		_safe_px(hero, gx, gy + 2, Color("#39446e"))
+		_safe_px(hero, gx, gy + 3, OUTLINE)
+	# Under-barrel shotgun tube + ribbed pump (x=76..102)
+	for i in range(28):
+		var gx: int = 76 + i
+		var gy: int = 28 + int(float(i) * 0.16)
+		var is_grip: bool = (i >= 10 and i <= 20)
+		_safe_px(hero, gx, gy, Color("#a85822") if is_grip else Color("#4a588a"))
+		_safe_px(hero, gx, gy + 1, Color("#5e2912") if is_grip else Color("#232946"))
+		_safe_px(hero, gx, gy + 2, OUTLINE)
+	# Muzzle sight bead
+	_safe_px(hero, 73, 22, OUTLINE)
+	_safe_px(hero, 73, 23, Color("#f28c38"))
+	# Walnut stock + brass receiver angled down-right behind arm (x=104..122, y=30..38)
+	_draw_rect_outline(hero, 104, 29, 8, 6, Color("#39446e"), OUTLINE)
+	hero.fill_rect(Rect2i(106, 30, 3, 2), Color("#fff3b0"))
+	for i in range(15):
+		var sx: int = 111 + i
+		var sy: int = 31 + int(float(i) * 0.35)
+		_safe_px(hero, sx, sy - 1, OUTLINE)
+		_safe_px(hero, sx, sy, Color("#f28c38"))
+		_safe_px(hero, sx, sy + 1, Color("#a85822"))
+		_safe_px(hero, sx, sy + 2, Color("#5e2912"))
+		_safe_px(hero, sx, sy + 3, OUTLINE)
+
+	# Gloved Front & Rear Hands Gripping Shotgun
+	_draw_rect_outline(hero, 90, 29, 6, 5, Color("#232d52"), OUTLINE)
+	hero.fill_rect(Rect2i(91, 30, 3, 2), Color("#38d8f2"))
+	_draw_rect_outline(hero, 107, 32, 6, 5, Color("#232d52"), OUTLINE)
+	hero.fill_rect(Rect2i(108, 33, 3, 2), Color("#4e629c"))
+
+	# Subtle warm barrel gleam glint ahead of muzzle tip (x=66..70, y=22..26)
+	_safe_px(hero, 68, 24, Color("#fff3b0"))
+	_safe_px(hero, 67, 24, Color("#f28c38"))
+	_safe_px(hero, 69, 24, Color("#f28c38"))
+	_safe_px(hero, 68, 23, Color("#f28c38"))
+	_safe_px(hero, 68, 25, Color("#f28c38"))
+
+	hero.save_png("res://assets/ui/px_hero_showcase.png")
+
 
 

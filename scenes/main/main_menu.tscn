@@ -14,8 +14,9 @@
 [ext_resource type="Texture2D" path="res://assets/ui/px_icon_controls.png" id="12_ictrl"]
 [ext_resource type="Texture2D" path="res://assets/ui/px_icon_exit.png" id="13_iexit"]
 [ext_resource type="Texture2D" path="res://assets/ui/px_icon_trophy.png" id="14_itrophy"]
-[ext_resource type="Texture2D" path="res://assets/characters/cube_player.png" id="15_hero"]
-[ext_resource type="Texture2D" path="res://assets/weapons/shotgun.png" id="16_gun"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_hero_showcase.png" id="15_showcase"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_icon_sfx_on.png" id="16_isfx"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_icon_music_on.png" id="19_imusic"]
 [ext_resource type="Texture2D" path="res://assets/zombies/zombie_walker.png" id="17_walker"]
 [ext_resource type="Texture2D" path="res://assets/zombies/zombie_runner.png" id="18_runner"]
 
@@ -114,41 +115,19 @@ position = Vector2(46, -12)
 texture = ExtResource("18_runner")
 hframes = 4
 
-[node name="DioramaRight" type="Control" parent="LobbyRoad"]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -90.0
-offset_bottom = 10.0
-grow_horizontal = 0
-mouse_filter = 2
-
-[node name="LobbyHero" type="Sprite2D" parent="LobbyRoad/DioramaRight"]
-unique_name_in_owner = true
-position = Vector2(54, -12)
-texture = ExtResource("15_hero")
-hframes = 6
-vframes = 8
-frame = 6
-
-[node name="LobbyShotgun" type="Sprite2D" parent="LobbyRoad/DioramaRight/LobbyHero"]
-position = Vector2(2, 4)
-texture = ExtResource("16_gun")
-
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -12.0
-offset_bottom = -34.0
+offset_top = -18.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 8
 alignment = 1
 
 [node name="TitleBanner" type="VBoxContainer" parent="CenterContainer/VBox"]
@@ -208,13 +187,14 @@ theme_override_styles/panel = SubResource("StyleBoxEmpty_MenuRow")
 
 [node name="MainContentRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop"]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 26
 alignment = 1
 
 [node name="ControlButtons" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
 layout_mode = 2
+size_flags_vertical = 8
 theme_override_constants/separation = 6
-alignment = 1
+alignment = 2
 
 [node name="PlayButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 unique_name_in_owner = true
@@ -223,6 +203,7 @@ layout_mode = 2
 theme_type_variation = &"PrimaryButton"
 text = "PLAY MISSION"
 icon = ExtResource("11_iplay")
+alignment = 0
 
 [node name="ControlsButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 unique_name_in_owner = true
@@ -230,6 +211,7 @@ custom_minimum_size = Vector2(166, 23)
 layout_mode = 2
 text = "CONTROLS"
 icon = ExtResource("12_ictrl")
+alignment = 0
 
 [node name="AudioRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 layout_mode = 2
@@ -242,6 +224,8 @@ custom_minimum_size = Vector2(80, 23)
 layout_mode = 2
 button_pressed = true
 text = "SFX:ON"
+icon = ExtResource("16_isfx")
+alignment = 0
 
 [node name="MusicCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons/AudioRow"]
 unique_name_in_owner = true
@@ -249,6 +233,8 @@ custom_minimum_size = Vector2(80, 23)
 layout_mode = 2
 button_pressed = true
 text = "BGM:ON"
+icon = ExtResource("19_imusic")
+alignment = 0
 
 [node name="ExitButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 unique_name_in_owner = true
@@ -256,40 +242,57 @@ custom_minimum_size = Vector2(166, 23)
 layout_mode = 2
 text = "EXIT GAME"
 icon = ExtResource("13_iexit")
+alignment = 0
 
-[node name="RecordPanel" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
+[node name="RightHeroColumn" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/separation = 3
+alignment = 2
+
+[node name="HeroShowcaseBox" type="Control" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn"]
+custom_minimum_size = Vector2(158, 60)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HeroShowcaseSprite" type="Sprite2D" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/HeroShowcaseBox"]
+unique_name_in_owner = true
+texture = ExtResource("15_showcase")
+centered = false
+
+[node name="RecordPanel" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn"]
 custom_minimum_size = Vector2(158, 0)
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_styles/panel = SubResource("StyleBoxTexture_RecordCard")
 
-[node name="RecordBox" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel"]
+[node name="RecordBox" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/RecordPanel"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="RecordHeaderRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox"]
+[node name="RecordHeaderRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/RecordPanel/RecordBox"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="TrophyIcon" type="TextureRect" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox/RecordHeaderRow"]
+[node name="TrophyIcon" type="TextureRect" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/RecordPanel/RecordBox/RecordHeaderRow"]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("14_itrophy")
 stretch_mode = 5
 
-[node name="RecordHeader" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox/RecordHeaderRow"]
+[node name="RecordHeader" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/RecordPanel/RecordBox/RecordHeaderRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
 text = "SURVIVOR RECORD"
 
-[node name="Divider" type="ColorRect" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox"]
+[node name="Divider" type="ColorRect" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/RecordPanel/RecordBox"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
 color = Color(0.22, 0.847, 0.949, 0.35)
 
-[node name="HighScoreLabel" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox"]
+[node name="HighScoreLabel" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/RecordPanel/RecordBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "HIGH SCORE: 0
