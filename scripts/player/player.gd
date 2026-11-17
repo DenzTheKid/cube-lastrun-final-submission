@@ -39,6 +39,7 @@ var _wait_shoot_release: bool = false
 var _wait_jump_release: bool = false
 const COYOTE_TIME: float = 0.12
 const JUMP_BUFFER_TIME: float = 0.12
+const MIN_CEILING_Y: float = 38.0
 
 # Footstep audio & particle timer
 var _footstep_timer: float = 0.0
@@ -72,8 +73,8 @@ var _visor_light: PointLight2D = null
 
 func _ready() -> void:
 	velocity = Vector2.ZERO
-	_wait_shoot_release = Input.is_action_pressed("shoot")
-	_wait_jump_release = Input.is_action_pressed("jump")
+	_wait_shoot_release = _is_physical_shoot_held()
+	_wait_jump_release = _is_physical_jump_held()
 	current_hp = max_hp
 	health_changed.emit(current_hp, max_hp)
 
@@ -180,17 +181,17 @@ func _physics_process(delta: float) -> void:
 
 	_was_on_floor = is_on_floor()
 
-	if _wait_shoot_release and not Input.is_action_pressed("shoot"):
+	if _wait_shoot_release and not _is_physical_shoot_held():
 		_wait_shoot_release = false
-	if _wait_jump_release and not Input.is_action_pressed("jump"):
+	if _wait_jump_release and not _is_physical_jump_held():
 		_wait_jump_release = false
 
 	if _spawn_input_grace_frames > 0:
 		_spawn_input_grace_frames -= 1
 		jump_buffer_timer = 0.0
-		if Input.is_action_pressed("shoot"):
+		if _is_physical_shoot_held():
 			_wait_shoot_release = true
-		if Input.is_action_pressed("jump"):
+		if _is_physical_jump_held():
 			_wait_jump_release = true
 	else:
 		# Jump buffering
@@ -216,10 +217,30 @@ func _physics_process(delta: float) -> void:
 			shotgun.start_reload()
 
 	move_and_slide()
+	if global_position.y < MIN_CEILING_Y:
+		global_position.y = MIN_CEILING_Y
+		if velocity.y < 0.0:
+			velocity.y = 0.0
 	_update_animation(delta)
 	_update_juice_visuals(delta, speed_mult)
 	if shotgun and shotgun.is_reloading:
 		queue_redraw()
+
+func _is_physical_shoot_held() -> bool:
+	return (
+		Input.is_action_pressed("shoot")
+		or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+		or Input.is_key_pressed(KEY_X)
+		or Input.is_key_pressed(KEY_J)
+	)
+
+func _is_physical_jump_held() -> bool:
+	return (
+		Input.is_action_pressed("jump")
+		or Input.is_key_pressed(KEY_SPACE)
+		or Input.is_key_pressed(KEY_W)
+		or Input.is_key_pressed(KEY_UP)
+	)
 
 func _perform_jump() -> void:
 	velocity.y = jump_velocity

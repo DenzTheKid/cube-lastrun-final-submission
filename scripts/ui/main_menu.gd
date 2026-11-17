@@ -121,7 +121,7 @@ func _on_play_pressed() -> void:
 	var fade := ColorRect.new()
 	fade.color = Color(0.04, 0.04, 0.08, 0.0)
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fade.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(fade)
 	var tw: Tween = create_tween()
 	tw.tween_property(fade, "color:a", 1.0, 0.18)
