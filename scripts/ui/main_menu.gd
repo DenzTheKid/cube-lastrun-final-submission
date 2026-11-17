@@ -1,10 +1,9 @@
 extends Control
 class_name MainMenu
 
-# Main Menu (Lobby) controller for CUBE: LAST RUN.
-# Uses the TimeOfDay background controller set to dusk, static city layers,
-# flat pixel-art StyleBox buttons with 2px borders, keyboard/gamepad focus
-# navigation, and high-score record persistence.
+# Main Menu (Home Page) controller for CUBE: LAST RUN.
+# Uses the shared res://assets/ui/game_theme.tres Theme resource, TimeOfDay
+# background set to dusk with the sun low and setting, and a quick pixel fade transition.
 
 const SKY_SHADER: Shader = preload("res://shaders/dusk_sky_gradient.gdshader")
 const TIME_OF_DAY_SCRIPT = preload("res://scripts/gameplay/time_of_day.gd")
@@ -16,21 +15,17 @@ const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 @onready var controls_panel: PanelContainer = %ControlsPanel
 @onready var close_controls_btn: Button = %CloseControlsButton
 @onready var highscore_label: Label = %HighScoreLabel
-@onready var record_header: Label = %RecordHeader
-@onready var version_label: Label = %VersionLabel
-@onready var hint_label: Label = %HintLabel
 @onready var sfx_btn: CheckButton = %SfxCheckButton
 @onready var music_btn: CheckButton = %MusicCheckButton
 @onready var bg_sky: TextureRect = $BgSky
 @onready var bg_skyline: TextureRect = $BgSkyline
 @onready var bg_buildings: TextureRect = $BgBuildings
 @onready var bg_overpass: TextureRect = $BgOverpass
-@onready var title_label: Label = %Title
-@onready var tagline_label: Label = %Tagline
 
 var _sfx_enabled: bool = true
 var _music_enabled: bool = true
 var _time_of_day: Node = null
+var _is_transitioning: bool = false
 
 func _ready() -> void:
 	if AudioManager:
@@ -39,7 +34,7 @@ func _ready() -> void:
 		_music_enabled = AudioManager.music_volume_db > -40.0
 
 	_setup_layout_and_background()
-	_setup_typography_and_buttons()
+	_setup_buttons_and_focus()
 
 	play_btn.pressed.connect(_on_play_pressed)
 	controls_btn.pressed.connect(_on_controls_pressed)
@@ -65,7 +60,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 func _setup_layout_and_background() -> void:
-	# Support both root Window responsive layout and Node2D test-runner instantiation
 	if get_parent() is Window:
 		set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	else:
@@ -83,25 +77,11 @@ func _setup_layout_and_background() -> void:
 	_time_of_day.name = "TimeOfDay"
 	add_child(_time_of_day)
 	_time_of_day.bind_layers(sky_mat, bg_skyline, bg_buildings, bg_overpass)
-	# Default lobby background to the dusk horizon look unless overridden by --tod=
+	# Default lobby background to dusk with the sun low and setting behind the skyline
 	if not _time_of_day._debug_override_active:
-		_time_of_day.set_fixed_time(0.65)
+		_time_of_day.set_fixed_time(0.42)
 
-func _setup_typography_and_buttons() -> void:
-	UI_ANIMATOR.apply_label_font(title_label, true, 22)
-	UI_ANIMATOR.apply_label_font(tagline_label, false, 9)
-	UI_ANIMATOR.apply_label_font(record_header, false, 9)
-	UI_ANIMATOR.apply_label_font(highscore_label, false, 9)
-	UI_ANIMATOR.apply_label_font(version_label, false, 8)
-	UI_ANIMATOR.apply_label_font(hint_label, false, 8)
-
-	var ctrl_header := get_node_or_null("ControlsPanel/Margin/VBox/Header") as Label
-	var ctrl_text := get_node_or_null("ControlsPanel/Margin/VBox/Text") as Label
-	if ctrl_header:
-		UI_ANIMATOR.apply_label_font(ctrl_header, true, 12)
-	if ctrl_text:
-		UI_ANIMATOR.apply_label_font(ctrl_text, false, 9)
-
+func _setup_buttons_and_focus() -> void:
 	UI_ANIMATOR.style_button(play_btn, true)
 	UI_ANIMATOR.style_button(controls_btn, false)
 	UI_ANIMATOR.style_button(exit_btn, false)
@@ -109,7 +89,6 @@ func _setup_typography_and_buttons() -> void:
 	UI_ANIMATOR.style_toggle_button(sfx_btn, "SFX")
 	UI_ANIMATOR.style_toggle_button(music_btn, "BGM")
 
-	# Explicit keyboard / gamepad focus neighbor chain
 	play_btn.focus_neighbor_top = exit_btn.get_path()
 	play_btn.focus_neighbor_bottom = controls_btn.get_path()
 	controls_btn.focus_neighbor_top = play_btn.get_path()
@@ -128,10 +107,24 @@ func _update_high_score() -> void:
 		highscore_label.text = "HIGH SCORE: %d\nRECORD: %dm" % [GameManager.high_score, int(GameManager.max_distance)]
 
 func _on_play_pressed() -> void:
+	if _is_transitioning:
+		return
+	_is_transitioning = true
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
-	if GameManager:
-		GameManager.restart_game()
+
+	# Quick 0.18s pixel fade before starting the run
+	var fade := ColorRect.new()
+	fade.color = Color(0.04, 0.04, 0.08, 0.0)
+	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(fade)
+	var tw: Tween = create_tween()
+	tw.tween_property(fade, "color:a", 1.0, 0.18)
+	tw.tween_callback(func():
+		if GameManager:
+			GameManager.restart_game()
+	)
 
 func _on_controls_pressed() -> void:
 	if AudioManager:

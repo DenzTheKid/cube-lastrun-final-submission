@@ -58,6 +58,8 @@ func start_game() -> void:
 	combo_timer = 0.0
 	difficulty_factor = 1.0
 	get_tree().paused = false
+	Input.action_release("shoot")
+	Input.action_release("jump")
 	game_started.emit()
 	combo_updated.emit(combo_count, combo_multiplier)
 	if AudioManager:

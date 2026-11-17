@@ -22,6 +22,16 @@ func _ready() -> void:
 		UI_ANIMATOR.style_toggle_button(sfx_check, "SFX")
 	if music_check:
 		UI_ANIMATOR.style_toggle_button(music_check, "BGM")
+	if AudioManager:
+		if sfx_check:
+			var sfx_on: bool = AudioManager.sfx_volume_db > -40.0
+			sfx_check.set_pressed_no_signal(sfx_on)
+			UI_ANIMATOR._update_toggle_visual(sfx_check, sfx_on, false)
+		if music_check:
+			var bgm_on: bool = AudioManager.music_volume_db > -40.0
+			music_check.set_pressed_no_signal(bgm_on)
+			UI_ANIMATOR._update_toggle_visual(music_check, bgm_on, false)
+
 	resume_btn.pressed.connect(_on_resume_pressed)
 	restart_btn.pressed.connect(_on_restart_pressed)
 	menu_btn.pressed.connect(_on_menu_pressed)

@@ -6,31 +6,40 @@
 [ext_resource type="Texture2D" path="res://assets/environment/parallax_buildings_mid.png" id="4_mid"]
 [ext_resource type="Texture2D" path="res://assets/environment/parallax_overpass_fore.png" id="5_fore"]
 [ext_resource type="Texture2D" path="res://assets/ui/lobby_road.png" id="6_road"]
+[ext_resource type="Theme" path="res://assets/ui/game_theme.tres" id="7_theme"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_TitleBanner"]
-bg_color = Color(0.063, 0.071, 0.129, 0.92)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.949, 0.549, 0.22, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_MenuCol"]
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+bg_color = Color(0.039, 0.043, 0.078, 0.86)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.212, 0.349, 1)
 anti_aliasing = false
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_RecordPlate"]
-bg_color = Color(0.063, 0.071, 0.129, 0.9)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.18, 0.212, 0.349, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_RecordCard"]
 content_margin_left = 10.0
 content_margin_top = 8.0
 content_margin_right = 10.0
 content_margin_bottom = 8.0
+bg_color = Color(0.063, 0.071, 0.129, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.212, 0.349, 1)
 anti_aliasing = false
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ControlsModal"]
-bg_color = Color(0.063, 0.071, 0.129, 0.96)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Modal"]
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+bg_color = Color(0.063, 0.071, 0.129, 0.98)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -46,6 +55,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("7_theme")
 script = ExtResource("1_menu")
 
 [node name="BgSky" type="TextureRect" parent="."]
@@ -105,121 +115,113 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = -18.0
+offset_top = -6.0
+offset_bottom = -32.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 16
 alignment = 1
 
-[node name="TitleBanner" type="PanelContainer" parent="CenterContainer/VBox"]
-custom_minimum_size = Vector2(316, 54)
+[node name="TitleBanner" type="VBoxContainer" parent="CenterContainer/VBox"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_TitleBanner")
-
-[node name="TitleBox" type="VBoxContainer" parent="CenterContainer/VBox/TitleBanner"]
-layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 3
 alignment = 1
 
-[node name="Title" type="Label" parent="CenterContainer/VBox/TitleBanner/TitleBox"]
+[node name="TitlePrefix" type="Label" parent="CenterContainer/VBox/TitleBanner"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.957, 0.98, 1)
-theme_override_colors/font_shadow_color = Color(0.478, 0.157, 0.196, 1)
-theme_override_colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 22
-text = "CUBE: LAST RUN"
+theme_type_variation = &"TitleSub"
+text = "CUBE:"
 horizontal_alignment = 1
 
-[node name="Tagline" type="Label" parent="CenterContainer/VBox/TitleBanner/TitleBox"]
+[node name="Title" type="Label" parent="CenterContainer/VBox/TitleBanner"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"TitleMain"
+text = "LAST RUN"
+horizontal_alignment = 1
+
+[node name="Tagline" type="Label" parent="CenterContainer/VBox/TitleBanner"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.949, 0.549, 0.22, 1)
-theme_override_colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 9
 text = "RUN. SHOOT. SURVIVE. DON'T STOP."
 horizontal_alignment = 1
 
-[node name="MainContentRow" type="HBoxContainer" parent="CenterContainer/VBox"]
+[node name="MenuBackdrop" type="PanelContainer" parent="CenterContainer/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_MenuCol")
+
+[node name="MainContentRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop"]
 layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="ControlButtons" type="VBoxContainer" parent="CenterContainer/VBox/MainContentRow"]
+[node name="ControlButtons" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 6
 alignment = 1
 
-[node name="PlayButton" type="Button" parent="CenterContainer/VBox/MainContentRow/ControlButtons"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(156, 24)
-layout_mode = 2
-text = "PLAY MISSION"
-
-[node name="ControlsButton" type="Button" parent="CenterContainer/VBox/MainContentRow/ControlButtons"]
+[node name="PlayButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(156, 22)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+text = "PLAY MISSION"
+
+[node name="ControlsButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(156, 20)
 layout_mode = 2
 text = "CONTROLS"
 
-[node name="AudioRow" type="HBoxContainer" parent="CenterContainer/VBox/MainContentRow/ControlButtons"]
+[node name="AudioRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1
 
-[node name="SfxCheckButton" type="CheckButton" parent="CenterContainer/VBox/MainContentRow/ControlButtons/AudioRow"]
+[node name="SfxCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons/AudioRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 20)
 layout_mode = 2
 button_pressed = true
-text = "SFX: ON"
+text = "SFX:ON"
 
-[node name="MusicCheckButton" type="CheckButton" parent="CenterContainer/VBox/MainContentRow/ControlButtons/AudioRow"]
+[node name="MusicCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons/AudioRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(75, 20)
 layout_mode = 2
 button_pressed = true
-text = "BGM: ON"
+text = "BGM:ON"
 
-[node name="ExitButton" type="Button" parent="CenterContainer/VBox/MainContentRow/ControlButtons"]
+[node name="ExitButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(156, 22)
+custom_minimum_size = Vector2(156, 20)
 layout_mode = 2
 text = "EXIT GAME"
 
-[node name="RecordPanel" type="PanelContainer" parent="CenterContainer/VBox/MainContentRow"]
+[node name="RecordPanel" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow"]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_RecordPlate")
+theme_override_styles/panel = SubResource("StyleBoxFlat_RecordCard")
 
-[node name="RecordBox" type="VBoxContainer" parent="CenterContainer/VBox/MainContentRow/RecordPanel"]
+[node name="RecordBox" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="RecordHeader" type="Label" parent="CenterContainer/VBox/MainContentRow/RecordPanel/RecordBox"]
+[node name="RecordHeader" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.22, 0.847, 0.949, 1)
-theme_override_colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"HeaderLabel"
 text = "SURVIVOR RECORD"
 
-[node name="HighScoreLabel" type="Label" parent="CenterContainer/VBox/MainContentRow/RecordPanel/RecordBox"]
+[node name="HighScoreLabel" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RecordPanel/RecordBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.957, 0.98, 1)
-theme_override_colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 9
 text = "HIGH SCORE: 0
 RECORD: 0m"
 
@@ -230,7 +232,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 10.0
-offset_top = -16.0
+offset_top = -14.0
 offset_right = -10.0
 offset_bottom = -3.0
 grow_horizontal = 2
@@ -243,19 +245,13 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.549, 0.588, 0.722, 1)
-theme_override_colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 8
+theme_override_colors/font_color = Color(0.72, 0.76, 0.88, 1)
 text = "V1.2 // GL COMPATIBILITY"
 
 [node name="HintLabel" type="Label" parent="FooterBar/FooterRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.549, 0.588, 0.722, 1)
-theme_override_colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 8
+theme_override_colors/font_color = Color(0.72, 0.76, 0.88, 1)
 text = "[UP/DOWN] NAVIGATE   [ENTER] SELECT"
 horizontal_alignment = 2
 
@@ -268,51 +264,38 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -175.0
-offset_top = -112.0
-offset_right = 175.0
-offset_bottom = 112.0
+offset_left = -180.0
+offset_top = -108.0
+offset_right = 180.0
+offset_bottom = 108.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_ControlsModal")
+theme_override_styles/panel = SubResource("StyleBoxFlat_Modal")
 
-[node name="Margin" type="MarginContainer" parent="ControlsPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 10
-
-[node name="VBox" type="VBoxContainer" parent="ControlsPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="ControlsPanel"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Header" type="Label" parent="ControlsPanel/Margin/VBox"]
+[node name="Header" type="Label" parent="ControlsPanel/VBox"]
 layout_mode = 2
+theme_type_variation = &"HeaderLabel"
 theme_override_colors/font_color = Color(0.949, 0.549, 0.22, 1)
-theme_override_colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 12
 text = "SURVIVOR CONTROLS"
 horizontal_alignment = 1
 
-[node name="Text" type="Label" parent="ControlsPanel/Margin/VBox"]
+[node name="Text" type="Label" parent="ControlsPanel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.957, 0.98, 1)
-theme_override_colors/font_outline_color = Color(0.039, 0.043, 0.078, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 9
-text = "- Auto-Run: Continuous rightward survival run
-- Jump: [SPACE] / [W] / [UP ARROW]
-- Aim: [MOUSE] True 360 Continuous Aiming (or Gamepad Right Stick / Arrows)
-- Shoot: [LEFT CLICK] / [X] (2-Shell Double-Barrel Shotgun)
-- RECOIL JUMP: Shoot DOWNWARD at any angle to launch into the air!
-  Spend shells to kill zombies or save shells for jump mobility.
-- Reload: [R] (Auto-reloads when dry, 0.8s duration)
-- Pause: [ESC] / [P]"
+text = "- AUTO-RUN: CONTINUOUS RIGHTWARD RUN
+- JUMP: [SPACE] / [W] / [UP ARROW]
+- AIM: [MOUSE] 360 AIM (OR RIGHT STICK)
+- SHOOT: [LEFT CLICK] / [X] (2 SHELLS)
+- RECOIL JUMP: SHOOT DOWNWARD TO VAULT!
+- RELOAD: [R] (AUTO-RELOADS WHEN DRY)
+- PAUSE: [ESC] / [P]"
 
-[node name="CloseControlsButton" type="Button" parent="ControlsPanel/Margin/VBox"]
+[node name="CloseControlsButton" type="Button" parent="ControlsPanel/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(156, 22)
+custom_minimum_size = Vector2(156, 20)
 layout_mode = 2
+theme_type_variation = &"PrimaryButton"
 text = "BACK TO MENU"

@@ -2,12 +2,11 @@ extends CanvasLayer
 class_name HUD
 
 # Gameplay HUD for CUBE: LAST RUN.
-# Restyled to match the Main Menu palette and pixel typography while keeping
-# all telemetry values, signals, and update rules unchanged.
+# Uses the shared res://assets/ui/game_theme.tres Theme resource and ThemePalette
+# while keeping all telemetry values, signals, and update rules unchanged.
 
 const PIP_FULL_TEX: Texture2D = preload("res://assets/ui/hp_pip_full.png")
 const PIP_EMPTY_TEX: Texture2D = preload("res://assets/ui/hp_pip_empty.png")
-const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 const PALETTE = preload("res://scripts/ui/theme_palette.gd")
 
 @onready var root_control: Control = $RootControl
@@ -16,6 +15,7 @@ const PALETTE = preload("res://scripts/ui/theme_palette.gd")
 @onready var time_label: Label = %TimeLabel
 @onready var shell_1: TextureRect = %Shell1
 @onready var shell_2: TextureRect = %Shell2
+@onready var reload_box: VBoxContainer = $RootControl/BottomLeft/AmmoPlate/AmmoBox/ReloadBox
 @onready var reload_bar: ProgressBar = %ReloadBar
 @onready var reload_label: Label = %ReloadLabel
 @onready var horde_bar: ProgressBar = %HordeBar
@@ -31,26 +31,19 @@ var _hp_pip_1: TextureRect = null
 var _hp_pip_2: TextureRect = null
 
 func _ready() -> void:
-	_setup_hud_visuals()
+	_setup_hud_pips()
 
 	if GameManager:
 		GameManager.score_updated.connect(_on_score_updated)
 		GameManager.distance_updated.connect(_on_distance_updated)
 		GameManager.horde_proximity_changed.connect(_on_horde_proximity_changed)
+	if reload_box:
+		reload_box.visible = false
 	reload_bar.visible = false
 	reload_label.visible = false
 	horde_warning.visible = false
 
-func _setup_hud_visuals() -> void:
-	var horde_lbl := get_node_or_null("RootControl/BottomRight/HordePlate/HordeBox/HBox/Label") as Label
-	for lbl: Label in [score_label, distance_label, time_label, hp_label]:
-		if lbl:
-			UI_ANIMATOR.apply_label_font(lbl, false, 10)
-	for sub_lbl: Label in [reload_label, horde_warning, horde_lbl]:
-		if sub_lbl:
-			UI_ANIMATOR.apply_label_font(sub_lbl, false, 9)
-
-	# Segmented pixel shield pips beside HP: 2/2
+func _setup_hud_pips() -> void:
 	var top_hbox := hp_label.get_parent() as HBoxContainer
 	if top_hbox:
 		var pip_box := HBoxContainer.new()
@@ -117,11 +110,15 @@ func _on_reload_started(duration: float) -> void:
 	_is_reloading = true
 	_reload_duration = duration
 	_reload_elapsed = 0.0
+	if reload_box:
+		reload_box.visible = true
 	reload_bar.visible = true
 	reload_label.visible = true
 
 func _on_reload_finished() -> void:
 	_is_reloading = false
+	if reload_box:
+		reload_box.visible = false
 	reload_bar.visible = false
 	reload_label.visible = false
 

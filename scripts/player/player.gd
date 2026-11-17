@@ -34,6 +34,7 @@ var is_invulnerable: bool = false
 # Jump helpers
 var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
+var _spawn_input_grace_frames: int = 2
 const COYOTE_TIME: float = 0.12
 const JUMP_BUFFER_TIME: float = 0.12
 
@@ -174,27 +175,31 @@ func _physics_process(delta: float) -> void:
 
 	_was_on_floor = is_on_floor()
 
-	# Jump buffering
-	if Input.is_action_just_pressed("jump"):
-		jump_buffer_timer = JUMP_BUFFER_TIME
+	if _spawn_input_grace_frames > 0:
+		_spawn_input_grace_frames -= 1
+		jump_buffer_timer = 0.0
 	else:
-		jump_buffer_timer -= delta
+		# Jump buffering
+		if Input.is_action_just_pressed("jump"):
+			jump_buffer_timer = JUMP_BUFFER_TIME
+		else:
+			jump_buffer_timer -= delta
 
-	# Execute Jump
-	if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
-		_perform_jump()
+		# Execute Jump
+		if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
+			_perform_jump()
 
-	# Variable jump height (releasing jump cuts upward velocity)
-	if Input.is_action_just_released("jump") and velocity.y < (jump_velocity * 0.45):
-		velocity.y = jump_velocity * 0.45
+		# Variable jump height (releasing jump cuts upward velocity)
+		if Input.is_action_just_released("jump") and velocity.y < (jump_velocity * 0.45):
+			velocity.y = jump_velocity * 0.45
 
-	# Shooting input
-	if Input.is_action_just_pressed("shoot"):
-		shotgun.shoot()
+		# Shooting input
+		if Input.is_action_just_pressed("shoot"):
+			shotgun.shoot()
 
-	# Manual reload input
-	if Input.is_action_just_pressed("reload"):
-		shotgun.start_reload()
+		# Manual reload input
+		if Input.is_action_just_pressed("reload"):
+			shotgun.start_reload()
 
 	move_and_slide()
 	_update_animation(delta)

@@ -1,22 +1,19 @@
 extends SceneTree
 
-# Native Godot 4 Image Generator for CUBE: LAST RUN AAA Indie Overhaul.
-# Generates ultra-crisp 2.5D voxel-shaded sprite sheets, multi-layer parallax
-# textures (including Foreground Overpass Layer), PointLight2D radial lightmaps,
-# and glowing HUD shield pips without requiring external Python/Pillow.
+# Deterministic Pixel-Art Asset Generator for CUBE: LAST RUN.
+# Generates:
+# - Clean distant & mid-ground city skylines with structured, clustered window grids
+# - Regular static street lamps every 96px along the road edge
+# - Clean ground-level RearHorde texture without floating sky/building dots
 
-const OUTLINE := Color8(14, 16, 24, 255)
+const OUTLINE := Color8(10, 11, 20, 255)
 
 func _init() -> void:
-	print("=== Generating AAA Indie 2.5D Voxel Pixel Art Assets via Godot 4.7 ===")
-	_make_light_textures()
-	_make_ui_pips()
-	_make_lobby_ui_plates()
+	print("=== Generating City Skylines, Clustered Windows, Street Lamps & Horde Assets ===")
+	_make_clean_horde_wall()
 	_make_foreground_overpass()
-	_make_upgraded_sky_and_skylines()
-	_make_upgraded_player()
-	_make_upgraded_zombies()
-	print("=== All AAA Indie Assets Generated Successfully! ===")
+	_make_city_skylines()
+	print("=== Asset Generation Complete ===")
 	quit(0)
 
 func _draw_rect_outline(img: Image, x0: int, y0: int, w: int, h: int, fill_col: Color, out_col: Color = OUTLINE) -> void:
@@ -30,391 +27,278 @@ func _draw_rect_outline(img: Image, x0: int, y0: int, w: int, h: int, fill_col: 
 		_safe_px(img, x0, y, out_col)
 		_safe_px(img, x0 + w - 1, y, out_col)
 
-func _draw_voxel_box(img: Image, x0: int, y0: int, w: int, h: int, fill_col: Color, hi_col: Color, rim_col: Color, sh_col: Color) -> void:
-	_draw_rect_outline(img, x0, y0, w, h, fill_col, OUTLINE)
-	for x in range(x0 + 1, x0 + w - 1):
-		_safe_px(img, x, y0 + 1, rim_col)
-		_safe_px(img, x, y0 + 2, hi_col)
-		_safe_px(img, x, y0 + h - 2, sh_col)
-	for y in range(y0 + 1, y0 + h - 1):
-		_safe_px(img, x0 + w - 2, y, hi_col)
-		_safe_px(img, x0 + 1, y, sh_col)
-
 func _safe_px(img: Image, x: int, y: int, col: Color) -> void:
 	if x >= 0 and x < img.get_width() and y >= 0 and y < img.get_height():
 		img.set_pixel(x, y, col)
 
-func _make_light_textures() -> void:
-	var rad := Image.create(64, 64, false, Image.FORMAT_RGBA8)
-	for y in range(64):
-		for x in range(64):
-			var dx := (float(x) - 31.5) / 31.5
-			var dy := (float(y) - 31.5) / 31.5
-			var d := sqrt(dx * dx + dy * dy)
-			var a := pow(maxf(0.0, 1.0 - d), 2.0)
-			rad.set_pixel(x, y, Color(1.0, 1.0, 1.0, a))
-	rad.save_png("res://assets/environment/point_light_radial.png")
+func _make_clean_horde_wall() -> void:
+	# RearHorde sits at global_position.y = 212 with centered Sprite2D (128x360 -> y_local -180..+180).
+	# Keep horde silhouettes strictly near the road corridor (y_img = 135..215) with ZERO floating sky dots.
+	var hw: int = 128
+	var hh: int = 360
+	var h_img := Image.create(hw, hh, false, Image.FORMAT_RGBA8)
 
-	# Cone light texture for streetlamps
-	var cone := Image.create(64, 64, false, Image.FORMAT_RGBA8)
-	for y in range(64):
-		var ty := float(y) / 63.0
-		var half_w := lerpf(3.0, 28.0, ty)
-		for x in range(64):
-			var dx := absf(float(x) - 31.5)
-			if dx <= half_w:
-				var falloff_x := 1.0 - (dx / half_w)
-				var falloff_y := 1.0 - ty * 0.85
-				var a := clampf(falloff_x * falloff_y, 0.0, 1.0)
-				cone.set_pixel(x, y, Color(1.0, 0.85, 0.55, a))
-	cone.save_png("res://assets/environment/light_cone.png")
+	# Ground-hugging shadow mist & zombie crowd silhouettes only between y = 148..208
+	for y in range(148, 210):
+		var v_fade: float = sin(clampf(float(y - 148) / 62.0, 0.0, 1.0) * PI)
+		for x in range(hw):
+			var h_fade: float = pow(1.0 - (float(x) / float(hw)), 1.6)
+			var a: float = clampf(h_fade * v_fade * 0.88, 0.0, 0.92)
+			if a > 0.02:
+				h_img.set_pixel(x, y, Color(0.06, 0.04, 0.09, a))
 
-func _make_ui_pips() -> void:
-	# Glowing Shield / Heart Pip Full (14x14)
-	var full := Image.create(14, 14, false, Image.FORMAT_RGBA8)
-	_draw_voxel_box(full, 1, 2, 12, 10, Color8(235, 45, 70), Color8(255, 110, 130), Color8(255, 200, 210), Color8(135, 18, 35))
-	full.fill_rect(Rect2i(4, 4, 6, 4), Color8(255, 150, 165))
-	full.set_pixel(4, 4, Color.WHITE)
-	full.save_png("res://assets/ui/hp_pip_full.png")
+	# Compact zombie head/arm silhouettes strictly along street level (y = 162..196)
+	var silhouettes: Array[Vector3i] = [
+		Vector3i(12, 166, 18), Vector3i(28, 170, 22), Vector3i(46, 164, 16),
+		Vector3i(62, 172, 20), Vector3i(78, 168, 16), Vector3i(92, 174, 14)
+	]
+	for s: Vector3i in silhouettes:
+		var sx: int = s.x
+		var sy: int = s.y
+		var sh: int = s.z
+		_draw_rect_outline(h_img, sx, sy, 14, sh, Color8(22, 18, 32, 245), OUTLINE)
+		# Reaching arm at street level
+		_draw_rect_outline(h_img, sx + 10, sy + 5, 10, 4, Color8(28, 22, 38, 245), OUTLINE)
+		# Subtle static crimson eye pair on the zombie head (street level only)
+		h_img.fill_rect(Rect2i(sx + 9, sy + 3, 2, 2), Color8(230, 57, 98, 240))
 
-	# Shattered Empty Pip (14x14)
-	var empty := Image.create(14, 14, false, Image.FORMAT_RGBA8)
-	_draw_rect_outline(empty, 1, 2, 12, 10, Color8(32, 35, 46, 180), OUTLINE)
-	for i in range(6):
-		_safe_px(empty, 4 + i, 3 + i, OUTLINE)
-	empty.save_png("res://assets/ui/hp_pip_empty.png")
-
-func _draw_chamfered_plate(img: Image, w: int, h: int, cut: int, bg_top: Color, bg_bot: Color, border_col: Color, accent_col: Color, is_hover: bool) -> void:
-	for y in range(h):
-		var ty: float = float(y) / float(max(1, h - 1))
-		var row_col: Color = bg_top.lerp(bg_bot, ty)
-		# Subtle horizontal scanline texture every 2px
-		if y % 2 == 1:
-			row_col = row_col.darkened(0.08)
-		for x in range(w):
-			# Chamfered 45-degree cut corners (top-left, top-right, bottom-left, bottom-right)
-			var d_tl: int = x + y
-			var d_tr: int = (w - 1 - x) + y
-			var d_bl: int = x + (h - 1 - y)
-			var d_br: int = (w - 1 - x) + (h - 1 - y)
-			if d_tl < cut or d_tr < cut or d_bl < cut or d_br < cut:
-				continue
-			# Outer dark outline
-			if x == 0 or x == w - 1 or y == 0 or y == h - 1 or d_tl == cut or d_tr == cut or d_bl == cut or d_br == cut:
-				img.set_pixel(x, y, OUTLINE)
-			# Glowing inner beveled border
-			elif x == 1 or x == w - 2 or y == 1 or y == h - 2 or d_tl == cut + 1 or d_tr == cut + 1 or d_bl == cut + 1 or d_br == cut + 1:
-				var bcol: Color = border_col.lightened(0.25) if (y == 1 or d_tl == cut + 1) else border_col
-				img.set_pixel(x, y, bcol)
-			else:
-				img.set_pixel(x, y, row_col)
-
-	# Left Tactical Hazard Stripe Bar (x = cut+2 .. cut+10)
-	for y in range(3, h - 3):
-		for x in range(cut + 2, cut + 9):
-			var stripe_phase: int = (x + y) % 6
-			var scol: Color = accent_col if stripe_phase < 3 else Color8(18, 20, 30, 255)
-			_safe_px(img, x, y, scol)
-		_safe_px(img, cut + 9, y, OUTLINE)
-
-	# Right Metallic Corner Rivets / Tech Notch
-	var rv_col: Color = accent_col if is_hover else Color8(180, 195, 215, 255)
-	for ry in [4, h - 5]:
-		_safe_px(img, w - cut - 4, ry, rv_col)
-		_safe_px(img, w - cut - 3, ry, rv_col)
-
-	# Glowing bottom accent bar on hover
-	if is_hover:
-		for x in range(cut + 12, w - cut - 6):
-			_safe_px(img, x, h - 3, accent_col)
-
-func _make_lobby_ui_plates() -> void:
-	# 1. Primary PLAY Button (160x28): Chamfered Crimson/Amber Tactical Plate
-	var p_norm := Image.create(160, 28, false, Image.FORMAT_RGBA8)
-	_draw_chamfered_plate(
-		p_norm, 160, 28, 5,
-		Color8(46, 22, 34, 248), Color8(24, 14, 24, 248),
-		Color8(235, 85, 45, 255), Color8(255, 185, 45, 255), false
-	)
-	p_norm.save_png("res://assets/ui/btn_primary_normal.png")
-
-	var p_hov := Image.create(160, 28, false, Image.FORMAT_RGBA8)
-	_draw_chamfered_plate(
-		p_hov, 160, 28, 5,
-		Color8(78, 32, 42, 255), Color8(42, 18, 28, 255),
-		Color8(255, 215, 65, 255), Color8(255, 235, 95, 255), true
-	)
-	p_hov.save_png("res://assets/ui/btn_primary_hover.png")
-
-	# 2. Secondary Button (150x24): Chamfered Dark-Slate/Cyan Tactical Plate
-	var s_norm := Image.create(150, 24, false, Image.FORMAT_RGBA8)
-	_draw_chamfered_plate(
-		s_norm, 150, 24, 4,
-		Color8(26, 32, 52, 242), Color8(16, 20, 34, 242),
-		Color8(85, 145, 195, 255), Color8(65, 215, 245, 255), false
-	)
-	s_norm.save_png("res://assets/ui/btn_secondary_normal.png")
-
-	var s_hov := Image.create(150, 24, false, Image.FORMAT_RGBA8)
-	_draw_chamfered_plate(
-		s_hov, 150, 24, 4,
-		Color8(42, 52, 82, 255), Color8(24, 30, 52, 255),
-		Color8(255, 190, 60, 255), Color8(255, 215, 75, 255), true
-	)
-	s_hov.save_png("res://assets/ui/btn_secondary_hover.png")
-
-	# 3. Audio Toggle Badges (72x22): SFX / MUSIC On & Off Plates
-	var t_on := Image.create(72, 22, false, Image.FORMAT_RGBA8)
-	_draw_chamfered_plate(
-		t_on, 72, 22, 4,
-		Color8(22, 42, 46, 245), Color8(14, 26, 32, 245),
-		Color8(55, 225, 165, 255), Color8(65, 255, 185, 255), true
-	)
-	t_on.save_png("res://assets/ui/btn_toggle_on.png")
-
-	var t_off := Image.create(72, 22, false, Image.FORMAT_RGBA8)
-	_draw_chamfered_plate(
-		t_off, 72, 22, 4,
-		Color8(32, 24, 32, 235), Color8(18, 14, 22, 235),
-		Color8(95, 75, 92, 255), Color8(185, 55, 65, 255), false
-	)
-	t_off.save_png("res://assets/ui/btn_toggle_off.png")
-
-	# 4. Title Banner Plate (310x62): Post-Apocalyptic Armored Header Crest
-	var banner := Image.create(310, 62, false, Image.FORMAT_RGBA8)
-	_draw_chamfered_plate(
-		banner, 310, 62, 8,
-		Color8(28, 18, 36, 235), Color8(14, 10, 22, 242),
-		Color8(235, 75, 52, 255), Color8(255, 180, 48, 255), true
-	)
-	# Top & bottom hazard stripe rails along banner
-	for x in range(24, 286):
-		var p: int = x % 10
-		var hcol: Color = Color8(245, 175, 42, 220) if p < 5 else Color8(22, 18, 28, 220)
-		banner.set_pixel(x, 3, hcol)
-		banner.set_pixel(x, 4, hcol)
-	banner.save_png("res://assets/ui/title_banner.png")
-
-	# 5. Lobby Highway Strip (480x46) for the live Main Menu diorama floor
-	var road := Image.create(480, 46, false, Image.FORMAT_RGBA8)
-	var tiles := Image.load_from_file("res://assets/environment/urban_tiles.png")
-	if tiles:
-		for i in range(30):
-			var tx: int = i * 16
-			var src_x: int = 16 if (i % 4) == 2 else 0
-			road.blit_rect(tiles, Rect2i(src_x, 0, 16, 16), Vector2i(tx, 0))
-			road.blit_rect(tiles, Rect2i(32, 0, 16, 16), Vector2i(tx, 16))
-			road.blit_rect(tiles, Rect2i(32, 0, 16, 16), Vector2i(tx, 32))
-	road.save_png("res://assets/ui/lobby_road.png")
+	h_img.save_png("res://assets/zombies/horde_wall.png")
 
 func _make_foreground_overpass() -> void:
+	# Layer 4 (Parallax 0.60): Regular static street lamps every 96px (5 lamps per 480px repeat)
+	# plus rusted highway guardrail along the road edge (y = 213..224).
 	var fore := Image.create(480, 270, false, Image.FORMAT_RGBA8)
-	var rust_dark := Color8(44, 28, 32, 240)
-	var rust_hi := Color8(96, 54, 46, 240)
-	var pole_col := Color8(28, 32, 44, 255)
-	var sodium := Color8(255, 198, 92, 255)
+	var rail_dark := Color8(36, 26, 38, 255)
+	var rail_hi := Color8(78, 52, 64, 255)
+	var pole_col := Color8(24, 28, 44, 255)
+	var pole_hi := Color8(48, 56, 84, 255)
+	var lamp_amber := Color("#f28c38")
+	var lamp_core := Color("#fff3b0")
 
-	# Rusted highway guardrail along road edge (y = 213..218)
-	_draw_rect_outline(fore, 0, 213, 480, 5, rust_dark, OUTLINE)
-	fore.fill_rect(Rect2i(0, 214, 480, 1), rust_hi)
+	# Continuous guardrail beam along road edge
+	_draw_rect_outline(fore, 0, 213, 480, 5, rail_dark, OUTLINE)
+	fore.fill_rect(Rect2i(0, 214, 480, 1), rail_hi)
 	for gx in range(0, 480, 24):
-		_draw_rect_outline(fore, gx, 210, 4, 14, rust_dark, OUTLINE)
+		_draw_rect_outline(fore, gx, 210, 4, 14, rail_dark, OUTLINE)
 
-	# Streetlamps casting warm sodium-vapor cones at x = 76, 236, 396
-	for lx: int in [76, 236, 396]:
-		_draw_rect_outline(fore, lx, 132, 4, 92, pole_col, OUTLINE)
-		_draw_rect_outline(fore, lx, 130, 18, 4, pole_col, OUTLINE)
-		_draw_rect_outline(fore, lx + 14, 132, 8, 4, sodium, OUTLINE)
-		# Volumetric light cone
-		for y in range(136, 224):
-			var t := float(y - 136) / 88.0
-			var hw := int(lerpf(3.0, 26.0, t))
-			var alpha := lerpf(0.18, 0.02, t)
-			for x in range(lx + 18 - hw, lx + 18 + hw):
-				if x >= 0 and x < 480 and y < 213:
-					var cur := fore.get_pixel(x, y)
+	# 5 evenly spaced static street lamps (every 96px: x = 36, 132, 228, 324, 420)
+	for lx: int in [36, 132, 228, 324, 420]:
+		# Vertical pole
+		_draw_rect_outline(fore, lx, 142, 4, 82, pole_col, OUTLINE)
+		fore.fill_rect(Rect2i(lx + 2, 143, 1, 79), pole_hi)
+		# Horizontal mast arm
+		_draw_rect_outline(fore, lx, 140, 16, 4, pole_col, OUTLINE)
+		# Lamp housing & static warm amber bulb
+		_draw_rect_outline(fore, lx + 12, 142, 8, 4, pole_col, OUTLINE)
+		fore.fill_rect(Rect2i(lx + 13, 145, 6, 2), lamp_amber)
+		fore.fill_rect(Rect2i(lx + 14, 145, 4, 1), lamp_core)
+
+		# Subtle static pixel-stepped light cone onto the road verge
+		for y in range(147, 213):
+			var t: float = float(y - 147) / 66.0
+			var hw: int = int(lerpf(3.0, 20.0, t))
+			var alpha: float = lerpf(0.14, 0.02, t)
+			for x in range(lx + 16 - hw, lx + 16 + hw):
+				if x >= 0 and x < 480:
+					var cur: Color = fore.get_pixel(x, y)
 					if cur.a < 0.1:
-						fore.set_pixel(x, y, Color(1.0, 0.78, 0.35, alpha))
-
-	# Burned-out car silhouettes behind guardrail
-	for cx: int in [138, 318]:
-		_draw_rect_outline(fore, cx, 203, 38, 11, Color8(24, 22, 32, 245), OUTLINE)
-		_draw_rect_outline(fore, cx + 7, 196, 22, 8, Color8(30, 26, 38, 245), OUTLINE)
-		fore.fill_rect(Rect2i(cx + 9, 198, 7, 5), Color8(85, 42, 48, 190))
-		fore.fill_rect(Rect2i(cx + 18, 198, 8, 5), Color8(85, 42, 48, 190))
+						fore.set_pixel(x, y, Color(0.95, 0.62, 0.25, alpha))
 
 	fore.save_png("res://assets/environment/parallax_overpass_fore.png")
 
-func _make_upgraded_sky_and_skylines() -> void:
-	# 1. Sky gradient (#0f1021 -> #2b193d -> #7a2832 -> #f28c38)
+func _make_city_skylines() -> void:
+	# 1. Base Sky Texture (480x270) — 6 clean pixel-art horizontal dusk bands
 	var sky := Image.create(480, 270, false, Image.FORMAT_RGBA8)
-	var c0 := Color("#0f1021")
-	var c1 := Color("#2b193d")
-	var c2 := Color("#7a2832")
-	var c3 := Color("#f28c38")
+	var bands: Array[Color] = [
+		Color("#0f1021"),
+		Color("#1c1530"),
+		Color("#2b193d"),
+		Color("#522038"),
+		Color("#7a2832"),
+		Color("#f28c38")
+	]
 	for y in range(270):
-		var ty := float(y) / 269.0
-		var col: Color
-		if ty < 0.32:
-			col = c0.lerp(c1, ty / 0.32)
-		elif ty < 0.65:
-			col = c1.lerp(c2, (ty - 0.32) / 0.33)
-		else:
-			col = c2.lerp(c3, (ty - 0.65) / 0.35)
-		sky.fill_rect(Rect2i(0, y, 480, 1), col)
+		var b_idx: int = clampi(int((float(y) / 270.0) * float(bands.size())), 0, bands.size() - 1)
+		sky.fill_rect(Rect2i(0, y, 480, 1), bands[b_idx])
 	sky.save_png("res://assets/environment/parallax_sky.png")
 
-	# 2. Distant Mega-City Silhouette with red aviation beacons
+	# 2. Distant Skyline Layer (Parallax 0.10, 480x270)
+	# 100% opaque building silhouettes so the setting sun passes cleanly behind them.
+	# Deliberate horizontal office window strip clusters; zero random single-pixel noise.
 	var dist := Image.create(480, 270, false, Image.FORMAT_RGBA8)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 101
-	var sil_col := Color8(30, 19, 38, 240)
-	var rim_col := Color8(110, 48, 58, 220)
-	var bx := 0
-	while bx < 480:
-		var bw := rng.randi_range(24, 46)
-		if bx + bw > 480:
-			bw = 480 - bx
-		var bh := rng.randi_range(68, 148)
-		var by := 224 - bh
-		dist.fill_rect(Rect2i(bx, by, bw, 270 - by), sil_col)
-		dist.fill_rect(Rect2i(bx, by, bw, 1), rim_col)
-		dist.fill_rect(Rect2i(bx + bw - 1, by, 1, 224 - by), rim_col)
-		# Radio spire & red aviation warning light
-		if rng.randf() > 0.45:
-			var tx := bx + bw / 2
-			var th := rng.randi_range(12, 26)
+	var sil_col := Color8(22, 18, 36, 255)
+	var sil_rim := Color8(46, 32, 62, 255)
+	var win_unlit := Color8(14, 12, 24, 255)
+	var win_amber_dim := Color8(195, 118, 56, 255)
+	var win_cyan_dim := Color8(52, 148, 178, 255)
+
+	# Fixed deterministic distant building specifications: [x, width, top_y, has_spire, cluster_seed]
+	var dist_buildings: Array[ Array ] = [
+		[0, 44, 118, true, 1],
+		[42, 38, 136, false, 2],
+		[78, 52, 98, true, 3],
+		[128, 40, 128, false, 4],
+		[166, 48, 108, true, 5],
+		[212, 42, 134, false, 6],
+		[252, 54, 94, true, 7],
+		[304, 38, 140, false, 8],
+		[340, 48, 112, true, 9],
+		[386, 46, 126, false, 10],
+		[430, 50, 104, true, 11]
+	]
+
+	for b: Array in dist_buildings:
+		var bx: int = b[0]
+		var bw: int = b[1]
+		var by: int = b[2]
+		var has_spire: bool = b[3]
+		var b_seed: int = b[4]
+
+		_draw_rect_outline(dist, bx, by, bw, 270 - by, sil_col, OUTLINE)
+		dist.fill_rect(Rect2i(bx + 1, by + 1, bw - 2, 1), sil_rim)
+
+		# Static rooftop spire with a single 2x2 static red beacon tip
+		if has_spire:
+			var tx: int = bx + bw / 2
+			var th: int = 16
 			dist.fill_rect(Rect2i(tx, by - th, 2, th), sil_col)
-			dist.fill_rect(Rect2i(tx - 1, by - th - 1, 4, 4), Color8(255, 45, 55, 245))
-			_safe_px(dist, tx, by - th, Color.WHITE)
-		# Distant warm amber windows
-		var wy := by + 8
-		while wy < 210:
-			var wx := bx + 4
-			while wx < bx + bw - 5:
-				if rng.randf() > 0.68:
-					dist.fill_rect(Rect2i(wx, wy, 2, 4), Color8(245, 145, 65, 130))
-				wx += 7
-			wy += 10
-		bx += bw + rng.randi_range(2, 6)
+			dist.fill_rect(Rect2i(tx, by - th - 2, 2, 2), Color("#e63962"))
+
+		# Structured floor grid: 3px wide x 3px tall windows, 6px column step, 7px floor step
+		var cols: int = (bw - 10) / 6
+		var floor_idx: int = 0
+		var wy: int = by + 8
+		while wy < 214:
+			# Deliberate floor pattern: some floors have a contiguous lit cluster of 2-4 windows
+			var lit_start: int = -1
+			var lit_len: int = 0
+			var use_cyan: bool = ((floor_idx + b_seed) % 4 == 0)
+			if (floor_idx * 3 + b_seed) % 3 == 0:
+				lit_start = (floor_idx + b_seed) % max(1, cols - 2)
+				lit_len = 3
+			elif (floor_idx + b_seed * 2) % 4 == 1:
+				lit_start = (b_seed) % max(1, cols - 1)
+				lit_len = 2
+
+			for c in range(cols):
+				var wx: int = bx + 6 + c * 6
+				var wcol: Color = win_unlit
+				if c >= lit_start and c < lit_start + lit_len:
+					wcol = win_cyan_dim if use_cyan else win_amber_dim
+				dist.fill_rect(Rect2i(wx, wy, 3, 3), wcol)
+			wy += 7
+			floor_idx += 1
+
 	dist.save_png("res://assets/environment/parallax_skyline_distant.png")
 
-	# 3. Mid-ground Urban Skyline (#161b33, #1f2747) with amber/cyan windows & neon signs
+	# 3. Mid-Ground Urban Skyline Layer (Parallax 0.25, 480x270)
+	# Dark navy/slate buildings (#161b33, #1f2747) with structured floor-and-bay window grids,
+	# clustered warm amber & cyan lit rooms, static rooftop neon sign frames, and water towers.
 	var mid := Image.create(480, 270, false, Image.FORMAT_RGBA8)
-	rng.seed = 202
-	var navy_a := Color("#161b33")
-	var navy_b := Color("#1f2747")
-	var mid_rim := Color8(78, 64, 102, 255)
-	var win_amber := Color8(255, 182, 72, 240)
-	var win_cyan := Color8(75, 228, 255, 230)
-	var win_dark := Color8(12, 15, 28, 255)
-	bx = 0
-	var idx := 0
-	while bx < 480:
-		var bw := rng.randi_range(40, 72)
-		if bx + bw > 480:
-			bw = 480 - bx
-		var bh := rng.randi_range(76, 156)
-		var by := 226 - bh
-		var col := navy_a if (idx % 2 == 0) else navy_b
-		_draw_rect_outline(mid, bx, by, bw, 270 - by, col, OUTLINE)
-		mid.fill_rect(Rect2i(bx + 1, by + 1, bw - 2, 1), mid_rim)
-		mid.fill_rect(Rect2i(bx + bw - 2, by + 1, 1, 226 - by), mid_rim)
-		# Rooftop neon billboard frame
-		if idx % 2 == 0 and bw >= 44:
-			var bbw := bw - 14
-			_draw_rect_outline(mid, bx + 7, by - 20, bbw, 15, Color8(34, 20, 42, 255), OUTLINE)
-			var neon := Color8(255, 65, 130, 255) if (idx % 4 == 0) else Color8(55, 235, 255, 255)
-			_draw_rect_outline(mid, bx + 9, by - 18, bbw - 4, 11, Color8(24, 16, 32, 255), neon)
-			mid.fill_rect(Rect2i(bx + 11, by - 5, 2, 5), OUTLINE)
-			mid.fill_rect(Rect2i(bx + bbw, by - 5, 2, 5), OUTLINE)
+	var navy_dark := Color("#161b33")
+	var navy_slate := Color("#1f2747")
+	var mid_rim := Color8(52, 62, 102, 255)
+	var mid_unlit := Color8(11, 14, 26, 255)
+	var win_amber := Color("#f28c38")
+	var win_cyan := Color("#38d8f2")
+	var neon_magenta := Color("#e63962")
+
+	# Deterministic mid-ground buildings: [x, width, top_y, style_idx, roof_feature]
+	# Note: Gap left around x = 280..335 (uv.x ~ 0.60..0.68) so the setting sun & rising moon
+	# have a dramatic canyon vista before sinking behind the mid-ground skyline at y = 138!
+	var mid_buildings: Array[ Array ] = [
+		[0, 56, 106, 0, "neon_magenta"],
+		[62, 52, 82, 1, "tower"],
+		[120, 60, 96, 0, "neon_cyan"],
+		[186, 48, 122, 1, "ac"],
+		[240, 52, 88, 0, "neon_magenta"],
+		[298, 48, 134, 1, "ac"],
+		[352, 64, 78, 0, "neon_cyan"],
+		[422, 58, 102, 1, "tower"]
+	]
+
+	for idx in range(mid_buildings.size()):
+		var mb: Array = mid_buildings[idx]
+		var bx: int = mb[0]
+		var bw: int = mb[1]
+		var by: int = mb[2]
+		var st: int = mb[3]
+		var roof_feat: String = mb[4]
+		var bcol: Color = navy_dark if st == 0 else navy_slate
+
+		_draw_rect_outline(mid, bx, by, bw, 270 - by, bcol, OUTLINE)
+		# Top cornice ledge (3px deep)
+		_draw_rect_outline(mid, bx - 1, by, bw + 2, 4, navy_slate.lightened(0.08), OUTLINE)
+		mid.fill_rect(Rect2i(bx, by + 1, bw, 1), mid_rim)
+
+		# Static rooftop architecture
+		if roof_feat == "neon_magenta" or roof_feat == "neon_cyan":
+			var bbw: int = bw - 14
+			var ncol: Color = neon_magenta if roof_feat == "neon_magenta" else win_cyan
+			_draw_rect_outline(mid, bx + 7, by - 18, bbw, 14, Color8(18, 16, 30, 255), OUTLINE)
+			_draw_rect_outline(mid, bx + 9, by - 16, bbw - 4, 10, Color8(14, 12, 24, 255), ncol)
+			# Static inner horizontal neon bar
+			mid.fill_rect(Rect2i(bx + 13, by - 12, bbw - 12, 2), ncol)
+			mid.fill_rect(Rect2i(bx + 11, by - 4, 2, 4), OUTLINE)
+			mid.fill_rect(Rect2i(bx + bbw + 1, by - 4, 2, 4), OUTLINE)
+		elif roof_feat == "tower":
+			_draw_rect_outline(mid, bx + 10, by - 16, 16, 12, Color8(48, 38, 46, 255), OUTLINE)
+			_draw_rect_outline(mid, bx + 8, by - 18, 20, 3, Color8(36, 28, 36, 255), OUTLINE)
+			mid.fill_rect(Rect2i(bx + 12, by - 4, 2, 4), OUTLINE)
+			mid.fill_rect(Rect2i(bx + 22, by - 4, 2, 4), OUTLINE)
 		else:
-			# Rooftop water tower
-			_draw_rect_outline(mid, bx + 8, by - 16, 14, 11, Color8(56, 42, 48, 255), OUTLINE)
-			mid.fill_rect(Rect2i(bx + 10, by - 5, 2, 5), OUTLINE)
-			mid.fill_rect(Rect2i(bx + 18, by - 5, 2, 5), OUTLINE)
+			_draw_rect_outline(mid, bx + 8, by - 7, 16, 7, navy_dark, OUTLINE)
+			_draw_rect_outline(mid, bx + 28, by - 5, 12, 5, navy_dark, OUTLINE)
 
-		var wy := by + 10
-		while wy < 216:
-			var wx := bx + 6
-			while wx < bx + bw - 8:
-				var rv := rng.randf()
-				var wcol := win_dark
-				if rv > 0.70:
-					wcol = win_amber
-				elif rv > 0.54:
-					wcol = win_cyan
+		# Structured window grid: 4px wide x 6px tall windows, 8px column step, 10px floor step
+		var cols: int = (bw - 10) / 8
+		var floor_num: int = 0
+		var wy: int = by + 8
+		while wy < 214:
+			# Subtle horizontal floor divider line
+			mid.fill_rect(Rect2i(bx + 2, wy - 2, bw - 4, 1), bcol.darkened(0.15))
+
+			# Deliberate clustered window lighting per floor (2-3 adjacent lit rooms per cluster)
+			var c_start_a: int = -10
+			var c_len_a: int = 0
+			var c_col_a: Color = win_amber
+
+			var c_start_b: int = -10
+			var c_len_b: int = 0
+			var c_col_b: Color = win_cyan
+
+			var pat: int = (floor_num * 5 + idx * 3) % 7
+			if pat == 0:
+				c_start_a = 0
+				c_len_a = min(3, cols)
+			elif pat == 1:
+				c_start_a = max(0, cols - 3)
+				c_len_a = min(3, cols)
+			elif pat == 2:
+				c_start_b = 1
+				c_len_b = min(2, max(0, cols - 1))
+			elif pat == 3:
+				c_start_a = 0
+				c_len_a = 2
+				c_start_b = max(2, cols - 2)
+				c_len_b = 2
+			elif pat == 4:
+				c_start_a = max(0, (cols / 2) - 1)
+				c_len_a = 2
+			# pat 5 & 6: unlit floor for natural vertical rhythm
+
+			for c in range(cols):
+				var wx: int = bx + 6 + c * 8
+				var wcol: Color = mid_unlit
+				if c >= c_start_a and c < c_start_a + c_len_a:
+					wcol = c_col_a
+				elif c >= c_start_b and c < c_start_b + c_len_b:
+					wcol = c_col_b
 				mid.fill_rect(Rect2i(wx, wy, 4, 6), wcol)
-				wx += 9
-			wy += 12
-		bx += bw + rng.randi_range(6, 14)
-		idx += 1
+				# Subtle window sill shadow
+				mid.fill_rect(Rect2i(wx, wy + 6, 4, 1), OUTLINE)
+
+			wy += 10
+			floor_num += 1
+
 	mid.save_png("res://assets/environment/parallax_buildings_mid.png")
-
-func _make_upgraded_player() -> void:
-	# Enhance cube_player.png with glowing cyan tactical visor & 2.5D voxel bevels
-	var img := Image.load_from_file("res://assets/characters/cube_player.png")
-	if not img:
-		return
-	var visor_glow := Color8(0, 245, 255, 255)
-	var visor_core := Color8(230, 255, 255, 255)
-	# Add glowing visor highlights on Idle (Row 0), Run (Row 1), Jump (Row 2), Fall (Row 3), Land (Row 4)
-	for row: int in [0, 1, 2, 3, 4]:
-		var max_cols: int = 6 if row == 1 else (4 if row == 0 else 2)
-		for col: int in range(max_cols):
-			if row == 0 and col == 3:
-				continue # blink frame
-			var cx: int = col * 24
-			var cy: int = row * 24
-			var bob: int = 0
-			if row == 0 and col in [1, 2]:
-				bob = 1
-			elif row == 1:
-				var bobs: Array[int] = [0, -1, 0, 1, 0, -1]
-				bob = bobs[col]
-			elif row == 2:
-				bob = 1 if col == 0 else -2
-			elif row == 3:
-				bob = 0 if col == 0 else 1
-			elif row == 4:
-				bob = 2 if col == 0 else 0
-			var bx: int = cx + 4
-			var by: int = cy + 4 + bob
-			# Top specular voxel edge
-			img.fill_rect(Rect2i(bx + 1, by + 1, 14, 1), Color8(165, 248, 255, 255))
-			# Glowing cyan visor eyes
-			var vx0: int = bx + 3
-			var vy0: int = by + 5
-			img.fill_rect(Rect2i(vx0, vy0, 11, 6), Color8(16, 22, 36, 255))
-			img.fill_rect(Rect2i(vx0 + 2, vy0 + 1, 3, 4), visor_glow)
-			_safe_px(img, vx0 + 3, vy0 + 1, visor_core)
-			img.fill_rect(Rect2i(vx0 + 6, vy0 + 1, 3, 4), visor_glow)
-			_safe_px(img, vx0 + 7, vy0 + 1, visor_core)
-	img.save_png("res://assets/characters/cube_player.png")
-
-func _make_upgraded_zombies() -> void:
-	# Add glowing toxic-green eyes to Shambler (zombie_walker.png)
-	var w_img := Image.load_from_file("res://assets/zombies/zombie_walker.png")
-	if w_img:
-		for i in range(4):
-			var cx := i * 24
-			var bob := 1 if i in [1, 3] else 0
-			var bx := cx + 4
-			var by := 4 + bob
-			w_img.fill_rect(Rect2i(bx + 1, by + 1, 14, 1), Color8(150, 215, 135, 255))
-			w_img.fill_rect(Rect2i(bx + 8, by + 4, 4, 3), Color8(55, 255, 65, 255))
-			_safe_px(w_img, bx + 9, by + 5, Color8(230, 255, 220, 255))
-		w_img.save_png("res://assets/zombies/zombie_walker.png")
-
-	# Add glowing crimson eyes to Sprinter (zombie_runner.png)
-	var r_img := Image.load_from_file("res://assets/zombies/zombie_runner.png")
-	if r_img:
-		for i in range(4):
-			var cx := i * 24
-			var bob := (i % 2) * 2
-			var bx := cx + 4
-			var by := 4 + bob
-			r_img.fill_rect(Rect2i(bx + 1, by + 1, 14, 1), Color8(255, 125, 125, 255))
-			r_img.fill_rect(Rect2i(bx + 7, by + 3, 6, 3), Color8(255, 35, 35, 255))
-			_safe_px(r_img, bx + 8, by + 4, Color.WHITE)
-		r_img.save_png("res://assets/zombies/zombie_runner.png")

@@ -55,7 +55,7 @@ centered = false
 script = ExtResource("5_gen")
 
 [node name="Player" parent="." instance=ExtResource("6_player")]
-position = Vector2(100, 200)
+position = Vector2(100, 212)
 
 [node name="RearHorde" parent="." instance=ExtResource("7_horde")]
 position = Vector2(-120, 200)

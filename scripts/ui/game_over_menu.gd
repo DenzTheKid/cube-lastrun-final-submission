@@ -2,7 +2,9 @@ extends CanvasLayer
 class_name GameOverMenu
 
 # Game Over presentation showing final score, distance, survival stats,
-# new high-score fanfare, and retry controls.
+# new high-score fanfare, and retry controls using the shared game_theme.tres.
+
+const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 
 @onready var panel: PanelContainer = %GameOverPanel
 @onready var score_lbl: Label = %FinalScoreLabel
@@ -13,16 +15,11 @@ class_name GameOverMenu
 @onready var retry_btn: Button = %RetryButton
 @onready var menu_btn: Button = %MenuButton
 
-const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
-
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	panel.visible = false
 	UI_ANIMATOR.style_button(retry_btn, true)
 	UI_ANIMATOR.style_button(menu_btn, false)
-	for lbl: Label in [score_lbl, dist_lbl, time_lbl, kills_lbl, record_banner]:
-		if lbl:
-			UI_ANIMATOR.apply_label_font(lbl, false, 10)
 	if GameManager:
 		GameManager.game_over.connect(_on_game_over)
 	retry_btn.pressed.connect(_on_retry_pressed)
@@ -40,7 +37,6 @@ func _on_game_over(final_score: int, distance: float, survival_time: float, kill
 
 	record_banner.visible = is_new
 
-	# Delayed pop-in to let the death/transformation sequence play
 	await get_tree().create_timer(0.8).timeout
 	panel.visible = true
 	retry_btn.grab_focus()
