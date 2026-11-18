@@ -25,12 +25,18 @@ const PALETTE = preload("res://scripts/ui/theme_palette.gd")
 @onready var hp_label: Label = %HpLabel
 @onready var _hp_pip_1: TextureRect = %Heart1
 @onready var _hp_pip_2: TextureRect = %Heart2
+@onready var combo_plate: PanelContainer = %ComboPlate
+@onready var combo_label: Label = %ComboLabel
+@onready var critical_vignette: ColorRect = %CriticalVignette
 
 var _is_reloading: bool = false
 var _reload_duration: float = 0.80
 var _reload_elapsed: float = 0.0
 var _warning_pulse_timer: float = 0.0
+var _critical_pulse_timer: float = 0.0
+var _is_low_hp: bool = false
 var _last_hp: int = 2
+var _combo_tween: Tween = null
 
 func _ready() -> void:
 	_set_mouse_filter_ignore(root_control)
@@ -38,11 +44,16 @@ func _ready() -> void:
 		GameManager.score_updated.connect(_on_score_updated)
 		GameManager.distance_updated.connect(_on_distance_updated)
 		GameManager.horde_proximity_changed.connect(_on_horde_proximity_changed)
+		GameManager.combo_updated.connect(_on_combo_updated)
 	if reload_box:
 		reload_box.visible = false
 	reload_bar.visible = false
 	reload_label.visible = false
 	horde_warning.visible = false
+	if combo_plate:
+		combo_plate.visible = false
+	if critical_vignette:
+		critical_vignette.visible = false
 
 func _set_mouse_filter_ignore(node: Node) -> void:
 	if node is Control:
@@ -64,6 +75,19 @@ func _process(delta: float) -> void:
 	if horde_warning.visible:
 		_warning_pulse_timer += delta * 6.0
 		horde_warning.modulate.a = 0.5 + 0.5 * sin(_warning_pulse_timer)
+
+	if _is_low_hp:
+		_critical_pulse_timer += delta * 4.4
+		var beat: float = 0.5 + 0.5 * sin(_critical_pulse_timer)
+		if critical_vignette and critical_vignette.material is ShaderMaterial:
+			var smat := critical_vignette.material as ShaderMaterial
+			smat.set_shader_parameter("pulse_alpha", lerpf(0.22, 0.44, beat))
+		if _hp_pip_1:
+			_hp_pip_1.pivot_offset = Vector2(10.0, 8.5)
+			var pip_s: float = 1.0 + 0.14 * pow(beat, 2.0)
+			_hp_pip_1.scale = Vector2(pip_s, pip_s)
+		if hp_label:
+			hp_label.modulate = PALETTE.ACCENT_MAGENTA.lerp(Color(1.0, 0.52, 0.62, 1.0), beat * 0.65)
 
 func setup_player(player: Player) -> void:
 	if player:
@@ -102,10 +126,43 @@ func _on_health_changed(hp: int, max_hp: int) -> void:
 			tw_heal.tween_property(pop_pip, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_last_hp = hp
 
-	if hp == 1:
+	_is_low_hp = (hp == 1)
+	if critical_vignette:
+		critical_vignette.visible = _is_low_hp
+		if not _is_low_hp and critical_vignette.material is ShaderMaterial:
+			(critical_vignette.material as ShaderMaterial).set_shader_parameter("pulse_alpha", 0.0)
+	if not _is_low_hp and _hp_pip_1:
+		_hp_pip_1.scale = Vector2.ONE
+
+	if _is_low_hp:
+		_critical_pulse_timer = PI * 0.5
 		hp_label.modulate = PALETTE.ACCENT_MAGENTA
 	else:
 		hp_label.modulate = Color.WHITE
+
+func _on_combo_updated(combo_count: int, multiplier: int) -> void:
+	if not combo_plate or not combo_label:
+		return
+	if combo_count < 2:
+		combo_plate.visible = false
+		return
+
+	combo_plate.visible = true
+	combo_label.text = "COMBO x%d  (%d HIT)" % [multiplier, combo_count]
+	if multiplier >= 5:
+		combo_label.modulate = Color(1.0, 0.45, 0.60, 1.0)
+	elif multiplier >= 3:
+		combo_label.modulate = Color(0.96, 0.60, 0.30, 1.0)
+	else:
+		combo_label.modulate = Color(0.96, 0.84, 0.45, 1.0)
+
+	var sz: Vector2 = combo_plate.get_combined_minimum_size() if combo_plate.size.x < 1.0 else combo_plate.size
+	combo_plate.pivot_offset = sz * 0.5
+	combo_plate.scale = Vector2(1.18, 1.18)
+	if _combo_tween and _combo_tween.is_valid():
+		_combo_tween.kill()
+	_combo_tween = create_tween()
+	_combo_tween.tween_property(combo_plate, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _on_ammo_changed(current: int, _max_ammo: int) -> void:
 	if shell_1:

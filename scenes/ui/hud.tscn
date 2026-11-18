@@ -4,6 +4,13 @@
 [ext_resource type="Texture2D" path="res://assets/ui/px_shell_full.png" id="2_shelltex"]
 [ext_resource type="Theme" path="res://assets/ui/game_theme.tres" id="3_theme"]
 [ext_resource type="Texture2D" path="res://assets/ui/px_heart_full.png" id="4_heartfull"]
+[ext_resource type="Shader" path="res://shaders/critical_hp_vignette.gdshader" id="5_critshader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crit"]
+shader = ExtResource("5_critshader")
+shader_parameter/tint_color = Color(0.96, 0.16, 0.24, 1)
+shader_parameter/pulse_alpha = 0.0
+shader_parameter/edge_width = 0.065
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -19,6 +26,18 @@ grow_vertical = 2
 mouse_filter = 2
 theme = ExtResource("3_theme")
 
+[node name="CriticalVignette" type="ColorRect" parent="RootControl"]
+unique_name_in_owner = true
+visible = false
+material = SubResource("ShaderMaterial_crit")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
 [node name="TopMargin" type="MarginContainer" parent="RootControl"]
 layout_mode = 1
 anchors_preset = 10
@@ -26,7 +45,7 @@ anchor_right = 1.0
 offset_left = 8.0
 offset_top = 6.0
 offset_right = -8.0
-offset_bottom = 36.0
+offset_bottom = 68.0
 grow_horizontal = 2
 
 [node name="TopBar" type="HBoxContainer" parent="RootControl/TopMargin"]
@@ -67,31 +86,50 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="TopPlate" type="PanelContainer" parent="RootControl/TopMargin/TopBar"]
+[node name="TopRightBox" type="VBoxContainer" parent="RootControl/TopMargin/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+theme_override_constants/separation = 4
+
+[node name="TopPlate" type="PanelContainer" parent="RootControl/TopMargin/TopBar/TopRightBox"]
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
 
-[node name="HBox" type="HBoxContainer" parent="RootControl/TopMargin/TopBar/TopPlate"]
+[node name="HBox" type="HBoxContainer" parent="RootControl/TopMargin/TopBar/TopRightBox/TopPlate"]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="ScoreLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopPlate/HBox"]
+[node name="ScoreLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopRightBox/TopPlate/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.949, 0.549, 0.22, 1)
 text = "SCORE: 00000"
 
-[node name="DistanceLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopPlate/HBox"]
+[node name="DistanceLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopRightBox/TopPlate/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.22, 0.847, 0.949, 1)
 text = "DIST: 0m"
 
-[node name="TimeLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopPlate/HBox"]
+[node name="TimeLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopRightBox/TopPlate/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "TIME: 00:00"
+
+[node name="ComboPlate" type="PanelContainer" parent="RootControl/TopMargin/TopBar/TopRightBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+
+[node name="ComboLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopRightBox/ComboPlate"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.42, 1)
+text = "COMBO x2 (2 HIT)"
 
 [node name="BottomLeft" type="MarginContainer" parent="RootControl"]
 layout_mode = 1

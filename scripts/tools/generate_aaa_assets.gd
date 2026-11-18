@@ -1171,159 +1171,180 @@ func _make_wrecked_car_and_medkit() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/pickups"))
 	var out_col := Color("#0d101f")
 
-	# 1. Stationary Wrecked / Broken Sedan Car (68 x 28) facing left on the dusk highway
-	var cw: int = 68
-	var ch: int = 28
+	# 1. Stationary Wrecked / Abandoned Ambulance Van (74 x 32) facing left on the highway
+	var cw: int = 74
+	var ch: int = 32
 	var car := Image.create(cw, ch, false, Image.FORMAT_RGBA8)
 
-	# Palette: softened steel-navy body, rust corrosion, cracked cyan glass, dead amber headlight
-	var c_roof_hi := Color("#7291bd")
-	var c_body_hi := Color("#546f9c")
-	var c_body_mid := Color("#394d75")
-	var c_body_sh := Color("#263454")
-	var c_deep := Color("#131829")
+	# Cohesive softened ambulance palette: pale medical silver-slate + coral-red stripe & cross + rust damage
+	var c_roof_hi := Color("#dce6f4")
+	var c_body_hi := Color("#c4d2e8")
+	var c_body_mid := Color("#a2b4d1")
+	var c_body_sh := Color("#6f82a3")
+	var c_cab_sh := Color("#546685")
+	var c_deep := Color("#14192b")
 	var c_rust_dk := Color("#7a372f")
 	var c_rust_md := Color("#a84f3b")
 	var c_rust_lt := Color("#cc734b")
 	var c_glass_dk := Color("#161f38")
 	var c_glass_sh := Color("#5bb4c9")
 	var c_glass_md := Color("#3b7c96")
-	var c_trim := Color("#cf9146")
-	var c_trim_lt := Color("#ebbf75")
+	var c_red_hi := Color("#ff7d97")
+	var c_red_mid := Color("#db3959")
+	var c_red_dk := Color("#991f39")
 	var c_tire := Color("#1b2136")
 	var c_tire_hi := Color("#323c59")
-	var c_rim := Color("#7484a6")
+	var c_rim := Color("#7d8eb3")
 
-	# Lower Chassis Silhouette (x = 4..63, y = 13..22 with nose droop on left)
-	for x in range(4, 64):
-		var top_y: int = 13 if x >= 22 else (14 if x >= 8 else 15)
-		var bot_y: int = 23 if x <= 20 else 22
-		for y in range(top_y, bot_y + 1):
+	# A. Boxy Rear Ambulance Module (x = 27..70, y = 3..25) with slight roof dent around x = 35..43
+	for x in range(27, 71):
+		var top_y: int = 4 if (x >= 35 and x <= 43) else 3
+		for y in range(top_y, 26):
 			var col: Color = c_body_mid
 			if y == top_y:
+				col = c_roof_hi
+			elif y <= top_y + 2:
 				col = c_body_hi
-			elif y >= bot_y - 2:
+			elif y >= 22:
 				col = c_body_sh
+			if x >= 68 and y > 10:
+				col = c_body_sh # rear door shadow panel
 			car.set_pixel(x, y, col)
 
-	# Worn amber hazard/trim stripe along side door & fender (broken/scratched gaps)
-	for x in range(6, 61):
-		if x in [12, 13, 33, 34, 47, 48, 55]:
-			continue
-		var sy: int = 18 if x <= 21 else 17
-		car.set_pixel(x, sy, c_trim if x % 5 != 0 else c_trim_lt)
-
-	# Crushed / Dented Cabin & Pillars (x = 20..53, y = 2..13)
-	for x in range(20, 54):
-		# Sloped windshield A-pillar & rear C-pillar with 1px roof dent around x=33..39
-		var lx: int = x - 20
-		var rx: int = 53 - x
-		var roof_y: int = 2
-		if lx < 5:
-			roof_y = 2 + (5 - lx) * 2
-		elif rx < 5:
-			roof_y = 2 + (5 - rx) * 2
-		elif x >= 33 and x <= 39:
-			roof_y = 3 # visibly caved roof dent
-		for y in range(roof_y, 14):
-			var col: Color = c_body_mid
-			if y == roof_y or y == roof_y + 1:
-				col = c_roof_hi if y == roof_y else c_body_hi
+	# B. Forward Van Cab (x = 16..27, y = 5..25)
+	for x in range(16, 28):
+		var lx: int = x - 16
+		var cab_top: int = 5 if lx >= 5 else (5 + (5 - lx) * 2)
+		for y in range(cab_top, 26):
+			var col: Color = c_body_mid if y < 22 else c_cab_sh
+			if y <= cab_top + 1:
+				col = c_body_hi
 			car.set_pixel(x, y, col)
 
-	# Cabin Window Openings & Shattered Glass Shards
-	for x in range(22, 51):
-		var is_pillar: bool = (x >= 37 and x <= 39)
-		if is_pillar:
-			continue
-		var wx_top: int = 5
-		if x < 26:
-			wx_top = 5 + (26 - x) * 2
-		elif x > 47:
-			wx_top = 5 + (x - 47) * 2
-		for y in range(wx_top, 13):
+	# C. Lower Nose / Front Fender (x = 4..16, y = 16..26, slightly nose-sagged)
+	for x in range(4, 17):
+		var top_y: int = 16 if x >= 8 else 17
+		for y in range(top_y, 26):
+			var col: Color = c_body_mid if y < 22 else c_cab_sh
+			if y == top_y:
+				col = c_body_hi
+			car.set_pixel(x, y, col)
+
+	# D. Emergency Coral-Crimson Belt Stripe across Cab & Box (y = 17..19)
+	for x in range(6, 69):
+		if x in [12, 26, 27, 39, 57, 58, 63]:
+			continue # chipped/rusted breaks
+		var sy0: int = 18 if x <= 16 else 17
+		car.set_pixel(x, sy0, c_red_hi if x % 6 == 0 else c_red_mid)
+		car.set_pixel(x, sy0 + 1, c_red_mid)
+		car.set_pixel(x, sy0 + 2, c_red_dk)
+
+	# E. Unmistakable Bold Medical '+' Cross Emblem on Box Side (x = 42..53, y = 7..15)
+	for y in range(7, 16):
+		for x in range(42, 54):
+			var in_v: bool = (x >= 46 and x <= 49 and y >= 7 and y <= 15)
+			var in_h: bool = (x >= 43 and x <= 52 and y >= 10 and y <= 12)
+			if in_v or in_h:
+				var mcol: Color = c_red_mid
+				if (in_v and x == 46 and y <= 11) or (in_h and y == 10 and x <= 48):
+					mcol = c_red_hi
+				elif x == 49 or y == 15 or (in_h and y == 12):
+					mcol = c_red_dk
+				car.set_pixel(x, y, mcol)
+
+	# F. Dead Cracked Roof Lightbar on Cab & Box Edge (x = 22..32, y = 1..3)
+	for x in range(22, 33):
+		var dy: int = 1 if x >= 24 else 2
+		if x == 29:
+			continue # knocked-out missing shard
+		for y in range(dy, 4):
+			var lcol: Color = Color("#7d273c") if x <= 25 else (Color("#4c5a7a") if x <= 27 else Color("#285573"))
+			if y == dy:
+				lcol = Color("#b53c56") if x <= 25 else (Color("#7e8fb5") if x <= 27 else Color("#3c7fa1"))
+			car.set_pixel(x, y, lcol)
+
+	# G. Shattered Cab Windshield/Window (x = 18..25) & Barred Medical Box Window (x = 30..37)
+	for x in range(18, 26):
+		var wt: int = 7 if x >= 21 else 7 + (21 - x) * 2
+		for y in range(wt, 15):
 			car.set_pixel(x, y, c_glass_dk)
-	# Shattered cyan glass jagged fangs top & bottom
-	for gx in [26, 27, 29, 31, 35, 41, 44, 48]:
-		_safe_px(car, gx, 5, c_glass_sh)
-		_safe_px(car, gx + 1, 6, c_glass_md)
-	for gx in [25, 28, 33, 36, 42, 46]:
-		_safe_px(car, gx, 12, c_glass_md)
-		_safe_px(car, gx, 11, c_glass_sh)
-	# Visible crooked headrest silhouette inside busted rear cabin
-	car.fill_rect(Rect2i(32, 8, 3, 5), Color("#252d47"))
-	car.fill_rect(Rect2i(43, 9, 3, 4), Color("#202840"))
+	for gx in [20, 22, 24]:
+		_safe_px(car, gx, 7, c_glass_sh)
+		_safe_px(car, gx + 1, 8, c_glass_md)
+		_safe_px(car, gx, 14, c_glass_md)
+	car.fill_rect(Rect2i(30, 8, 8, 5), c_glass_dk)
+	for bx in [32, 35]:
+		car.fill_rect(Rect2i(bx, 8, 1, 5), Color("#5c6b8c")) # security bars on rear ambulance window
+	_safe_px(car, 31, 9, c_glass_sh)
+	_safe_px(car, 36, 12, c_glass_md)
 
-	# Door panel seam, handle & bent fender rust corrosion
-	for y in range(13, 22):
-		_safe_px(car, 26, y, c_deep)
-		_safe_px(car, 39, y, c_deep)
-		_safe_px(car, 51, y, c_deep)
-	car.fill_rect(Rect2i(35, 15, 3, 1), Color("#8599bf"))
-	# Heavy rust blotches & streaks along hood edge, rocker panel, rear trunk
+	# H. Panel Seams, Ajar Rear Door Crack & Door Handles
+	for y in range(6, 25):
+		_safe_px(car, 27, y, c_deep)
+		if y >= 5:
+			_safe_px(car, 60, y, c_deep) # crooked rear box door line
+	car.fill_rect(Rect2i(23, 16, 3, 1), Color("#59688a"))
+	car.fill_rect(Rect2i(57, 16, 2, 2), Color("#59688a"))
+
+	# I. Rust Corrosion, Cracks & Soot Grime
 	for rpt in [
-		[19, 14, 4, 2], [24, 19, 6, 3], [29, 20, 5, 2], [39, 18, 5, 4],
-		[45, 20, 4, 2], [54, 14, 6, 2], [56, 17, 4, 3], [33, 3, 5, 2], [8, 16, 4, 2]
+		[12, 20, 4, 2], [22, 21, 5, 3], [29, 22, 6, 3], [35, 3, 7, 2],
+		[40, 21, 5, 4], [51, 20, 4, 2], [61, 8, 5, 3], [63, 19, 5, 3]
 	]:
 		car.fill_rect(Rect2i(rpt[0], rpt[1], rpt[2], rpt[3]), c_rust_dk)
 		_safe_px(car, rpt[0] + 1, rpt[1], c_rust_md)
 		if rpt[2] >= 4:
 			_safe_px(car, rpt[0] + 2, rpt[1] + 1, c_rust_lt)
 
-	# Popped Crooked Engine Hood on Front Left (tilted upward from x=21 -> x=6)
-	for i in range(16):
-		var hx: int = 21 - i
-		var hy: int = 12 - int(floor(float(i) * 0.25)) # rises to y=8 at left tip
-		car.fill_rect(Rect2i(hx, hy + 2, 1, maxi(1, 14 - hy)), c_deep) # exposed engine bay below
+	# J. Popped Crooked Engine Hood on Front Left (x = 5..16, rising to y=11) + Exposed Engine Block
+	for i in range(12):
+		var hx: int = 16 - i
+		var hy: int = 15 - int(floor(float(i) * 0.34))
+		car.fill_rect(Rect2i(hx, hy + 2, 1, maxi(1, 17 - hy)), c_deep)
 		car.set_pixel(hx, hy - 1, out_col)
 		car.set_pixel(hx, hy, c_roof_hi if i > 3 else c_rust_md)
 		car.set_pixel(hx, hy + 1, c_body_mid)
-	# Engine block, pulley & frayed copper wire peeking under popped hood
-	car.fill_rect(Rect2i(9, 12, 6, 3), Color("#4f5c7a"))
-	car.fill_rect(Rect2i(10, 12, 3, 1), Color("#7a8aad"))
-	_safe_px(car, 14, 11, c_rust_lt)
-	_safe_px(car, 15, 12, c_trim)
+	car.fill_rect(Rect2i(8, 15, 5, 3), Color("#4f5c7a"))
+	car.fill_rect(Rect2i(9, 15, 3, 1), Color("#7a8aad"))
+	_safe_px(car, 13, 14, c_rust_lt)
+	_safe_px(car, 14, 15, Color("#db8d44"))
 
-	# Smashed Front Bumper, Dead Hanging Headlight & Cracked Grille (x = 1..6)
-	_draw_rect_outline(car, 1, 19, 5, 4, Color("#495573"), out_col)
-	car.fill_rect(Rect2i(2, 20, 3, 1), Color("#7f91b8"))
-	_draw_rect_outline(car, 3, 16, 3, 3, Color("#4a3423"), out_col) # dark smashed socket
-	_safe_px(car, 4, 17, Color("#a37136"))
-	_safe_px(car, 3, 19, c_trim) # dangling cracked lens
+	# K. Smashed Front Bumper, Dead Hanging Headlight, Rear Step Bumper & Exhaust Pipe
+	_draw_rect_outline(car, 1, 21, 5, 4, Color("#495573"), out_col)
+	car.fill_rect(Rect2i(2, 22, 3, 1), Color("#7f91b8"))
+	_draw_rect_outline(car, 3, 18, 3, 3, Color("#4a3423"), out_col)
+	_safe_px(car, 3, 21, Color("#cfa055")) # dangling cracked amber bulb
+	_draw_rect_outline(car, 67, 22, 6, 3, Color("#495573"), out_col)
+	car.fill_rect(Rect2i(68, 23, 4, 1), Color("#7f91b8"))
+	_draw_rect_outline(car, 68, 17, 3, 3, Color("#591c2b"), out_col)
+	_safe_px(car, 69, 18, Color("#ab334d")) # dead taillight
+	car.fill_rect(Rect2i(68, 25, 5, 2), Color("#5c6887")) # tailpipe
 
-	# Rear Bumper, Dented Trunk & Broken Taillight (x = 62..67)
-	_draw_rect_outline(car, 61, 19, 6, 3, Color("#495573"), out_col)
-	car.fill_rect(Rect2i(62, 20, 4, 1), Color("#7f91b8"))
-	_draw_rect_outline(car, 61, 15, 3, 3, Color("#591c2b"), out_col)
-	_safe_px(car, 62, 16, Color("#ab334d")) # dim cracked ruby taillight
-	car.fill_rect(Rect2i(62, 22, 5, 2), Color("#5c6887")) # drooping tailpipe
-
-	# Wheel Wells (x = 10..22 & 46..58) & Deflated Flat / Collapsed Tires (bottom at y = 27)
-	for wx in [16, 52]:
-		car.fill_rect(Rect2i(wx - 6, 19, 12, 5), c_deep)
-		car.fill_rect(Rect2i(wx - 5, 18, 10, 1), out_col)
-		# Deflated squat tire polygon (wider flat bottom rows y=25..27)
-		for dy in range(19, 28):
+	# L. Deflated Flat Front & Rear Tires sitting flush at y = 31
+	for wx in [15, 57]:
+		car.fill_rect(Rect2i(wx - 6, 22, 12, 5), c_deep)
+		car.fill_rect(Rect2i(wx - 5, 21, 10, 1), out_col)
+		for dy in range(22, 32):
 			var hw: int = 5
-			if dy == 19:
+			if dy == 22:
 				hw = 3
-			elif dy == 20 or dy == 21:
+			elif dy == 23 or dy == 24:
 				hw = 4
-			elif dy >= 26:
-				hw = 6 if wx == 16 else 5 # extra pancaked front flat tire
+			elif dy >= 30:
+				hw = 6 if wx == 15 else 5 # extra pancaked flat tire
 			for dx in range(-hw, hw + 1):
 				var tx: int = wx + dx
-				var is_rim: bool = (abs(dx) <= 2 and dy >= 22 and dy <= 25)
-				var is_edge: bool = (dy == 19 or dy == 27 or abs(dx) == hw)
+				var is_rim: bool = (abs(dx) <= 2 and dy >= 25 and dy <= 28)
+				var is_edge: bool = (dy == 22 or dy == 31 or abs(dx) == hw)
 				if is_edge:
 					_safe_px(car, tx, dy, out_col)
 				elif is_rim:
-					var rc: Color = Color("#8f9ec2") if (dx <= 0 and dy <= 23) else (c_rust_md if wx == 52 else c_rim)
+					var rc: Color = Color("#94a4c9") if (dx <= 0 and dy <= 26) else (c_rust_md if wx == 57 else c_rim)
 					_safe_px(car, tx, dy, rc)
 				else:
-					_safe_px(car, tx, dy, c_tire_hi if dy <= 21 else c_tire)
+					_safe_px(car, tx, dy, c_tire_hi if dy <= 24 else c_tire)
 
-	# Crisp Outer Pixel Silhouette Outline Pass
+	# M. Crisp 1px Outer Silhouette Outline Pass
 	var car_copy := car.duplicate() as Image
 	for y in range(ch):
 		for x in range(cw):

@@ -4,10 +4,10 @@
 [ext_resource type="Texture2D" path="res://assets/obstacles/px_wrecked_car.png" id="2_cartex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_chassis"]
-size = Vector2(58, 16)
+size = Vector2(66, 16)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cabin"]
-size = Vector2(28, 10)
+size = Vector2(46, 15)
 
 [sub_resource type="Gradient" id="Gradient_smoke"]
 offsets = PackedFloat32Array(0, 0.35, 1)
@@ -20,7 +20,7 @@ script = ExtResource("1_car")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture_filter = 1
-position = Vector2(0, -14)
+position = Vector2(0, -16)
 texture = ExtResource("2_cartex")
 
 [node name="ChassisCollision" type="CollisionShape2D" parent="."]
@@ -28,11 +28,11 @@ position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_chassis")
 
 [node name="CabinCollision" type="CollisionShape2D" parent="."]
-position = Vector2(3, -21)
+position = Vector2(10, -23.5)
 shape = SubResource("RectangleShape2D_cabin")
 
 [node name="SmokeParticles" type="CPUParticles2D" parent="."]
-position = Vector2(-21, -17)
+position = Vector2(-24, -18)
 amount = 7
 lifetime = 1.4
 preprocess = 0.6

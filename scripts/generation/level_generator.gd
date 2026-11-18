@@ -283,26 +283,39 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 		PatternType.CAR_WRECK_SOLO:
 			chunk.add_ground_segment(0.0, chunk_width)
 			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 180.0, ground_y)
+			# Environmental storytelling: wrecked ambulances almost always carry a spilled/rooftop Medkit
+			if _should_spawn_ambulance_medkit(0.85):
+				if randf() < 0.5:
+					_spawn_pickup(chunk, MEDKIT_SCENE, 232.0, ground_y - 4.0)
+				else:
+					_spawn_pickup(chunk, MEDKIT_SCENE, 190.0, ground_y - 36.0)
+				_chunks_since_medkit = 0
 
 		PatternType.CAR_WRECK_MEDKIT:
 			chunk.add_ground_segment(0.0, chunk_width)
 			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 180.0, ground_y)
-			_spawn_pickup(chunk, MEDKIT_SCENE, 183.0, ground_y - 32.0)
+			_spawn_pickup(chunk, MEDKIT_SCENE, 190.0, ground_y - 36.0)
 			_chunks_since_medkit = 0
 
 		PatternType.CAR_WRECK_WALKER:
 			chunk.add_ground_segment(0.0, chunk_width)
 			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 150.0, ground_y)
-			_spawn_enemy(chunk, WALKER_SCENE, 310.0, ground_y - 12.0)
+			_spawn_enemy(chunk, WALKER_SCENE, 315.0, ground_y - 12.0)
+			if _should_spawn_ambulance_medkit(0.85):
+				_spawn_pickup(chunk, MEDKIT_SCENE, 160.0, ground_y - 36.0)
+				_chunks_since_medkit = 0
 
 		PatternType.CAR_WRECK_SPIKES:
 			chunk.add_ground_segment(0.0, chunk_width)
 			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 140.0, ground_y)
 			_spawn_platform(chunk, 235.0, ground_y - 52.0)
 			_spawn_hazard(chunk, SPIKES_SCENE, 270.0, ground_y)
+			if _should_spawn_ambulance_medkit(0.85):
+				_spawn_pickup(chunk, MEDKIT_SCENE, 235.0, ground_y - 60.0)
+				_chunks_since_medkit = 0
 
 	# Smart periodic Medkit drop when injured or on safe interval
-	if pattern != PatternType.FLAT_START and pattern != PatternType.CAR_WRECK_MEDKIT:
+	if not (pattern in [PatternType.FLAT_START, PatternType.CAR_WRECK_SOLO, PatternType.CAR_WRECK_MEDKIT, PatternType.CAR_WRECK_WALKER, PatternType.CAR_WRECK_SPIKES]):
 		_chunks_since_medkit += 1
 		var is_injured: bool = is_instance_valid(target_player) and target_player.current_hp < target_player.max_hp
 		var threshold: int = 3 if is_injured else 6
@@ -310,6 +323,11 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 			var spot: Vector2 = _get_safe_medkit_spot(pattern)
 			_spawn_pickup(chunk, MEDKIT_SCENE, spot.x, spot.y)
 			_chunks_since_medkit = 0
+
+func _should_spawn_ambulance_medkit(base_prob: float) -> bool:
+	if is_instance_valid(target_player) and target_player.current_hp < target_player.max_hp:
+		return true
+	return randf() < base_prob
 
 func _get_safe_medkit_spot(pattern: PatternType) -> Vector2:
 	match pattern:
@@ -324,7 +342,7 @@ func _get_safe_medkit_spot(pattern: PatternType) -> Vector2:
 		PatternType.PLATFORM_CASCADE:
 			return Vector2(250.0, ground_y - 83.0)
 		PatternType.CAR_WRECK_SOLO, PatternType.CAR_WRECK_WALKER:
-			return Vector2(183.0 if pattern == PatternType.CAR_WRECK_SOLO else 153.0, ground_y - 32.0)
+			return Vector2(190.0 if pattern == PatternType.CAR_WRECK_SOLO else 160.0, ground_y - 36.0)
 		_:
 			return Vector2(250.0, ground_y - 4.0)
 
