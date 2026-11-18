@@ -43,6 +43,15 @@ var _muzzle_light: PointLight2D = null
 const PELLET_SCENE: PackedScene = preload("res://scenes/player/shotgun_pellet.tscn")
 const RECOIL_DUST_SCENE: PackedScene = preload("res://scenes/effects/recoil_dust.tscn")
 const LIGHT_TEXTURE: Texture2D = preload("res://assets/environment/point_light_radial.png")
+const WEAPON_SKIN_TEXTURES: Dictionary = {
+	"classic": preload("res://assets/weapons/shotgun.png"),
+	"crimson": preload("res://assets/weapons/shotgun_crimson.png"),
+	"toxic": preload("res://assets/weapons/shotgun_toxic.png"),
+	"gold": preload("res://assets/weapons/shotgun_gold.png"),
+	"plasma": preload("res://assets/weapons/shotgun_plasma.png")
+}
+
+var _tracer_color: Color = Color(1.0, 0.85, 0.42)
 
 func _ready() -> void:
 	current_ammo = max_ammo
@@ -58,6 +67,11 @@ func _ready() -> void:
 	_muzzle_light.enabled = false
 	muzzle.add_child(_muzzle_light)
 
+	if GameManager:
+		if not GameManager.weapon_skin_changed.is_connected(apply_equipped_weapon_skin):
+			GameManager.weapon_skin_changed.connect(apply_equipped_weapon_skin)
+		apply_equipped_weapon_skin()
+
 	flash_timer.timeout.connect(func():
 		muzzle_flash.visible = false
 		if _muzzle_light:
@@ -66,6 +80,17 @@ func _ready() -> void:
 	)
 	set_aim_direction(Vector2.RIGHT)
 	ammo_changed.emit(current_ammo, max_ammo)
+
+func apply_equipped_weapon_skin(_weapon_id: String = "") -> void:
+	if not GameManager:
+		return
+	var data: Dictionary = GameManager.get_weapon_skin_data(_weapon_id)
+	var skin_id: String = str(data.get("id", "classic"))
+	if gun_sprite and WEAPON_SKIN_TEXTURES.has(skin_id):
+		gun_sprite.texture = WEAPON_SKIN_TEXTURES[skin_id]
+	_tracer_color = data.get("tracer", Color(1.0, 0.85, 0.42))
+	if _muzzle_light:
+		_muzzle_light.color = data.get("light", Color(1.0, 0.72, 0.28))
 
 func _process(delta: float) -> void:
 	_handle_aiming(delta)
@@ -240,4 +265,4 @@ func _spawn_pellets() -> void:
 		var spread_offset: float = randf_range(-half_spread, half_spread)
 		var pellet_dir: Vector2 = Vector2.from_angle(base_angle + spread_offset)
 		root.add_child(pellet)
-		pellet.setup(pellet_dir, spawn_pos)
+		pellet.setup(pellet_dir, spawn_pos, _tracer_color)

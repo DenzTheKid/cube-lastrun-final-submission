@@ -11,6 +11,7 @@ signal zombie_killed(total_kills: int)
 signal combo_updated(combo_count: int, multiplier: int)
 signal horde_proximity_changed(proximity: float) # 0.0 (far) to 1.0 (caught)
 signal skin_changed(skin_id: String)
+signal weapon_skin_changed(weapon_id: String)
 
 enum State { MENU, PLAYING, PAUSED, GAME_OVER }
 
@@ -29,12 +30,74 @@ var high_score: int = 0
 var max_distance: float = 0.0
 var all_time_best_combo: int = 0
 var selected_skin: String = "crimson"
+var selected_weapon_skin: String = "classic"
 
 var run_start_high_score: int = 0
 var run_start_max_distance: float = 0.0
+var run_start_best_combo: int = 0
 var last_run_new_distance_record: bool = false
 var last_run_new_combo_record: bool = false
 var last_run_unlocked_skins: Array[String] = []
+var last_run_unlocked_weapons: Array[String] = []
+
+const WEAPON_SKIN_ORDER: Array[String] = ["classic", "crimson", "toxic", "gold", "plasma"]
+const WEAPON_SKIN_CATALOG: Dictionary = {
+	"classic": {
+		"id": "classic",
+		"name": "CLASSIC STEEL",
+		"unlock_combo": 0,
+		"unlock_score": 0,
+		"tex": "res://assets/weapons/shotgun.png",
+		"overlay": "",
+		"accent": Color(0.95, 0.72, 0.36),
+		"tracer": Color(1.0, 0.85, 0.42),
+		"light": Color(1.0, 0.72, 0.28)
+	},
+	"crimson": {
+		"id": "crimson",
+		"name": "CRIMSON OPS",
+		"unlock_combo": 3,
+		"unlock_score": 1200,
+		"tex": "res://assets/weapons/shotgun_crimson.png",
+		"overlay": "res://assets/ui/px_hero_gun_crimson.png",
+		"accent": Color(0.98, 0.36, 0.48),
+		"tracer": Color(1.0, 0.30, 0.42),
+		"light": Color(1.0, 0.36, 0.46)
+	},
+	"toxic": {
+		"id": "toxic",
+		"name": "VENOM BIO",
+		"unlock_combo": 5,
+		"unlock_score": 3000,
+		"tex": "res://assets/weapons/shotgun_toxic.png",
+		"overlay": "res://assets/ui/px_hero_gun_toxic.png",
+		"accent": Color(0.56, 0.96, 0.32),
+		"tracer": Color(0.48, 1.0, 0.32),
+		"light": Color(0.50, 1.0, 0.36)
+	},
+	"gold": {
+		"id": "gold",
+		"name": "ROYAL GOLD",
+		"unlock_combo": 8,
+		"unlock_score": 6000,
+		"tex": "res://assets/weapons/shotgun_gold.png",
+		"overlay": "res://assets/ui/px_hero_gun_gold.png",
+		"accent": Color(1.0, 0.88, 0.38),
+		"tracer": Color(1.0, 0.90, 0.36),
+		"light": Color(1.0, 0.82, 0.28)
+	},
+	"plasma": {
+		"id": "plasma",
+		"name": "CYBER PLASMA",
+		"unlock_combo": 10,
+		"unlock_score": 10000,
+		"tex": "res://assets/weapons/shotgun_plasma.png",
+		"overlay": "res://assets/ui/px_hero_gun_plasma.png",
+		"accent": Color(0.38, 0.94, 1.0),
+		"tracer": Color(0.32, 0.96, 1.0),
+		"light": Color(0.34, 0.95, 1.0)
+	}
+}
 
 const SKIN_ORDER: Array[String] = ["crimson", "emerald", "gold", "violet", "cyan"]
 const SKIN_CATALOG: Dictionary = {
@@ -153,9 +216,11 @@ func start_game() -> void:
 	best_combo = 0
 	run_start_high_score = high_score
 	run_start_max_distance = max_distance
+	run_start_best_combo = all_time_best_combo
 	last_run_new_distance_record = false
 	last_run_new_combo_record = false
 	last_run_unlocked_skins.clear()
+	last_run_unlocked_weapons.clear()
 	difficulty_factor = 1.0
 	get_tree().paused = false
 	Input.action_release("shoot")
@@ -216,6 +281,7 @@ func trigger_game_over() -> void:
 	current_state = State.GAME_OVER
 	var prev_best_dist: float = max_distance
 	var prev_best_score: int = high_score
+	var prev_best_combo: int = all_time_best_combo
 	var is_new: bool = false
 	last_run_new_distance_record = false
 	last_run_new_combo_record = false
@@ -229,6 +295,7 @@ func trigger_game_over() -> void:
 		all_time_best_combo = best_combo
 		last_run_new_combo_record = true
 	last_run_unlocked_skins = get_newly_unlocked_skins(prev_best_dist, prev_best_score, max_distance, high_score)
+	last_run_unlocked_weapons = get_newly_unlocked_weapon_skins(prev_best_combo, prev_best_score, all_time_best_combo, high_score)
 	save_game_data()
 	
 	if AudioManager:
@@ -301,12 +368,47 @@ func apply_skin_to_material(mat: ShaderMaterial, skin_id: String = "", is_showca
 	mat.set_shader_parameter("visor_base_color", data.get("visor_base", Color(0.30, 0.78, 0.87)))
 	mat.set_shader_parameter("visor_core_color", data.get("visor_core", Color(0.88, 1.0, 1.0)))
 
+func get_weapon_skin_ids() -> Array[String]:
+	return WEAPON_SKIN_ORDER
+
+func get_weapon_skin_data(weapon_id: String = "") -> Dictionary:
+	var id: String = selected_weapon_skin if weapon_id.is_empty() else weapon_id
+	return WEAPON_SKIN_CATALOG.get(id, WEAPON_SKIN_CATALOG["classic"])
+
+func is_weapon_skin_unlocked(weapon_id: String, check_combo: int = -1, check_score: int = -1) -> bool:
+	var data: Dictionary = WEAPON_SKIN_CATALOG.get(weapon_id, {})
+	if data.is_empty():
+		return false
+	var req_combo: int = int(data.get("unlock_combo", 0))
+	var req_score: int = int(data.get("unlock_score", 0))
+	if req_combo <= 0 and req_score <= 0:
+		return true
+	var c: int = all_time_best_combo if check_combo < 0 else check_combo
+	var s: int = high_score if check_score < 0 else check_score
+	return c >= req_combo or s >= req_score
+
+func get_newly_unlocked_weapon_skins(prev_combo: int, prev_score: int, new_combo: int, new_score: int) -> Array[String]:
+	var unlocked: Array[String] = []
+	for id in WEAPON_SKIN_ORDER:
+		if not is_weapon_skin_unlocked(id, prev_combo, prev_score) and is_weapon_skin_unlocked(id, new_combo, new_score):
+			unlocked.append(id)
+	return unlocked
+
+func set_selected_weapon_skin(weapon_id: String) -> bool:
+	if not WEAPON_SKIN_CATALOG.has(weapon_id) or not is_weapon_skin_unlocked(weapon_id):
+		return false
+	selected_weapon_skin = weapon_id
+	save_game_data()
+	weapon_skin_changed.emit(selected_weapon_skin)
+	return true
+
 func save_game_data() -> void:
 	var data: Dictionary = {
 		"high_score": high_score,
 		"max_distance": max_distance,
 		"all_time_best_combo": all_time_best_combo,
-		"selected_skin": selected_skin
+		"selected_skin": selected_skin,
+		"selected_weapon_skin": selected_weapon_skin
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f:
@@ -328,3 +430,5 @@ func load_game_data() -> void:
 			all_time_best_combo = int(dict.get("all_time_best_combo", 0))
 			var saved_skin: String = str(dict.get("selected_skin", "crimson"))
 			selected_skin = saved_skin if is_skin_unlocked(saved_skin) else "crimson"
+			var saved_wpn: String = str(dict.get("selected_weapon_skin", "classic"))
+			selected_weapon_skin = saved_wpn if is_weapon_skin_unlocked(saved_wpn) else "classic"

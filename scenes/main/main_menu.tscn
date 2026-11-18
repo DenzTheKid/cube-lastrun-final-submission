@@ -133,7 +133,7 @@ grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer" unique_id=91489931]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 4
 alignment = 1
 
 [node name="TitleBanner" type="VBoxContainer" parent="CenterContainer/VBox" unique_id=362023199]
@@ -286,46 +286,78 @@ unique_name_in_owner = true
 texture = ExtResource("15_showcase")
 centered = false
 
+[node name="HeroWeaponOverlay" type="Sprite2D" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/HeroShowcaseBox" unique_id=983492036]
+unique_name_in_owner = true
+visible = false
+centered = false
+
 [node name="SkinSelectorPanel" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn" unique_id=1765110921]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(172, 0)
 layout_mode = 2
 
-[node name="SkinRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel" unique_id=1765110922]
+[node name="SkinVBox" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel" unique_id=1765110928]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 2
 alignment = 1
 
-[node name="PrevSkinButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinRow" unique_id=1765110923]
+[node name="SkinRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinVBox" unique_id=1765110922]
+layout_mode = 2
+theme_override_constants/separation = 3
+alignment = 1
+
+[node name="PrevSkinButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinVBox/SkinRow" unique_id=1765110923]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(20, 16)
+custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 text = "<"
 alignment = 1
 
-[node name="SkinInfoBox" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinRow" unique_id=1765110924]
+[node name="SkinNameLabel" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinVBox/SkinRow" unique_id=1765110925]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -1
+theme_override_colors/font_color = Color(1, 0.45, 0.49, 1)
+text = "CUBE: RED BAND"
+horizontal_alignment = 1
+clip_text = true
+
+[node name="NextSkinButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinVBox/SkinRow" unique_id=1765110927]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+text = ">"
 alignment = 1
 
-[node name="SkinNameLabel" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinRow/SkinInfoBox" unique_id=1765110925]
+[node name="LoadoutDivider" type="ColorRect" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinVBox" unique_id=1765110929]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+color = Color(0.22, 0.847, 0.949, 0.28)
+
+[node name="WeaponRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinVBox" unique_id=1765110930]
+layout_mode = 2
+theme_override_constants/separation = 3
+alignment = 1
+
+[node name="PrevWeaponButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinVBox/WeaponRow" unique_id=1765110931]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+text = "<"
+alignment = 1
+
+[node name="WeaponNameLabel" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinVBox/WeaponRow" unique_id=1765110932]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.45, 0.49, 1)
-text = "RED BAND"
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.72, 0.36, 1)
+text = "GUN: CLASSIC"
 horizontal_alignment = 1
+clip_text = true
 
-[node name="SkinStatusLabel" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinRow/SkinInfoBox" unique_id=1765110926]
+[node name="NextWeaponButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinVBox/WeaponRow" unique_id=1765110933]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.96, 0.65, 1)
-text = "EQUIPPED"
-horizontal_alignment = 1
-
-[node name="NextSkinButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinRow" unique_id=1765110927]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(20, 16)
+custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 text = ">"
 alignment = 1

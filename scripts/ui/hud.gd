@@ -68,6 +68,7 @@ var _record_announced: bool = false
 var _record_baseline_dist: float = 0.0
 var _last_unlock_check_dist: float = 0.0
 var _last_unlock_check_score: int = 0
+var _last_unlock_check_combo: int = 0
 
 func _ready() -> void:
 	_set_mouse_filter_ignore(root_control)
@@ -221,6 +222,7 @@ func _reset_run_milestones() -> void:
 		_record_baseline_dist = GameManager.run_start_max_distance
 		_last_unlock_check_dist = GameManager.run_start_max_distance
 		_last_unlock_check_score = GameManager.run_start_high_score
+		_last_unlock_check_combo = GameManager.run_start_best_combo
 
 func _on_game_over_hide_banner(_s: int, _d: float, _t: float, _k: int, _n: bool) -> void:
 	_banner_queue.clear()
@@ -233,7 +235,7 @@ func _on_game_over_hide_banner(_s: int, _d: float, _t: float, _k: int, _n: bool)
 func _on_score_updated(new_score: int) -> void:
 	score_label.text = "SCORE: %05d" % new_score
 	if GameManager and GameManager.current_state == GameManager.State.PLAYING:
-		_check_skin_unlock_banners(GameManager.distance, new_score)
+		_check_skin_unlock_banners(GameManager.distance, new_score, GameManager.best_combo)
 
 func _on_distance_updated(dist: float) -> void:
 	distance_label.text = "DIST: %dm" % int(dist)
@@ -283,20 +285,30 @@ func _on_distance_updated(dist: float) -> void:
 		_record_announced = true
 		_queue_milestone_banner("NEW DISTANCE RECORD!", "PREVIOUS BEST: %dm" % int(_record_baseline_dist), Color(1.0, 0.84, 0.24))
 
-func _check_skin_unlock_banners(dist: float, scr: int) -> void:
+func _check_skin_unlock_banners(dist: float, scr: int, combo: int = 0) -> void:
 	if not GameManager:
 		return
 	var cur_d: float = maxf(_record_baseline_dist, dist)
 	var cur_s: int = maxi(GameManager.run_start_high_score, scr)
-	var newly: Array[String] = GameManager.get_newly_unlocked_skins(_last_unlock_check_dist, _last_unlock_check_score, cur_d, cur_s)
+	var cur_c: int = maxi(GameManager.run_start_best_combo, combo)
+	var newly_cubes: Array[String] = GameManager.get_newly_unlocked_skins(_last_unlock_check_dist, _last_unlock_check_score, cur_d, cur_s)
+	var newly_guns: Array[String] = GameManager.get_newly_unlocked_weapon_skins(_last_unlock_check_combo, _last_unlock_check_score, cur_c, cur_s)
 	_last_unlock_check_dist = maxf(_last_unlock_check_dist, cur_d)
 	_last_unlock_check_score = maxi(_last_unlock_check_score, cur_s)
-	for sid in newly:
+	_last_unlock_check_combo = maxi(_last_unlock_check_combo, cur_c)
+	for sid in newly_cubes:
 		var sdata: Dictionary = GameManager.get_skin_data(sid)
 		_queue_milestone_banner(
 			"SKIN UNLOCKED!",
 			str(sdata.get("name", "")),
 			sdata.get("light", Color(1.0, 0.85, 0.30))
+		)
+	for wid in newly_guns:
+		var wdata: Dictionary = GameManager.get_weapon_skin_data(wid)
+		_queue_milestone_banner(
+			"GUN SKIN UNLOCKED!",
+			str(wdata.get("name", "")),
+			wdata.get("accent", Color(1.0, 0.85, 0.30))
 		)
 
 func _queue_milestone_banner(title: String, sub: String, accent: Color) -> void:
@@ -396,6 +408,8 @@ func _on_shield_changed(shield_hp: int, _max_shield: int) -> void:
 	_last_shield = shield_hp
 
 func _on_combo_updated(combo_count: int, multiplier: int) -> void:
+	if GameManager and GameManager.current_state == GameManager.State.PLAYING:
+		_check_skin_unlock_banners(GameManager.distance, GameManager.score, GameManager.best_combo)
 	if not combo_plate or not combo_label:
 		return
 	if combo_count < 2:

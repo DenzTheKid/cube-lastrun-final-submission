@@ -62,14 +62,23 @@ func _on_game_over(final_score: int, distance: float, survival_time: float, kill
 		record_banner.text = "NEW DISTANCE RECORD!"
 
 	if unlock_banner:
-		var unlocked: Array[String] = GameManager.last_run_unlocked_skins if GameManager else []
-		if unlocked.is_empty():
+		var unlocked_cubes: Array[String] = GameManager.last_run_unlocked_skins if GameManager else []
+		var unlocked_guns: Array[String] = GameManager.last_run_unlocked_weapons if GameManager else []
+		var parts: Array[String] = []
+		if not unlocked_cubes.is_empty():
+			var c_names: Array[String] = []
+			for sid in unlocked_cubes:
+				c_names.append(str(GameManager.get_skin_data(sid).get("name", sid)))
+			parts.append("CUBE: %s" % ", ".join(c_names))
+		if not unlocked_guns.is_empty():
+			var w_names: Array[String] = []
+			for wid in unlocked_guns:
+				w_names.append(str(GameManager.get_weapon_skin_data(wid).get("name", wid)))
+			parts.append("GUN: %s" % ", ".join(w_names))
+		if parts.is_empty():
 			unlock_banner.visible = false
 		else:
-			var names: Array[String] = []
-			for sid in unlocked:
-				names.append(str(GameManager.get_skin_data(sid).get("name", sid)))
-			unlock_banner.text = "SKIN UNLOCKED: %s" % ", ".join(names)
+			unlock_banner.text = "UNLOCKED — %s" % " | ".join(parts)
 			unlock_banner.visible = true
 
 	await get_tree().create_timer(0.6, true, false, true).timeout

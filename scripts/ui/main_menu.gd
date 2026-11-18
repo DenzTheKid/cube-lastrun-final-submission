@@ -24,13 +24,23 @@ const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 @onready var bg_overpass: TextureRect = $BgOverpass
 @onready var center_container: CenterContainer = $CenterContainer
 @onready var hero_showcase: Sprite2D = %HeroShowcaseSprite
+@onready var hero_weapon_overlay: Sprite2D = %HeroWeaponOverlay
 @onready var skin_selector_panel: PanelContainer = %SkinSelectorPanel
 @onready var prev_skin_btn: Button = %PrevSkinButton
 @onready var next_skin_btn: Button = %NextSkinButton
 @onready var skin_name_label: Label = %SkinNameLabel
-@onready var skin_status_label: Label = %SkinStatusLabel
+@onready var prev_weapon_btn: Button = %PrevWeaponButton
+@onready var next_weapon_btn: Button = %NextWeaponButton
+@onready var weapon_name_label: Label = %WeaponNameLabel
 @onready var lobby_walker: Sprite2D = %LobbyWalker
 @onready var lobby_runner: Sprite2D = %LobbyRunner
+
+const HERO_WEAPON_OVERLAYS: Dictionary = {
+	"crimson": preload("res://assets/ui/px_hero_gun_crimson.png"),
+	"toxic": preload("res://assets/ui/px_hero_gun_toxic.png"),
+	"gold": preload("res://assets/ui/px_hero_gun_gold.png"),
+	"plasma": preload("res://assets/ui/px_hero_gun_plasma.png")
+}
 
 var _sfx_enabled: bool = true
 var _music_enabled: bool = true
@@ -41,6 +51,7 @@ var _zombie_step: int = 0
 var _hero_shader_mat: ShaderMaterial = null
 var _skin_style: StyleBoxFlat = null
 var _preview_skin_idx: int = 0
+var _preview_weapon_idx: int = 0
 
 func _ready() -> void:
 	if AudioManager:
@@ -60,6 +71,10 @@ func _ready() -> void:
 		prev_skin_btn.pressed.connect(func(): _cycle_skin(-1))
 	if next_skin_btn:
 		next_skin_btn.pressed.connect(func(): _cycle_skin(1))
+	if prev_weapon_btn:
+		prev_weapon_btn.pressed.connect(func(): _cycle_weapon_skin(-1))
+	if next_weapon_btn:
+		next_weapon_btn.pressed.connect(func(): _cycle_weapon_skin(1))
 
 	sfx_btn.set_pressed_no_signal(_sfx_enabled)
 	music_btn.set_pressed_no_signal(_music_enabled)
@@ -72,6 +87,7 @@ func _ready() -> void:
 	controls_panel.visible = false
 	_update_high_score()
 	refresh_skin_showcase()
+	refresh_weapon_showcase()
 	play_btn.grab_focus()
 
 func _process(delta: float) -> void:
@@ -86,6 +102,8 @@ func _process(delta: float) -> void:
 	if hero_showcase:
 		# Subtle 1px crisp pixel breathing idle bob without shifting RecordPanel layout
 		hero_showcase.position.y = -1.0 if int(_diorama_timer * 2.2) % 2 == 1 else 0.0
+		if hero_weapon_overlay:
+			hero_weapon_overlay.position.y = hero_showcase.position.y
 
 func _unhandled_input(event: InputEvent) -> void:
 	if controls_panel and controls_panel.visible:
@@ -143,6 +161,15 @@ func _setup_buttons_and_focus() -> void:
 		prev_skin_btn.focus_neighbor_right = next_skin_btn.get_path()
 		next_skin_btn.focus_neighbor_left = prev_skin_btn.get_path()
 		next_skin_btn.focus_neighbor_right = play_btn.get_path()
+		if prev_weapon_btn and next_weapon_btn:
+			prev_skin_btn.focus_neighbor_bottom = prev_weapon_btn.get_path()
+			next_skin_btn.focus_neighbor_bottom = next_weapon_btn.get_path()
+			prev_weapon_btn.focus_neighbor_top = prev_skin_btn.get_path()
+			next_weapon_btn.focus_neighbor_top = next_skin_btn.get_path()
+			prev_weapon_btn.focus_neighbor_left = controls_btn.get_path()
+			prev_weapon_btn.focus_neighbor_right = next_weapon_btn.get_path()
+			next_weapon_btn.focus_neighbor_left = prev_weapon_btn.get_path()
+			next_weapon_btn.focus_neighbor_right = exit_btn.get_path()
 
 func _setup_skin_selector() -> void:
 	if hero_showcase:
@@ -160,10 +187,14 @@ func _setup_skin_selector() -> void:
 		_skin_style.content_margin_top = 2
 		_skin_style.content_margin_bottom = 2
 		skin_selector_panel.add_theme_stylebox_override("panel", _skin_style)
+	_apply_compact_arrow_styles()
 	if GameManager:
 		var ids: Array[String] = GameManager.get_skin_ids()
 		var idx: int = ids.find(GameManager.selected_skin)
 		_preview_skin_idx = idx if idx >= 0 else 0
+		var w_ids: Array[String] = GameManager.get_weapon_skin_ids()
+		var w_idx: int = w_ids.find(GameManager.selected_weapon_skin)
+		_preview_weapon_idx = w_idx if w_idx >= 0 else 0
 
 func _cycle_skin(delta_idx: int) -> void:
 	if not GameManager:
@@ -183,6 +214,24 @@ func _cycle_skin(delta_idx: int) -> void:
 			AudioManager.play_sfx("empty")
 	refresh_skin_showcase(preview_id)
 
+func _cycle_weapon_skin(delta_idx: int) -> void:
+	if not GameManager:
+		return
+	var ids: Array[String] = GameManager.get_weapon_skin_ids()
+	if ids.is_empty():
+		return
+	_preview_weapon_idx = (_preview_weapon_idx + delta_idx + ids.size()) % ids.size()
+	var preview_id: String = ids[_preview_weapon_idx]
+	var unlocked: bool = GameManager.is_weapon_skin_unlocked(preview_id)
+	if unlocked:
+		GameManager.set_selected_weapon_skin(preview_id)
+		if AudioManager:
+			AudioManager.play_sfx("ui_click")
+	else:
+		if AudioManager:
+			AudioManager.play_sfx("empty")
+	refresh_weapon_showcase(preview_id)
+
 func refresh_skin_showcase(skin_id: String = "") -> void:
 	if not GameManager:
 		return
@@ -200,19 +249,70 @@ func refresh_skin_showcase(skin_id: String = "") -> void:
 
 	var accent: Color = data.get("band_hi", Color(1.0, 0.45, 0.49))
 	if skin_name_label:
-		skin_name_label.text = str(data.get("name", "RED BAND"))
-		skin_name_label.add_theme_color_override("font_color", accent if unlocked else accent.darkened(0.25))
+		if unlocked:
+			skin_name_label.text = "BAND: %s" % str(data.get("name", "RED BAND"))
+			skin_name_label.add_theme_color_override("font_color", accent)
+		else:
+			skin_name_label.text = "BAND: LOCK %dm" % int(data.get("unlock_dist", 0))
+			skin_name_label.add_theme_color_override("font_color", Color(0.96, 0.62, 0.30))
 	if _skin_style:
 		_skin_style.border_color = accent.lerp(Color(0.22, 0.85, 0.95), 0.35) if unlocked else Color(0.45, 0.48, 0.58, 0.65)
-	if skin_status_label:
-		if unlocked:
-			skin_status_label.text = "EQUIPPED" if active_id == GameManager.selected_skin else "UNLOCKED"
-			skin_status_label.add_theme_color_override("font_color", Color(0.45, 0.96, 0.65))
+
+func refresh_weapon_showcase(weapon_id: String = "") -> void:
+	if not GameManager:
+		return
+	var ids: Array[String] = GameManager.get_weapon_skin_ids()
+	var active_id: String = GameManager.selected_weapon_skin if weapon_id.is_empty() else weapon_id
+	var idx: int = ids.find(active_id)
+	if idx >= 0:
+		_preview_weapon_idx = idx
+	var data: Dictionary = GameManager.get_weapon_skin_data(active_id)
+	var unlocked: bool = GameManager.is_weapon_skin_unlocked(active_id)
+
+	if hero_weapon_overlay:
+		if HERO_WEAPON_OVERLAYS.has(active_id):
+			hero_weapon_overlay.texture = HERO_WEAPON_OVERLAYS[active_id]
+			hero_weapon_overlay.visible = true
+			hero_weapon_overlay.modulate = Color.WHITE if unlocked else Color(0.58, 0.62, 0.72, 0.90)
 		else:
-			var req_d: int = int(data.get("unlock_dist", 0))
-			var req_s: int = int(data.get("unlock_score", 0))
-			skin_status_label.text = "LOCKED: %dm / %d" % [req_d, req_s]
-			skin_status_label.add_theme_color_override("font_color", Color(0.96, 0.62, 0.30))
+			hero_weapon_overlay.visible = false
+
+	var accent: Color = data.get("accent", Color(0.95, 0.72, 0.36))
+	if weapon_name_label:
+		if unlocked:
+			weapon_name_label.text = "GUN: %s" % str(data.get("name", "CLASSIC STEEL"))
+			weapon_name_label.add_theme_color_override("font_color", accent)
+		else:
+			weapon_name_label.text = "GUN: LOCK %dx/%d" % [int(data.get("unlock_combo", 0)), int(data.get("unlock_score", 0))]
+			weapon_name_label.add_theme_color_override("font_color", Color(0.96, 0.62, 0.30))
+
+func _apply_compact_arrow_styles() -> void:
+	var nrm := StyleBoxFlat.new()
+	nrm.bg_color = Color(0.11, 0.14, 0.25, 0.95)
+	nrm.border_color = Color(0.28, 0.40, 0.62, 0.90)
+	nrm.set_border_width_all(1)
+	nrm.set_corner_radius_all(2)
+	nrm.content_margin_left = 4
+	nrm.content_margin_right = 4
+	nrm.content_margin_top = 1
+	nrm.content_margin_bottom = 1
+
+	var hov := nrm.duplicate() as StyleBoxFlat
+	hov.bg_color = Color(0.16, 0.22, 0.38, 1.0)
+	hov.border_color = Color(0.32, 0.88, 1.0, 1.0)
+
+	var prs := nrm.duplicate() as StyleBoxFlat
+	prs.bg_color = Color(0.24, 0.16, 0.10, 1.0)
+	prs.border_color = Color(0.96, 0.68, 0.28, 1.0)
+
+	for btn in [prev_skin_btn, next_skin_btn, prev_weapon_btn, next_weapon_btn]:
+		if not btn:
+			continue
+		btn.add_theme_stylebox_override("normal", nrm)
+		btn.add_theme_stylebox_override("hover", hov)
+		btn.add_theme_stylebox_override("focus", hov)
+		btn.add_theme_stylebox_override("pressed", prs)
+		btn.add_theme_stylebox_override("hover_pressed", prs)
 
 func _update_high_score() -> void:
 	if GameManager:

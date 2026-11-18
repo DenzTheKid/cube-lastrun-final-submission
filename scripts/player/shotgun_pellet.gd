@@ -31,10 +31,15 @@ func _ready() -> void:
 	_trail_line.gradient = grad
 	add_child(_trail_line)
 
-func setup(dir: Vector2, start_pos: Vector2) -> void:
+func setup(dir: Vector2, start_pos: Vector2, tracer_color: Color = Color(1.0, 0.92, 0.45)) -> void:
 	direction = dir.normalized()
 	global_position = start_pos
 	rotation = direction.angle()
+	if _trail_line and _trail_line.gradient:
+		var tail_col := Color(tracer_color.r, tracer_color.g, tracer_color.b, 0.0)
+		var head_col := Color(tracer_color.r, tracer_color.g, tracer_color.b, 0.95)
+		_trail_line.gradient.set_color(0, tail_col)
+		_trail_line.gradient.set_color(1, head_col)
 
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta

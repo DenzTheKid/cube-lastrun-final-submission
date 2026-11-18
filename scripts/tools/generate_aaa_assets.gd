@@ -9,6 +9,12 @@ extends SceneTree
 const OUTLINE := Color8(10, 11, 20, 255)
 
 func _init() -> void:
+	if "--weapons-only" in OS.get_cmdline_user_args():
+		print("=== Generating Bespoke Shotgun Skin Sprites & Hero Showcase Overlays ===")
+		_make_shotgun_skins()
+		print("=== Shotgun Skin Generation Complete ===")
+		quit(0)
+		return
 	print("=== Generating City Skylines, Clustered Windows, Street Lamps, Horde & AAA Pixel UI Art ===")
 	_make_clean_horde_wall()
 	_make_foreground_overpass()
@@ -21,6 +27,7 @@ func _init() -> void:
 	_make_wrecked_car_and_medkit()
 	_make_vehicle_varieties_and_barrier()
 	_make_tactical_shield_assets()
+	_make_shotgun_skins()
 	_make_heal_sfx()
 	print("=== Asset Generation Complete ===")
 	quit(0)
@@ -1964,6 +1971,132 @@ func _make_tactical_shield_assets() -> void:
 	_apply_pixel_outline(ui_empty, out_col)
 	ui_full.save_png("res://assets/ui/px_shield_full.png")
 	ui_empty.save_png("res://assets/ui/px_shield_empty.png")
+
+func _make_shotgun_skins() -> void:
+	var gun_palettes := {
+		"crimson": {
+			"metal_hi": Color("#c8d0e3"),
+			"metal_mid": Color("#3f4559"),
+			"metal_dark": Color("#1d202e"),
+			"grip_hi": Color("#f54764"),
+			"grip_dark": Color("#8f1c34"),
+			"accent": Color("#ff7088"),
+			"sight": Color("#ff2e4c"),
+			"spark_core": Color("#ffd6de"),
+			"spark_edge": Color("#ff3d5c")
+		},
+		"toxic": {
+			"metal_hi": Color("#a8ebc0"),
+			"metal_mid": Color("#384a54"),
+			"metal_dark": Color("#1b252e"),
+			"grip_hi": Color("#63e642"),
+			"grip_dark": Color("#216b25"),
+			"accent": Color("#b0ff4f"),
+			"sight": Color("#caff42"),
+			"spark_core": Color("#edffcf"),
+			"spark_edge": Color("#59ff38")
+		},
+		"gold": {
+			"metal_hi": Color("#fff59c"),
+			"metal_mid": Color("#f2b629"),
+			"metal_dark": Color("#9c5d11"),
+			"grip_hi": Color("#6b442b"),
+			"grip_dark": Color("#382015"),
+			"accent": Color("#ffe56b"),
+			"sight": Color("#ffea75"),
+			"spark_core": Color("#fff9d6"),
+			"spark_edge": Color("#ffb726")
+		},
+		"plasma": {
+			"metal_hi": Color("#f2fcff"),
+			"metal_mid": Color("#8db2db"),
+			"metal_dark": Color("#324570"),
+			"grip_hi": Color("#36e5ff"),
+			"grip_dark": Color("#14679c"),
+			"accent": Color("#94fbff"),
+			"sight": Color("#ff59f7"),
+			"spark_core": Color("#ffffff"),
+			"spark_edge": Color("#2ee8ff")
+		}
+	}
+
+	for id in gun_palettes.keys():
+		var p: Dictionary = gun_palettes[id]
+
+		# 1. Gameplay 24x10 Shotgun Sprite matching exact shotgun.png muzzle/port silhouette
+		var w_img := Image.create(24, 10, false, Image.FORMAT_RGBA8)
+		# Stock & Grip
+		for y in range(3, 8):
+			var x_start := 0
+			var x_end := 5 if y <= 4 or y >= 6 else 6
+			for x in range(x_start, x_end + 1):
+				if y == 3 and x < 3:
+					continue
+				if y == 3 or y == 7 or x == 0:
+					_safe_px(w_img, x, y, OUTLINE)
+				else:
+					_safe_px(w_img, x, y, p["grip_hi"] if y == 4 else p["grip_dark"])
+		# Receiver with glowing latch accent
+		_draw_rect_outline(w_img, 7, 2, 5, 6, p["metal_dark"], OUTLINE)
+		_safe_px(w_img, 8, 4, p["accent"])
+		_safe_px(w_img, 9, 4, p["accent"])
+		# Upper & lower barrels + specular top highlight
+		_draw_rect_outline(w_img, 11, 2, 13, 4, p["metal_mid"], OUTLINE)
+		w_img.fill_rect(Rect2i(12, 2, 11, 1), p["metal_hi"])
+		_draw_rect_outline(w_img, 11, 5, 13, 3, p["metal_dark"], OUTLINE)
+		# Barrel cooling vent accents
+		for vx in [14, 17, 20]:
+			_safe_px(w_img, vx, 3, p["accent"])
+		# Glowing optic front sight + pump grip
+		_safe_px(w_img, 22, 1, p["sight"])
+		_draw_rect_outline(w_img, 12, 7, 6, 2, p["grip_dark"], OUTLINE)
+		w_img.fill_rect(Rect2i(13, 7, 4, 1), p["grip_hi"])
+		w_img.save_png("res://assets/weapons/shotgun_%s.png" % id)
+
+		# 2. Hero Showcase Overlay Sprite (172x70): exact shotgun/hands/spark layers over px_hero_showcase.png
+		var ov := Image.create(172, 70, false, Image.FORMAT_RGBA8)
+		for i in range(42):
+			var gx: int = 39 + i
+			var gy: int = 29 + int(float(i) * 0.16)
+			_safe_px(ov, gx, gy - 1, OUTLINE)
+			var top_col: Color = p["metal_hi"] if i < 30 else p["metal_mid"]
+			if (i == 10 or i == 15 or i == 20):
+				top_col = p["accent"]
+			_safe_px(ov, gx, gy, top_col)
+			_safe_px(ov, gx, gy + 1, p["accent"] if (i >= 18 and i <= 26 and i % 3 == 0) else p["metal_mid"])
+			_safe_px(ov, gx, gy + 2, p["metal_dark"])
+			_safe_px(ov, gx, gy + 3, OUTLINE)
+		for i in range(32):
+			var gx: int = 44 + i
+			var gy: int = 33 + int(float(i) * 0.16)
+			var is_grip: bool = (i >= 11 and i <= 23)
+			_safe_px(ov, gx, gy, p["grip_hi"] if is_grip else p["metal_mid"])
+			_safe_px(ov, gx, gy + 1, p["grip_dark"] if is_grip else p["metal_dark"])
+			_safe_px(ov, gx, gy + 2, OUTLINE)
+		_safe_px(ov, 40, 27, OUTLINE)
+		_safe_px(ov, 40, 28, p["sight"])
+		_draw_rect_outline(ov, 76, 35, 9, 6, p["metal_dark"], OUTLINE)
+		ov.fill_rect(Rect2i(78, 36, 4, 2), p["accent"])
+		for i in range(17):
+			var sx: int = 84 + i
+			var sy: int = 36 + int(float(i) * 0.35)
+			_safe_px(ov, sx, sy - 1, OUTLINE)
+			_safe_px(ov, sx, sy, p["grip_hi"])
+			_safe_px(ov, sx, sy + 1, p["grip_hi"])
+			_safe_px(ov, sx, sy + 2, p["grip_dark"])
+			_safe_px(ov, sx, sy + 3, OUTLINE)
+		# Hands resting over pump/grip (matched cleanly to hero hand silhouette)
+		_draw_rect_outline(ov, 60, 34, 7, 6, Color("#33457d"), OUTLINE)
+		ov.fill_rect(Rect2i(61, 35, 3, 2), Color("#56cde3"))
+		_draw_rect_outline(ov, 80, 38, 7, 6, Color("#33457d"), OUTLINE)
+		ov.fill_rect(Rect2i(81, 39, 3, 2), Color("#697ab5"))
+		# Matching muzzle sparkle
+		_safe_px(ov, 35, 29, p["spark_core"])
+		_safe_px(ov, 34, 29, p["spark_edge"])
+		_safe_px(ov, 36, 29, p["spark_edge"])
+		_safe_px(ov, 35, 28, p["spark_edge"])
+		_safe_px(ov, 35, 30, p["spark_edge"])
+		ov.save_png("res://assets/ui/px_hero_gun_%s.png" % id)
 
 
 
