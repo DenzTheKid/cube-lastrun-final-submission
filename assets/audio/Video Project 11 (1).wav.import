@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://cxrlobsem1dlt"
+path="res://.godot/imported/Video Project 11 (1).wav-9a65c2c7698478e874e23c71271ffc5d.sample"
+
+[deps]
+
+source_file="res://assets/audio/Video Project 11 (1).wav"
+dest_files=["res://.godot/imported/Video Project 11 (1).wav-9a65c2c7698478e874e23c71271ffc5d.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

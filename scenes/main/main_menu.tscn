@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://ywa0jc5kt4ec" path="res://assets/environment/parallax_buildings_mid.png" id="4_mid"]
 [ext_resource type="Texture2D" uid="uid://cxhorts4ircak" path="res://assets/environment/parallax_overpass_fore.png" id="5_fore"]
 [ext_resource type="Texture2D" uid="uid://bkmgkrcj0o3yv" path="res://assets/ui/lobby_road.png" id="6_road"]
-[ext_resource type="Theme" path="res://assets/ui/game_theme.tres" id="7_theme"]
+[ext_resource type="Theme" uid="uid://lugdssqtsaab" path="res://assets/ui/game_theme.tres" id="7_theme"]
 [ext_resource type="Texture2D" uid="uid://bxunyyc3bemei" path="res://assets/ui/px_title_logo.png" id="8_logo"]
 [ext_resource type="Texture2D" uid="uid://xtniloucytnx" path="res://assets/ui/px_tagline_ribbon.png" id="9_ribbon"]
 [ext_resource type="Texture2D" uid="uid://crcetcd3jpjcq" path="res://assets/ui/px_record_card.png" id="10_reccard"]
