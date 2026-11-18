@@ -20,6 +20,7 @@ func _init() -> void:
 	_make_pixel_hearts()
 	_make_wrecked_car_and_medkit()
 	_make_vehicle_varieties_and_barrier()
+	_make_tactical_shield_assets()
 	_make_heal_sfx()
 	print("=== Asset Generation Complete ===")
 	quit(0)
@@ -1864,6 +1865,105 @@ func _make_vehicle_varieties_and_barrier() -> void:
 
 	_apply_pixel_outline(bar, out_col)
 	bar.save_png("res://assets/obstacles/px_concrete_barrier.png")
+
+func _make_tactical_shield_assets() -> void:
+	var out_col := Color("#0f1224")
+
+	# 1. Pickup Item Sprite (18 x 18): glowing tactical cobalt/cyan armor shield crate
+	var sw: int = 18
+	var sh: int = 18
+	var item := Image.create(sw, sh, false, Image.FORMAT_RGBA8)
+	var s_rim := Color("#9cf9ff")
+	var s_hi := Color("#4ec7ff")
+	var s_mid := Color("#2378e8")
+	var s_sh := Color("#164694")
+	var s_core := Color("#ecfeff")
+
+	for y in range(2, 16):
+		var half_w: int = 6
+		if y <= 3:
+			half_w = 5
+		elif y <= 9:
+			half_w = 6
+		elif y == 10 or y == 11:
+			half_w = 5
+		elif y == 12 or y == 13:
+			half_w = 3
+		else:
+			half_w = 1
+		var x0: int = 9 - half_w
+		var x1: int = 8 + half_w
+		for x in range(x0, x1 + 1):
+			var col: Color = s_mid
+			if y == 2 or x == x0:
+				col = s_rim
+			elif y <= 5 or x <= x0 + 2:
+				col = s_hi
+			elif x >= x1 - 1 or y >= 12:
+				col = s_sh
+			item.set_pixel(x, y, col)
+	# Glowing vertical diamond core inside shield face (distinct from Medkit '+' cross)
+	item.fill_rect(Rect2i(8, 4, 2, 8), s_rim)
+	item.fill_rect(Rect2i(7, 6, 4, 4), s_rim)
+	item.fill_rect(Rect2i(8, 6, 2, 4), s_core)
+	_apply_pixel_outline(item, out_col)
+	item.save_png("res://assets/pickups/px_shield.png")
+
+	# 2. HUD Tactical Shield Full & Empty Icons (17 x 17) matching px_heart style
+	var iw: int = 17
+	var ih: int = 17
+	var ui_full := Image.create(iw, ih, false, Image.FORMAT_RGBA8)
+	var ui_empty := Image.create(iw, ih, false, Image.FORMAT_RGBA8)
+
+	var e_rim := Color("#4d5a82")
+	var e_mid := Color("#252d47")
+	var e_sh := Color("#151929")
+
+	for y in range(1, 15):
+		var half_w: int = 6
+		if y == 1:
+			half_w = 4
+		elif y == 2:
+			half_w = 5
+		elif y <= 8:
+			half_w = 6
+		elif y <= 10:
+			half_w = 5
+		elif y <= 12:
+			half_w = 3
+		else:
+			half_w = 1
+		var x0: int = 8 - half_w
+		var x1: int = 8 + half_w
+		for x in range(x0, x1 + 1):
+			var col_f: Color = s_mid
+			if y <= 2 or x == x0:
+				col_f = s_rim
+			elif y <= 6 and x <= 7:
+				col_f = s_hi
+			elif x >= x1 - 1 or y >= 11:
+				col_f = s_sh
+			ui_full.set_pixel(x, y, col_f)
+
+			var col_e: Color = e_mid
+			if y == 1 or x == x0:
+				col_e = e_rim
+			elif x >= x1 - 1 or y >= 11:
+				col_e = e_sh
+			ui_empty.set_pixel(x, y, col_e)
+
+	# Crisp diamond specular core on full icon; subtle diagonal crack on empty
+	ui_full.fill_rect(Rect2i(8, 3, 1, 9), s_rim)
+	ui_full.fill_rect(Rect2i(7, 5, 3, 5), s_rim)
+	ui_full.fill_rect(Rect2i(8, 6, 1, 3), s_core)
+	ui_full.fill_rect(Rect2i(6, 7, 5, 1), s_core)
+	for c in [[5, 4], [6, 5], [7, 6], [8, 7], [8, 8], [9, 9], [10, 10]]:
+		_safe_px(ui_empty, c[0], c[1], out_col)
+
+	_apply_pixel_outline(ui_full, out_col)
+	_apply_pixel_outline(ui_empty, out_col)
+	ui_full.save_png("res://assets/ui/px_shield_full.png")
+	ui_empty.save_png("res://assets/ui/px_shield_empty.png")
 
 
 

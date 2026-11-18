@@ -25,6 +25,7 @@ const WRECKED_CAR_SCENE: PackedScene = preload("res://scenes/obstacles/wrecked_c
 const PLATFORM_SCENE: PackedScene = preload("res://scenes/obstacles/platform.tscn")
 const PIT_SCENE: PackedScene = preload("res://scenes/obstacles/pit_killzone.tscn")
 const MEDKIT_SCENE: PackedScene = preload("res://scenes/pickups/medkit.tscn")
+const SHIELD_SCENE: PackedScene = preload("res://scenes/pickups/shield_pickup.tscn")
 
 const WALKER_SCENE: PackedScene = preload("res://scenes/enemies/zombie_walker.tscn")
 const RUNNER_SCENE: PackedScene = preload("res://scenes/enemies/zombie_runner.tscn")
@@ -66,6 +67,7 @@ var _last_pattern: PatternType = PatternType.FLAT_START
 var _chunks_spawned: int = 0
 var _consecutive_hazard_chunks: int = 0
 var _chunks_since_medkit: int = 0
+var _chunks_since_shield: int = 3
 
 func setup(player: Player) -> void:
 	target_player = player
@@ -174,6 +176,7 @@ func _choose_fair_pattern() -> PatternType:
 func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 	if pattern != PatternType.FLAT_START:
 		_chunks_since_medkit += 1
+		_chunks_since_shield += 1
 
 	match pattern:
 		PatternType.FLAT_START:
@@ -337,12 +340,24 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 			if randf() < 0.5:
 				_spawn_enemy(chunk, WALKER_SCENE, 320.0, ground_y - 12.0)
 
-	# Rare fallback Medkit drop only when not already rolling an Ambulance medkit drop
+	# Rare fallback Medkit drop only when not already rolling an Ambulance medkit drop;
+	# otherwise consider spawning a Tactical Shield pickup on a clean safe spot.
 	if not (pattern in [PatternType.FLAT_START, PatternType.CAR_WRECK_MEDKIT]):
 		if _can_spawn_medkit(false):
 			var spot: Vector2 = _get_safe_medkit_spot(pattern)
 			_spawn_pickup(chunk, MEDKIT_SCENE, spot.x, spot.y)
 			_chunks_since_medkit = 0
+		elif _chunks_since_medkit > 0 and _can_spawn_shield():
+			var s_spot: Vector2 = _get_safe_medkit_spot(pattern)
+			_spawn_pickup(chunk, SHIELD_SCENE, s_spot.x, s_spot.y)
+			_chunks_since_shield = 0
+
+func _can_spawn_shield() -> bool:
+	var has_shield: bool = is_instance_valid(target_player) and target_player.shield_hp > 0
+	var cooldown: int = 11 if has_shield else 6
+	if _chunks_since_shield < cooldown:
+		return false
+	return randf() < 0.40 or _chunks_since_shield >= cooldown + 3
 
 func _can_spawn_medkit(is_ambulance: bool) -> bool:
 	var is_injured: bool = is_instance_valid(target_player) and target_player.current_hp < target_player.max_hp

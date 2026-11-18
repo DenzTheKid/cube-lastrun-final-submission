@@ -11,6 +11,7 @@ class_name Player
 # - Hit-flash shader, hitstop, and glowing tactical visor PointLight2D
 
 signal health_changed(current_hp: int, max_hp: int)
+signal shield_changed(current_shield: int, max_shield: int)
 signal died
 
 const HIT_FLASH_SHADER: Shader = preload("res://shaders/hit_flash.gdshader")
@@ -29,10 +30,15 @@ const SPARK_SCENE: PackedScene = preload("res://scenes/effects/bullet_spark.tscn
 
 @export var max_hp: int = 2
 var current_hp: int = 2
+@export var max_shield: int = 1
+var shield_hp: int = 0
 
 var is_dead: bool = false
 var is_transforming: bool = false
 var is_invulnerable: bool = false
+var was_recoil_launched: bool = false
+var _shield_anim_time: float = 0.0
+var _last_callout_usec: int = 0
 
 # Jump helpers
 var coyote_timer: float = 0.0
@@ -80,7 +86,9 @@ func _ready() -> void:
 	_wait_shoot_release = _is_physical_shoot_held()
 	_wait_jump_release = _is_physical_jump_held()
 	current_hp = max_hp
+	shield_hp = 0
 	health_changed.emit(current_hp, max_hp)
+	shield_changed.emit(shield_hp, max_shield)
 
 	_setup_visual_enhancements()
 
@@ -201,6 +209,7 @@ func _physics_process(delta: float) -> void:
 			_visual_scale = _visual_scale.lerp(Vector2(1.08, 0.92), 1.0 - exp(-12.0 * delta))
 	else:
 		_fast_fall_burst_used = false
+		was_recoil_launched = false
 		coyote_timer = COYOTE_TIME
 		if not _was_on_floor:
 			# Landed impact squash + dust burst!
@@ -263,7 +272,10 @@ func _physics_process(delta: float) -> void:
 			velocity.y = 0.0
 	_update_animation(delta)
 	_update_juice_visuals(delta, speed_mult)
-	if shotgun and shotgun.is_reloading:
+	if shield_hp > 0:
+		_shield_anim_time += delta
+		queue_redraw()
+	elif shotgun and shotgun.is_reloading:
 		queue_redraw()
 
 func _is_physical_shoot_held() -> bool:
@@ -315,6 +327,8 @@ func _on_shotgun_recoil(force: Vector2) -> void:
 	# Downward shot -> Upward boost
 	if force.y < 0.0:
 		_fast_fall_burst_used = false
+		if force.y <= -80.0:
+			was_recoil_launched = true
 		if velocity.y > 0.0:
 			velocity.y = 0.0
 		velocity.y += force.y
@@ -379,6 +393,17 @@ func _update_juice_visuals(delta: float, speed_mult: float) -> void:
 		_scarf_line.points = PackedVector2Array(_scarf_points)
 
 func _draw() -> void:
+	# Tactical Blue Energy Shield Aura around Cube Survivor
+	if shield_hp > 0 and not is_dead and not is_transforming:
+		var pulse: float = 0.5 + 0.5 * sin(_shield_anim_time * 5.2)
+		var ring_r: float = 16.5 + 0.6 * pulse
+		var center := Vector2(0.0, 2.0)
+		draw_circle(center, ring_r - 1.0, Color(0.18, 0.65, 1.0, 0.11 + 0.06 * pulse))
+		draw_arc(center, ring_r, 0.0, TAU, 28, Color(0.28, 0.80, 1.0, 0.42 + 0.18 * pulse), 1.2)
+		var base_ang: float = _shield_anim_time * 2.6
+		draw_arc(center, ring_r + 1.0, base_ang, base_ang + 1.35, 12, Color(0.62, 0.96, 1.0, 0.88), 1.6)
+		draw_arc(center, ring_r + 1.0, base_ang + PI, base_ang + PI + 1.35, 12, Color(0.62, 0.96, 1.0, 0.88), 1.6)
+
 	# Diegetic Reload Progress Bar directly under the Cube Survivor
 	if shotgun and shotgun.is_reloading and not is_dead and not is_transforming:
 		var pct: float = clampf(shotgun.reload_timer / maxf(shotgun.reload_time, 0.01), 0.0, 1.0)
@@ -392,6 +417,36 @@ func _draw() -> void:
 
 func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 	if is_dead or is_transforming or is_invulnerable:
+		return
+
+	if shield_hp > 0:
+		shield_hp = maxi(shield_hp - 1, 0)
+		shield_changed.emit(shield_hp, max_shield)
+		is_invulnerable = true
+		invuln_timer.start(0.95)
+		if AudioManager:
+			AudioManager.play_sfx("impact_metal", 0.06)
+			AudioManager.play_sfx("player_hurt", 0.08)
+		if GameFeel:
+			GameFeel.hitstop(0.04, 0.06)
+			GameFeel.camera_shake(0.55)
+			GameFeel.spawn_shockwave_ring(global_position, Color(0.32, 0.86, 1.0, 0.95))
+			GameFeel.spawn_voxel_debris(global_position, Color(0.32, 0.82, 1.0), 8)
+			GameFeel.spawn_floating_text(global_position + Vector2(0, -16), "SHIELD BLOCK!", Color(0.42, 0.92, 1.0), 1.15)
+		if _shader_mat:
+			_shader_mat.set_shader_parameter("flash_color", Color(0.45, 0.92, 1.0, 1.0))
+			_shader_mat.set_shader_parameter("flash_modifier", 1.0)
+			var tw_sh: Tween = create_tween()
+			tw_sh.tween_method(func(v: float):
+				if is_instance_valid(self) and _shader_mat:
+					_shader_mat.set_shader_parameter("flash_modifier", v)
+					if v <= 0.02:
+						_shader_mat.set_shader_parameter("flash_color", Color.WHITE)
+			, 1.0, 0.0, 0.16)
+		_visual_scale = Vector2(1.25, 0.78)
+		if knockback_dir != Vector2.ZERO:
+			velocity += knockback_dir.normalized() * 115.0
+		queue_redraw()
 		return
 
 	current_hp -= amount
@@ -470,6 +525,52 @@ func heal(amount: int = 1) -> bool:
 	_visual_scale = Vector2(0.86, 1.20)
 	return gained > 0
 
+func grant_shield(amount: int = 1) -> bool:
+	if is_dead or is_transforming or amount <= 0:
+		return false
+
+	var prev_shield: int = shield_hp
+	shield_hp = mini(shield_hp + amount, max_shield)
+	var gained: int = shield_hp - prev_shield
+	shield_changed.emit(shield_hp, max_shield)
+
+	if AudioManager:
+		AudioManager.play_sfx("heal", 0.05)
+
+	if GameFeel:
+		if gained > 0:
+			GameFeel.spawn_floating_text(global_position + Vector2(0, -18), "SHIELD UP!", Color(0.36, 0.88, 1.0), 1.12)
+		else:
+			if GameManager:
+				GameManager.add_bonus_score(50)
+			GameFeel.spawn_floating_text(global_position + Vector2(0, -18), "SHIELD +50!", Color(0.55, 0.94, 1.0), 1.0)
+		GameFeel.spawn_shockwave_ring(global_position, Color(0.32, 0.86, 1.0, 0.90))
+
+	if _shader_mat:
+		_shader_mat.set_shader_parameter("rim_color", Color(0.34, 0.86, 1.0, 1.0))
+		_shader_mat.set_shader_parameter("rim_strength", 0.85)
+		var tw: Tween = create_tween()
+		tw.tween_method(func(v: float):
+			if is_instance_valid(self) and _shader_mat:
+				_shader_mat.set_shader_parameter("rim_strength", v)
+				if v <= 0.36:
+					var rest_col: Color = Color(0.45, 0.95, 1.0, 1.0)
+					if GameManager:
+						rest_col = GameManager.get_skin_data().get("light", rest_col)
+					_shader_mat.set_shader_parameter("rim_color", rest_col)
+		, 0.85, 0.35, 0.35)
+
+	_visual_scale = Vector2(0.88, 1.18)
+	queue_redraw()
+	return gained > 0
+
+func can_trigger_style_callout(cooldown_sec: float = 0.9) -> bool:
+	var now: int = Time.get_ticks_usec()
+	if now - _last_callout_usec < int(cooldown_sec * 1000000.0):
+		return false
+	_last_callout_usec = now
+	return true
+
 func _disable_skin_swap() -> void:
 	if _shader_mat:
 		_shader_mat.set_shader_parameter("skin_swap_enabled", 0.0)
@@ -479,6 +580,8 @@ func die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	shield_hp = 0
+	shield_changed.emit(shield_hp, max_shield)
 	_disable_skin_swap()
 	velocity = Vector2.ZERO
 	shotgun.visible = false
@@ -500,6 +603,8 @@ func trigger_horde_catch() -> void:
 	if is_dead or is_transforming:
 		return
 	is_transforming = true
+	shield_hp = 0
+	shield_changed.emit(shield_hp, max_shield)
 	_disable_skin_swap()
 	velocity = Vector2.ZERO
 	shotgun.visible = false

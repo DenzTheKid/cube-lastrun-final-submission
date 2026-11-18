@@ -7,6 +7,8 @@ class_name HUD
 
 const PIP_FULL_TEX: Texture2D = preload("res://assets/ui/px_heart_full.png")
 const PIP_EMPTY_TEX: Texture2D = preload("res://assets/ui/px_heart_empty.png")
+const SHIELD_FULL_TEX: Texture2D = preload("res://assets/ui/px_shield_full.png")
+const SHIELD_EMPTY_TEX: Texture2D = preload("res://assets/ui/px_shield_empty.png")
 const SHELL_FULL_TEX: Texture2D = preload("res://assets/ui/px_shell_full.png")
 const SHELL_EMPTY_TEX: Texture2D = preload("res://assets/ui/px_shell_empty.png")
 const PALETTE = preload("res://scripts/ui/theme_palette.gd")
@@ -28,6 +30,7 @@ const PALETTE = preload("res://scripts/ui/theme_palette.gd")
 @onready var hp_label: Label = %HpLabel
 @onready var _hp_pip_1: TextureRect = %Heart1
 @onready var _hp_pip_2: TextureRect = %Heart2
+@onready var _shield_icon: TextureRect = %ShieldIcon
 @onready var combo_plate: PanelContainer = %ComboPlate
 @onready var combo_label: Label = %ComboLabel
 @onready var critical_vignette: ColorRect = %CriticalVignette
@@ -51,6 +54,8 @@ var _warning_pulse_timer: float = 0.0
 var _critical_pulse_timer: float = 0.0
 var _is_low_hp: bool = false
 var _last_hp: int = 2
+var _has_shield: bool = false
+var _last_shield: int = 0
 var _combo_tween: Tween = null
 var _milestone_tween: Tween = null
 var _milestone_style: StyleBoxFlat = null
@@ -170,7 +175,9 @@ func _process(delta: float) -> void:
 func setup_player(player: Player) -> void:
 	if player:
 		player.health_changed.connect(_on_health_changed)
+		player.shield_changed.connect(_on_shield_changed)
 		_on_health_changed(player.current_hp, player.max_hp)
+		_on_shield_changed(player.shield_hp, player.max_shield)
 		if player.shotgun:
 			player.shotgun.ammo_changed.connect(_on_ammo_changed)
 			player.shotgun.reload_started.connect(_on_reload_started)
@@ -365,6 +372,19 @@ func _on_health_changed(hp: int, max_hp: int) -> void:
 		hp_label.modulate = PALETTE.ACCENT_MAGENTA
 	else:
 		hp_label.modulate = Color.WHITE
+
+func _on_shield_changed(shield_hp: int, _max_shield: int) -> void:
+	_has_shield = shield_hp > 0
+	if not _shield_icon:
+		return
+	_shield_icon.texture = SHIELD_FULL_TEX if _has_shield else SHIELD_EMPTY_TEX
+	_shield_icon.modulate = Color.WHITE if _has_shield else Color(0.75, 0.82, 0.94, 0.55)
+	if shield_hp != _last_shield:
+		_shield_icon.pivot_offset = Vector2(8.5, 8.5)
+		_shield_icon.scale = Vector2(1.40, 1.40)
+		var tw_sh: Tween = create_tween()
+		tw_sh.tween_property(_shield_icon, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_last_shield = shield_hp
 
 func _on_combo_updated(combo_count: int, multiplier: int) -> void:
 	if not combo_plate or not combo_label:

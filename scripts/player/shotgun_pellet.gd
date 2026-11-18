@@ -16,8 +16,8 @@ var _trail_line: Line2D = null
 func _ready() -> void:
 	monitoring = true
 	monitorable = false
-	collision_layer = 8 # Layer 4: PlayerAttacks
-	collision_mask = 5  # Layer 1: World + Layer 3: Enemies
+	collision_layer = 8  # Layer 4: PlayerAttacks
+	collision_mask = 37  # Layer 1: World + Layer 3: Enemies + Layer 6: Horde
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
 

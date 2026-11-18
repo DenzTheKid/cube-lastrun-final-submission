@@ -158,6 +158,21 @@ func die() -> void:
 			popup_scale = 1.10
 		GameFeel.spawn_floating_text(global_position + Vector2(0, -10), popup_txt, popup_col, popup_scale)
 
+		# Arcade Skill Style Callouts: AIRSHOT! / POINT BLANK!
+		var root_node: Node = get_tree().current_scene
+		if root_node and root_node.name != "TestRunner":
+			var player_node: Player = root_node.find_child("Player", true, false) as Player
+			if player_node and not player_node.is_dead:
+				var is_airborne_shot: bool = not player_node.is_on_floor() and (player_node.was_recoil_launched or player_node.global_position.y < 194.0)
+				if is_airborne_shot and player_node.can_trigger_style_callout(0.9):
+					if GameManager:
+						GameManager.add_bonus_score(50)
+					GameFeel.spawn_floating_text(global_position + Vector2(0, -24), "AIRSHOT! +50", Color(0.38, 0.96, 1.0), 1.08)
+				elif absf(global_position.x - player_node.global_position.x) <= 50.0 and player_node.can_trigger_style_callout(1.2):
+					if GameManager:
+						GameManager.add_bonus_score(40)
+					GameFeel.spawn_floating_text(global_position + Vector2(0, -24), "POINT BLANK! +40", Color(1.0, 0.72, 0.28), 1.04)
+
 	# Death tween: squash, fade out, queue_free
 	var tw: Tween = create_tween()
 	tw.tween_property(sprite, "scale", Vector2(1.45, 0.18), 0.10)
