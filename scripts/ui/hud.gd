@@ -12,12 +12,15 @@ const SHELL_EMPTY_TEX: Texture2D = preload("res://assets/ui/px_shell_empty.png")
 const PALETTE = preload("res://scripts/ui/theme_palette.gd")
 
 @onready var root_control: Control = $RootControl
+@onready var safe_frame: Control = %SafeFrame
+@onready var top_margin: MarginContainer = %TopMargin
+@onready var bottom_margin: MarginContainer = %BottomMargin
 @onready var score_label: Label = %ScoreLabel
 @onready var distance_label: Label = %DistanceLabel
 @onready var time_label: Label = %TimeLabel
 @onready var shell_1: TextureRect = %Shell1
 @onready var shell_2: TextureRect = %Shell2
-@onready var reload_box: VBoxContainer = $RootControl/BottomLeft/AmmoPlate/AmmoBox/ReloadBox
+@onready var reload_box: VBoxContainer = %ReloadBox
 @onready var reload_bar: ProgressBar = %ReloadBar
 @onready var reload_label: Label = %ReloadLabel
 @onready var horde_bar: ProgressBar = %HordeBar
@@ -40,6 +43,10 @@ var _combo_tween: Tween = null
 
 func _ready() -> void:
 	_set_mouse_filter_ignore(root_control)
+	var vp = get_viewport()
+	if vp and not vp.size_changed.is_connected(_update_responsive_layout):
+		vp.size_changed.connect(_update_responsive_layout)
+	_update_responsive_layout()
 	if GameManager:
 		GameManager.score_updated.connect(_on_score_updated)
 		GameManager.distance_updated.connect(_on_distance_updated)
@@ -54,6 +61,51 @@ func _ready() -> void:
 		combo_plate.visible = false
 	if critical_vignette:
 		critical_vignette.visible = false
+
+func _update_responsive_layout() -> void:
+	if not is_instance_valid(safe_frame) or not is_instance_valid(root_control):
+		return
+
+	var vp_size: Vector2 = get_viewport().get_visible_rect().size
+	if vp_size.x <= 0.0 or vp_size.y <= 0.0:
+		return
+
+	var win_size: Vector2i = DisplayServer.window_get_size()
+	if win_size.x <= 0 or win_size.y <= 0:
+		win_size = Vector2i(int(vp_size.x * 2.0), int(vp_size.y * 2.0))
+
+	# 1. Base 16:9 focal dimensions constraint
+	var target_aspect: float = 16.0 / 9.0
+	var current_aspect: float = vp_size.x / maxf(vp_size.y, 1.0)
+
+	var focal_w: float = vp_size.x
+	var focal_h: float = vp_size.y
+
+	if current_aspect > target_aspect:
+		# Wider than 16:9 (e.g. 21:9 ultrawide) -> clamp focal width to 16:9
+		focal_w = vp_size.y * target_aspect
+	elif current_aspect < target_aspect:
+		# Taller than 16:9 (e.g. 16:10 like 1920x1200) -> clamp focal height to 16:9
+		focal_h = vp_size.x / target_aspect
+
+	var origin_y: float = (vp_size.y - focal_h) * 0.5
+	var origin_x: float = (vp_size.x - focal_w) * 0.5
+
+	# 2. Responsive horizontal padding based on window size & fullscreen state
+	# Small window (960x540): compact pad_x (12px).
+	# Fullscreen & high resolutions (1080p, 1200p, 1440p): pad_x scales smoothly
+	# so HUD elements stay in the player's focal vision rather than drifting to the outer bezels.
+	var is_fullscreen: bool = (
+		DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+		or DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
+	)
+	var scale_factor: float = clampf(float(win_size.x) / 960.0, 1.0, 2.67)
+	var base_pad: float = lerpf(12.0, 32.0, clampf((scale_factor - 1.0) / 1.0, 0.0, 1.0))
+	if is_fullscreen:
+		base_pad = maxf(base_pad, 30.0)
+
+	safe_frame.position = Vector2(origin_x + base_pad, origin_y)
+	safe_frame.size = Vector2(focal_w - (base_pad * 2.0), focal_h)
 
 func _set_mouse_filter_ignore(node: Node) -> void:
 	if node is Control:

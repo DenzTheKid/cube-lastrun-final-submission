@@ -38,194 +38,232 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="TopMargin" type="MarginContainer" parent="RootControl"]
+[node name="SafeFrame" type="Control" parent="RootControl"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+offset_right = 480.0
+offset_bottom = 270.0
+mouse_filter = 2
+
+[node name="TopMargin" type="MarginContainer" parent="RootControl/SafeFrame"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_left = 8.0
 offset_top = 6.0
-offset_right = -8.0
 offset_bottom = 68.0
 grow_horizontal = 2
+mouse_filter = 2
 
-[node name="TopBar" type="HBoxContainer" parent="RootControl/TopMargin"]
+[node name="TopBar" type="HBoxContainer" parent="RootControl/SafeFrame/TopMargin"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="HeartPlate" type="PanelContainer" parent="RootControl/TopMargin/TopBar"]
+[node name="HeartPlate" type="PanelContainer" parent="RootControl/SafeFrame/TopMargin/TopBar"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
+mouse_filter = 2
 
-[node name="HeartsBox" type="HBoxContainer" parent="RootControl/TopMargin/TopBar/HeartPlate"]
+[node name="HeartsBox" type="HBoxContainer" parent="RootControl/SafeFrame/TopMargin/TopBar/HeartPlate"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="Heart1" type="TextureRect" parent="RootControl/TopMargin/TopBar/HeartPlate/HeartsBox"]
+[node name="Heart1" type="TextureRect" parent="RootControl/SafeFrame/TopMargin/TopBar/HeartPlate/HeartsBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(20, 17)
 layout_mode = 2
+mouse_filter = 2
 texture = ExtResource("4_heartfull")
 stretch_mode = 5
 
-[node name="Heart2" type="TextureRect" parent="RootControl/TopMargin/TopBar/HeartPlate/HeartsBox"]
+[node name="Heart2" type="TextureRect" parent="RootControl/SafeFrame/TopMargin/TopBar/HeartPlate/HeartsBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(20, 17)
 layout_mode = 2
+mouse_filter = 2
 texture = ExtResource("4_heartfull")
 stretch_mode = 5
 
-[node name="HpLabel" type="Label" parent="RootControl/TopMargin/TopBar/HeartPlate/HeartsBox"]
+[node name="HpLabel" type="Label" parent="RootControl/SafeFrame/TopMargin/TopBar/HeartPlate/HeartsBox"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.902, 0.224, 0.384, 1)
 text = "2/2"
 
-[node name="Spacer" type="Control" parent="RootControl/TopMargin/TopBar"]
+[node name="Spacer" type="Control" parent="RootControl/SafeFrame/TopMargin/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="TopRightBox" type="VBoxContainer" parent="RootControl/TopMargin/TopBar"]
+[node name="TopRightBox" type="VBoxContainer" parent="RootControl/SafeFrame/TopMargin/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
+mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="TopPlate" type="PanelContainer" parent="RootControl/TopMargin/TopBar/TopRightBox"]
+[node name="TopPlate" type="PanelContainer" parent="RootControl/SafeFrame/TopMargin/TopBar/TopRightBox"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
+mouse_filter = 2
 
-[node name="HBox" type="HBoxContainer" parent="RootControl/TopMargin/TopBar/TopRightBox/TopPlate"]
+[node name="HBox" type="HBoxContainer" parent="RootControl/SafeFrame/TopMargin/TopBar/TopRightBox/TopPlate"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 14
 
-[node name="ScoreLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopRightBox/TopPlate/HBox"]
+[node name="ScoreLabel" type="Label" parent="RootControl/SafeFrame/TopMargin/TopBar/TopRightBox/TopPlate/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.949, 0.549, 0.22, 1)
 text = "SCORE: 00000"
 
-[node name="DistanceLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopRightBox/TopPlate/HBox"]
+[node name="DistanceLabel" type="Label" parent="RootControl/SafeFrame/TopMargin/TopBar/TopRightBox/TopPlate/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.22, 0.847, 0.949, 1)
 text = "DIST: 0m"
 
-[node name="TimeLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopRightBox/TopPlate/HBox"]
+[node name="TimeLabel" type="Label" parent="RootControl/SafeFrame/TopMargin/TopBar/TopRightBox/TopPlate/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
 text = "TIME: 00:00"
 
-[node name="ComboPlate" type="PanelContainer" parent="RootControl/TopMargin/TopBar/TopRightBox"]
+[node name="ComboPlate" type="PanelContainer" parent="RootControl/SafeFrame/TopMargin/TopBar/TopRightBox"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
+mouse_filter = 2
 
-[node name="ComboLabel" type="Label" parent="RootControl/TopMargin/TopBar/TopRightBox/ComboPlate"]
+[node name="ComboLabel" type="Label" parent="RootControl/SafeFrame/TopMargin/TopBar/TopRightBox/ComboPlate"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.82, 0.42, 1)
 text = "COMBO x2 (2 HIT)"
 
-[node name="BottomLeft" type="MarginContainer" parent="RootControl"]
+[node name="BottomMargin" type="MarginContainer" parent="RootControl/SafeFrame"]
+unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = -44.0
-offset_right = 164.0
-offset_bottom = -6.0
-grow_vertical = 0
-
-[node name="AmmoPlate" type="PanelContainer" parent="RootControl/BottomLeft"]
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 8
-
-[node name="AmmoBox" type="HBoxContainer" parent="RootControl/BottomLeft/AmmoPlate"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ShellsBox" type="HBoxContainer" parent="RootControl/BottomLeft/AmmoPlate/AmmoBox"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="Shell1" type="TextureRect" parent="RootControl/BottomLeft/AmmoPlate/AmmoBox/ShellsBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(14, 22)
-layout_mode = 2
-texture = ExtResource("2_shelltex")
-stretch_mode = 5
-
-[node name="Shell2" type="TextureRect" parent="RootControl/BottomLeft/AmmoPlate/AmmoBox/ShellsBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(14, 22)
-layout_mode = 2
-texture = ExtResource("2_shelltex")
-stretch_mode = 5
-
-[node name="ReloadBox" type="VBoxContainer" parent="RootControl/BottomLeft/AmmoPlate/AmmoBox"]
-layout_mode = 2
-alignment = 1
-
-[node name="ReloadLabel" type="Label" parent="RootControl/BottomLeft/AmmoPlate/AmmoBox/ReloadBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.549, 0.22, 1)
-text = "RELOADING..."
-
-[node name="ReloadBar" type="ProgressBar" parent="RootControl/BottomLeft/AmmoPlate/AmmoBox/ReloadBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(64, 6)
-layout_mode = 2
-show_percentage = false
-
-[node name="BottomRight" type="MarginContainer" parent="RootControl"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
+anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -184.0
-offset_top = -42.0
-offset_right = -8.0
+offset_top = -44.0
 offset_bottom = -6.0
-grow_horizontal = 0
+grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 
-[node name="HordePlate" type="PanelContainer" parent="RootControl/BottomRight"]
+[node name="BottomBar" type="HBoxContainer" parent="RootControl/SafeFrame/BottomMargin"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="AmmoPlate" type="PanelContainer" parent="RootControl/SafeFrame/BottomMargin/BottomBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+mouse_filter = 2
+
+[node name="AmmoBox" type="HBoxContainer" parent="RootControl/SafeFrame/BottomMargin/BottomBar/AmmoPlate"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="ShellsBox" type="HBoxContainer" parent="RootControl/SafeFrame/BottomMargin/BottomBar/AmmoPlate/AmmoBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="Shell1" type="TextureRect" parent="RootControl/SafeFrame/BottomMargin/BottomBar/AmmoPlate/AmmoBox/ShellsBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(14, 22)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_shelltex")
+stretch_mode = 5
+
+[node name="Shell2" type="TextureRect" parent="RootControl/SafeFrame/BottomMargin/BottomBar/AmmoPlate/AmmoBox/ShellsBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(14, 22)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_shelltex")
+stretch_mode = 5
+
+[node name="ReloadBox" type="VBoxContainer" parent="RootControl/SafeFrame/BottomMargin/BottomBar/AmmoPlate/AmmoBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="ReloadLabel" type="Label" parent="RootControl/SafeFrame/BottomMargin/BottomBar/AmmoPlate/AmmoBox/ReloadBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.949, 0.549, 0.22, 1)
+text = "RELOADING..."
+
+[node name="ReloadBar" type="ProgressBar" parent="RootControl/SafeFrame/BottomMargin/BottomBar/AmmoPlate/AmmoBox/ReloadBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 6)
+layout_mode = 2
+mouse_filter = 2
+show_percentage = false
+
+[node name="BottomSpacer" type="Control" parent="RootControl/SafeFrame/BottomMargin/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="HordePlate" type="PanelContainer" parent="RootControl/SafeFrame/BottomMargin/BottomBar"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
+mouse_filter = 2
 
-[node name="HordeBox" type="VBoxContainer" parent="RootControl/BottomRight/HordePlate"]
+[node name="HordeBox" type="VBoxContainer" parent="RootControl/SafeFrame/BottomMargin/BottomBar/HordePlate"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 2
 alignment = 2
 
-[node name="HordeWarning" type="Label" parent="RootControl/BottomRight/HordePlate/HordeBox"]
+[node name="HordeWarning" type="Label" parent="RootControl/SafeFrame/BottomMargin/BottomBar/HordePlate/HordeBox"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.902, 0.224, 0.384, 1)
 text = "! HORDE CLOSING IN !"
 horizontal_alignment = 2
 
-[node name="HBox" type="HBoxContainer" parent="RootControl/BottomRight/HordePlate/HordeBox"]
+[node name="HBox" type="HBoxContainer" parent="RootControl/SafeFrame/BottomMargin/BottomBar/HordePlate/HordeBox"]
 layout_mode = 2
+mouse_filter = 2
 alignment = 2
 
-[node name="Label" type="Label" parent="RootControl/BottomRight/HordePlate/HordeBox/HBox"]
+[node name="Label" type="Label" parent="RootControl/SafeFrame/BottomMargin/BottomBar/HordePlate/HordeBox/HBox"]
 layout_mode = 2
+mouse_filter = 2
 text = "HORDE:"
 
-[node name="HordeBar" type="ProgressBar" parent="RootControl/BottomRight/HordePlate/HordeBox/HBox"]
+[node name="HordeBar" type="ProgressBar" parent="RootControl/SafeFrame/BottomMargin/BottomBar/HordePlate/HordeBox/HBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(76, 8)
 layout_mode = 2
+mouse_filter = 2
 show_percentage = false
