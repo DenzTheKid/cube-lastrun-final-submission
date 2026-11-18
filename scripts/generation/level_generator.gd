@@ -417,14 +417,13 @@ class ChunkNode extends Node2D:
 				var gap_x: float = s_curr.x + s_curr.y
 				var gap_w: float = s_next.x - gap_x
 				if gap_w > 0.0:
-					# Deep chasm abyss covering background elements
-					draw_rect(Rect2(gap_x, ground_y - 14.0, gap_w, 60.0), Color(0.05, 0.06, 0.10, 0.96), true)
-					draw_rect(Rect2(gap_x, ground_y + 16.0, gap_w, 30.0), Color(0.02, 0.02, 0.05, 1.0), true)
+					# Deep chasm abyss under the road floor
+					draw_rect(Rect2(gap_x, ground_y, gap_w, 46.0), Color(0.04, 0.05, 0.08, 1.0), true)
 					# Left fractured bridge abutment wall
-					draw_rect(Rect2(gap_x, ground_y, 4.0, 46.0), Color(0.16, 0.18, 0.24, 1.0), true)
+					draw_rect(Rect2(gap_x, ground_y, 3.0, 46.0), Color(0.16, 0.18, 0.24, 1.0), true)
 					draw_rect(Rect2(gap_x, ground_y, 1.0, 46.0), Color(0.08, 0.10, 0.14, 1.0), true)
 					# Right fractured bridge abutment wall
-					draw_rect(Rect2(s_next.x - 4.0, ground_y, 4.0, 46.0), Color(0.16, 0.18, 0.24, 1.0), true)
+					draw_rect(Rect2(s_next.x - 3.0, ground_y, 3.0, 46.0), Color(0.16, 0.18, 0.24, 1.0), true)
 					draw_rect(Rect2(s_next.x - 1.0, ground_y, 1.0, 46.0), Color(0.08, 0.10, 0.14, 1.0), true)
 
 		for seg in ground_segments:
@@ -432,7 +431,7 @@ class ChunkNode extends Node2D:
 			var w: float = seg.y
 			var tile_count: int = int(ceil(w / 16.0))
 
-			# 1. Base Road Surface & Unbroken Concrete Curb (16x16 tiles)
+			# 1. Base Road Surface: Pure dark aggregate asphalt (16x16 tiles)
 			for i in range(tile_count):
 				var tx: float = sx + i * 16.0
 				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y, 16, 16), Rect2(0, 0, 16, 16))
@@ -440,21 +439,7 @@ class ChunkNode extends Node2D:
 				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y + 16, 16, 16), Rect2(32, 0, 16, 16))
 				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y + 32, 16, 16), Rect2(32, 0, 16, 16))
 
-			# 2. Continuous Precast Concrete Curb Detail (Trotoar)
-			# Sunset specular rim on the top of the curb
-			draw_rect(Rect2(sx, ground_y + 1.0, w, 1.0), Color(0.95, 0.60, 0.35, 0.32), true)
-			# Precast expansion joint grooves every 48px
-			var seg_x0: int = int(sx)
-			var seg_x1: int = int(sx + w)
-			var first_joint: int = seg_x0 - (seg_x0 % 48)
-			for jx in range(first_joint, seg_x1, 48):
-				if jx >= seg_x0 and jx < seg_x1:
-					draw_rect(Rect2(float(jx), ground_y + 1.0, 1.0, 3.0), Color(0.20, 0.22, 0.28, 0.8), true)
-
-			# 3. Solid White Highway Shoulder Line (Bahu Jalan)
-			draw_rect(Rect2(sx, ground_y + 5.0, w, 1.0), Color(0.80, 0.84, 0.92, 0.88), true)
-
-			# 4. Straight, Consistent, Proportional Dashed Lane Markings (Traffic Yellow)
+			# 2. Straight, Consistent, Proportional Dashed Lane Markings (Traffic Yellow)
 			# Anchored to global world X coordinate for perfect continuity across all chunk borders
 			var global_base_x: float = global_position.x + sx
 			for x_off in range(0, int(w)):
@@ -466,43 +451,8 @@ class ChunkNode extends Node2D:
 					draw_rect(Rect2(sx + float(x_off), ground_y + 9.0, 1.0, 1.0), Color("#f5ac38"), true)
 					draw_rect(Rect2(sx + float(x_off), ground_y + 10.0, 1.0, 1.0), Color(0.10, 0.11, 0.14, 0.75), true)
 
-			# 5. Pit Edge Structural Coping & Safety Terminals
+			# 3. Pit Edge Structural Coping
 			if sx > 4.0:
-				# Left edge of segment following a pit: reinforced concrete fracture wall
 				draw_rect(Rect2(sx, ground_y, 2.0, 48.0), Color(0.12, 0.14, 0.20, 0.95), true)
-				draw_rect(Rect2(sx, ground_y + 2.0, 2.0, 2.0), Color(0.70, 0.75, 0.85, 0.9), true)
 			if sx + w < 380.0:
-				# Right edge of segment preceding a pit: reinforced concrete fracture wall
 				draw_rect(Rect2(sx + w - 2.0, ground_y, 2.0, 48.0), Color(0.12, 0.14, 0.20, 0.95), true)
-				draw_rect(Rect2(sx + w - 2.0, ground_y + 2.0, 2.0, 2.0), Color(0.70, 0.75, 0.85, 0.9), true)
-
-			# 6. Ground-Anchored Highway Guardrail (Pagar & Tiang)
-			# Follows terrain elevation directly: beam at ground_y - 12.0
-			draw_rect(Rect2(sx, ground_y - 12.0, w, 1.0), Color("#8a6275"), true) # Top rim highlight
-			draw_rect(Rect2(sx, ground_y - 11.0, w, 1.0), Color("#583e4c"), true) # Upper ridge
-			draw_rect(Rect2(sx, ground_y - 10.0, w, 1.0), Color("#221824"), true) # Center groove
-			draw_rect(Rect2(sx, ground_y - 9.0, w, 1.0), Color("#583e4c"), true)  # Lower ridge
-			draw_rect(Rect2(sx, ground_y - 8.0, w, 1.0), Color("#160f18"), true)  # Bottom shadow
-
-			# Vertical steel posts every 24px - firmly anchored into curb baseplates (ZERO FLOATING)
-			for px in range(int(sx) + 12, int(sx + w) - 8, 24):
-				var fpx: float = float(px)
-				# Post shaft connecting beam down into curb
-				draw_rect(Rect2(fpx, ground_y - 14.0, 3.0, 16.0), Color("#2e2230"), true)
-				draw_rect(Rect2(fpx + 2.0, ground_y - 14.0, 1.0, 16.0), Color("#4a3648"), true)
-				draw_rect(Rect2(fpx, ground_y - 14.0, 1.0, 16.0), Color("#0a0b14"), true)
-				# Reinforced mounting baseplate bracket on curb
-				draw_rect(Rect2(fpx - 1.0, ground_y + 1.0, 5.0, 2.0), Color("#563e52"), true)
-				draw_rect(Rect2(fpx, ground_y + 2.0, 1.0, 1.0), Color("#0a0b14"), true)
-				draw_rect(Rect2(fpx + 2.0, ground_y + 2.0, 1.0, 1.0), Color("#0a0b14"), true)
-
-			# Safety terminal end-posts with hazard reflector stripes at pit boundaries
-			if sx > 4.0:
-				draw_rect(Rect2(sx, ground_y - 14.0, 4.0, 17.0), Color("#ebb92d"), true)
-				draw_rect(Rect2(sx, ground_y - 12.0, 4.0, 2.0), Color("#12161e"), true)
-				draw_rect(Rect2(sx, ground_y - 7.0, 4.0, 2.0), Color("#12161e"), true)
-			if sx + w < 380.0:
-				var end_x: float = sx + w - 4.0
-				draw_rect(Rect2(end_x, ground_y - 14.0, 4.0, 17.0), Color("#ebb92d"), true)
-				draw_rect(Rect2(end_x, ground_y - 12.0, 4.0, 2.0), Color("#12161e"), true)
-				draw_rect(Rect2(end_x, ground_y - 7.0, 4.0, 2.0), Color("#12161e"), true)
