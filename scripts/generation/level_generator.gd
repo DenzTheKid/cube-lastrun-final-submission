@@ -115,8 +115,7 @@ func _choose_fair_pattern() -> PatternType:
 		PatternType.RUNNER_RUSH,
 		PatternType.SPIKE_HURDLE,
 		PatternType.PLATFORM_HIGHWAY,
-		PatternType.CAR_WRECK_SOLO,
-		PatternType.CAR_WRECK_MEDKIT
+		PatternType.CAR_WRECK_SOLO
 	]
 
 	# 2. Mid Tier Patterns (Unlocked at diff > 1.2, ~100m+)
@@ -127,6 +126,7 @@ func _choose_fair_pattern() -> PatternType:
 		choices.append(PatternType.BARRICADE_SOLO)
 		choices.append(PatternType.BARRICADE_WALKER)
 		choices.append(PatternType.PLATFORM_OVER_PIT)
+		choices.append(PatternType.CAR_WRECK_MEDKIT)
 		choices.append(PatternType.CAR_WRECK_WALKER)
 
 	# 3. High Tier Patterns (Unlocked at diff > 1.45, ~250m+)
@@ -168,6 +168,9 @@ func _choose_fair_pattern() -> PatternType:
 	return candidate
 
 func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
+	if pattern != PatternType.FLAT_START:
+		_chunks_since_medkit += 1
+
 	match pattern:
 		PatternType.FLAT_START:
 			chunk.add_ground_segment(0.0, chunk_width)
@@ -283,8 +286,7 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 		PatternType.CAR_WRECK_SOLO:
 			chunk.add_ground_segment(0.0, chunk_width)
 			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 180.0, ground_y)
-			# Environmental storytelling: wrecked ambulances almost always carry a spilled/rooftop Medkit
-			if _should_spawn_ambulance_medkit(0.85):
+			if _can_spawn_medkit(true):
 				if randf() < 0.5:
 					_spawn_pickup(chunk, MEDKIT_SCENE, 232.0, ground_y - 4.0)
 				else:
@@ -294,14 +296,15 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 		PatternType.CAR_WRECK_MEDKIT:
 			chunk.add_ground_segment(0.0, chunk_width)
 			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 180.0, ground_y)
-			_spawn_pickup(chunk, MEDKIT_SCENE, 190.0, ground_y - 36.0)
-			_chunks_since_medkit = 0
+			if _can_spawn_medkit(true):
+				_spawn_pickup(chunk, MEDKIT_SCENE, 190.0, ground_y - 36.0)
+				_chunks_since_medkit = 0
 
 		PatternType.CAR_WRECK_WALKER:
 			chunk.add_ground_segment(0.0, chunk_width)
 			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 150.0, ground_y)
 			_spawn_enemy(chunk, WALKER_SCENE, 315.0, ground_y - 12.0)
-			if _should_spawn_ambulance_medkit(0.85):
+			if _can_spawn_medkit(true):
 				_spawn_pickup(chunk, MEDKIT_SCENE, 160.0, ground_y - 36.0)
 				_chunks_since_medkit = 0
 
@@ -310,24 +313,26 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 140.0, ground_y)
 			_spawn_platform(chunk, 235.0, ground_y - 52.0)
 			_spawn_hazard(chunk, SPIKES_SCENE, 270.0, ground_y)
-			if _should_spawn_ambulance_medkit(0.85):
+			if _can_spawn_medkit(true):
 				_spawn_pickup(chunk, MEDKIT_SCENE, 235.0, ground_y - 60.0)
 				_chunks_since_medkit = 0
 
-	# Smart periodic Medkit drop when injured or on safe interval
+	# Rare fallback Medkit drop on non-ambulance chunks only after long dry streak
 	if not (pattern in [PatternType.FLAT_START, PatternType.CAR_WRECK_SOLO, PatternType.CAR_WRECK_MEDKIT, PatternType.CAR_WRECK_WALKER, PatternType.CAR_WRECK_SPIKES]):
-		_chunks_since_medkit += 1
-		var is_injured: bool = is_instance_valid(target_player) and target_player.current_hp < target_player.max_hp
-		var threshold: int = 3 if is_injured else 6
-		if _chunks_since_medkit >= threshold:
+		if _can_spawn_medkit(false):
 			var spot: Vector2 = _get_safe_medkit_spot(pattern)
 			_spawn_pickup(chunk, MEDKIT_SCENE, spot.x, spot.y)
 			_chunks_since_medkit = 0
 
-func _should_spawn_ambulance_medkit(base_prob: float) -> bool:
-	if is_instance_valid(target_player) and target_player.current_hp < target_player.max_hp:
-		return true
-	return randf() < base_prob
+func _can_spawn_medkit(is_ambulance: bool) -> bool:
+	var is_injured: bool = is_instance_valid(target_player) and target_player.current_hp < target_player.max_hp
+	var min_cooldown: int = 4 if is_injured else 8
+	if _chunks_since_medkit < min_cooldown:
+		return false
+	if is_ambulance:
+		return true if is_injured else (randf() < 0.45)
+	var fallback_threshold: int = 7 if is_injured else 14
+	return _chunks_since_medkit >= fallback_threshold
 
 func _get_safe_medkit_spot(pattern: PatternType) -> Vector2:
 	match pattern:
