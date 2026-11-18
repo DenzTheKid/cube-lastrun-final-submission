@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Texture2D" path="res://assets/environment/urban_tiles.png" id="1_tiletex"]
+[ext_resource type="Texture2D" path="res://assets/obstacles/px_concrete_barrier.png" id="1_barrier"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(28, 24)
@@ -9,29 +9,10 @@ size = Vector2(28, 24)
 collision_layer = 1
 collision_mask = 6
 
-[node name="Sprite1" type="Sprite2D" parent="."]
-position = Vector2(-8, -8)
-texture = ExtResource("1_tiletex")
-region_enabled = true
-region_rect = Rect2(64, 0, 16, 16)
-
-[node name="Sprite2" type="Sprite2D" parent="."]
-position = Vector2(8, -8)
-texture = ExtResource("1_tiletex")
-region_enabled = true
-region_rect = Rect2(64, 0, 16, 16)
-
-[node name="SpriteTop1" type="Sprite2D" parent="."]
-position = Vector2(-8, -20)
-texture = ExtResource("1_tiletex")
-region_enabled = true
-region_rect = Rect2(64, 0, 16, 16)
-
-[node name="SpriteTop2" type="Sprite2D" parent="."]
-position = Vector2(8, -20)
-texture = ExtResource("1_tiletex")
-region_enabled = true
-region_rect = Rect2(64, 0, 16, 16)
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(0, -13)
+texture = ExtResource("1_barrier")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -12)

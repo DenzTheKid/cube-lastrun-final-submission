@@ -19,6 +19,7 @@ func _init() -> void:
 	_make_empty_and_hero_showcase()
 	_make_pixel_hearts()
 	_make_wrecked_car_and_medkit()
+	_make_vehicle_varieties_and_barrier()
 	_make_heal_sfx()
 	print("=== Asset Generation Complete ===")
 	quit(0)
@@ -1507,6 +1508,363 @@ func _make_heal_sfx() -> void:
 	if f:
 		f.store_buffer(buf.data_array)
 		f.close()
+
+func _apply_pixel_outline(img: Image, out_col: Color) -> void:
+	var w: int = img.get_width()
+	var h: int = img.get_height()
+	var src := img.duplicate() as Image
+	for y in range(h):
+		for x in range(w):
+			if src.get_pixel(x, y).a > 0.5:
+				continue
+			for off in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+				var nx: int = x + off.x
+				var ny: int = y + off.y
+				if nx >= 0 and nx < w and ny >= 0 and ny < h and src.get_pixel(nx, ny).a > 0.5:
+					img.set_pixel(x, y, out_col)
+					break
+
+func _draw_flat_tire(img: Image, cx: int, bottom_y: int, is_rusted: bool, extra_flat: bool, out_col: Color) -> void:
+	var c_deep := Color("#131829")
+	var c_tire := Color("#1b2136")
+	var c_tire_hi := Color("#323c59")
+	var c_rim := Color("#7d8eb3")
+	var c_rust := Color("#a84f3b")
+	var top_y: int = bottom_y - 9
+	img.fill_rect(Rect2i(cx - 6, top_y, 12, 5), c_deep)
+	img.fill_rect(Rect2i(cx - 5, top_y - 1, 10, 1), out_col)
+	for dy in range(top_y, bottom_y + 1):
+		var rel: int = dy - top_y
+		var hw: int = 5
+		if rel == 0:
+			hw = 3
+		elif rel == 1 or rel == 2:
+			hw = 4
+		elif rel >= 8:
+			hw = 6 if extra_flat else 5
+		for dx in range(-hw, hw + 1):
+			var tx: int = cx + dx
+			var is_rim: bool = (abs(dx) <= 2 and rel >= 3 and rel <= 6)
+			var is_edge: bool = (rel == 0 or dy == bottom_y or abs(dx) == hw)
+			if is_edge:
+				_safe_px(img, tx, dy, out_col)
+			elif is_rim:
+				var rc: Color = Color("#94a4c9") if (dx <= 0 and rel <= 4) else (c_rust if is_rusted else c_rim)
+				_safe_px(img, tx, dy, rc)
+			else:
+				_safe_px(img, tx, dy, c_tire_hi if rel <= 2 else c_tire)
+
+func _make_vehicle_varieties_and_barrier() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/obstacles"))
+	var out_col := Color("#0d101f")
+	var c_deep := Color("#131829")
+	var c_rust_dk := Color("#7a372f")
+	var c_rust_md := Color("#a84f3b")
+	var c_rust_lt := Color("#cc734b")
+	var c_glass_dk := Color("#161f38")
+	var c_glass_sh := Color("#5bb4c9")
+	var c_glass_md := Color("#3b7c96")
+
+	# ------------------------------------------------------------------
+	# 1. Beat-Up Rusted Scrap Sedan (68 x 28) — dusty olive-teal wreck
+	# ------------------------------------------------------------------
+	var sw: int = 68
+	var sh: int = 28
+	var sed := Image.create(sw, sh, false, Image.FORMAT_RGBA8)
+	var s_roof := Color("#7a948e")
+	var s_hi := Color("#5b7573")
+	var s_mid := Color("#3f5459")
+	var s_sh := Color("#2a3942")
+	for x in range(4, 64):
+		var top_y: int = 13 if x >= 22 else (14 if x >= 8 else 15)
+		var bot_y: int = 23 if x <= 20 else 22
+		for y in range(top_y, bot_y + 1):
+			sed.set_pixel(x, y, s_hi if y == top_y else (s_sh if y >= bot_y - 2 else s_mid))
+	# Cabin + crooked caved roof (x = 20..53)
+	for x in range(20, 54):
+		var lx: int = x - 20
+		var rx: int = 53 - x
+		var ry: int = 2
+		if lx < 5:
+			ry = 2 + (5 - lx) * 2
+		elif rx < 5:
+			ry = 2 + (5 - rx) * 2
+		elif x >= 32 and x <= 40:
+			ry = 3
+		for y in range(ry, 14):
+			sed.set_pixel(x, y, s_roof if y == ry else (s_hi if y == ry + 1 else s_mid))
+	# Windows + jagged cyan glass shards
+	for x in range(22, 51):
+		if x >= 37 and x <= 39:
+			continue
+		var wt: int = 5 + ((26 - x) * 2 if x < 26 else ((x - 47) * 2 if x > 47 else 0))
+		for y in range(wt, 13):
+			sed.set_pixel(x, y, c_glass_dk)
+	for gx in [26, 28, 32, 35, 42, 46]:
+		_safe_px(sed, gx, 5, c_glass_sh)
+		_safe_px(sed, gx + 1, 6, c_glass_md)
+		_safe_px(sed, gx, 11, c_glass_sh)
+	# Heavy rust corrosion, exposed primer door & dented trunk
+	sed.fill_rect(Rect2i(27, 13, 12, 9), Color("#634039")) # mismatched replacement rusty door
+	for y in range(13, 22):
+		_safe_px(sed, 26, y, c_deep)
+		_safe_px(sed, 39, y, c_deep)
+		_safe_px(sed, 51, y, c_deep)
+	for rpt in [[7, 16, 5, 2], [20, 19, 6, 3], [30, 15, 7, 3], [43, 19, 6, 3], [54, 14, 7, 3], [32, 3, 7, 2]]:
+		sed.fill_rect(Rect2i(rpt[0], rpt[1], rpt[2], rpt[3]), c_rust_dk)
+		_safe_px(sed, rpt[0] + 1, rpt[1], c_rust_md)
+		_safe_px(sed, rpt[0] + 3, rpt[1] + 1, c_rust_lt)
+	# Popped hood + exposed engine on front left
+	for i in range(16):
+		var hx: int = 21 - i
+		var hy: int = 12 - int(floor(float(i) * 0.25))
+		sed.fill_rect(Rect2i(hx, hy + 2, 1, maxi(1, 14 - hy)), c_deep)
+		sed.set_pixel(hx, hy - 1, out_col)
+		sed.set_pixel(hx, hy, s_roof if i > 3 else c_rust_md)
+		sed.set_pixel(hx, hy + 1, s_mid)
+	sed.fill_rect(Rect2i(9, 12, 6, 3), Color("#4f5c7a"))
+	sed.fill_rect(Rect2i(10, 12, 3, 1), Color("#7a8aad"))
+	_safe_px(sed, 14, 11, c_rust_lt)
+	_draw_rect_outline(sed, 1, 19, 5, 4, Color("#495573"), out_col)
+	_draw_rect_outline(sed, 61, 19, 6, 3, Color("#495573"), out_col)
+	_draw_rect_outline(sed, 61, 15, 3, 3, Color("#591c2b"), out_col)
+	sed.fill_rect(Rect2i(62, 22, 5, 2), Color("#5c6887"))
+	_draw_flat_tire(sed, 16, 27, false, true, out_col)
+	_draw_flat_tire(sed, 52, 27, true, false, out_col)
+	_apply_pixel_outline(sed, out_col)
+	sed.save_png("res://assets/obstacles/px_wrecked_sedan.png")
+
+	# ------------------------------------------------------------------
+	# 2. Wrecked Police Cruiser (68 x 29) — navy hood/trunk + silver doors + dead lightbar
+	# ------------------------------------------------------------------
+	var pw: int = 68
+	var ph: int = 29
+	var pol := Image.create(pw, ph, false, Image.FORMAT_RGBA8)
+	var p_navy_hi := Color("#3e5078")
+	var p_navy := Color("#233052")
+	var p_navy_sh := Color("#172038")
+	var p_wht_hi := Color("#dce6f4")
+	var p_wht_md := Color("#b8c8e0")
+	var p_wht_sh := Color("#7c8fae")
+	# Body base (+1 row offset y = 1..28 for roof lightbar at y = 0..3)
+	for x in range(4, 64):
+		var is_door: bool = (x >= 24 and x <= 48)
+		var top_y: int = 14 if x >= 22 else (15 if x >= 8 else 16)
+		var bot_y: int = 24 if x <= 20 else 23
+		for y in range(top_y, bot_y + 1):
+			var col: Color
+			if is_door:
+				col = p_wht_hi if y == top_y else (p_wht_sh if y >= bot_y - 2 else p_wht_md)
+			else:
+				col = p_navy_hi if y == top_y else (p_navy_sh if y >= bot_y - 2 else p_navy)
+			pol.set_pixel(x, y, col)
+	# Cruiser cabin (pale silver-white roof & dark pillars, x = 20..53, y = 3..14)
+	for x in range(20, 54):
+		var lx: int = x - 20
+		var rx: int = 53 - x
+		var ry: int = 3
+		if lx < 5:
+			ry = 3 + (5 - lx) * 2
+		elif rx < 5:
+			ry = 3 + (5 - rx) * 2
+		elif x >= 34 and x <= 39:
+			ry = 4
+		for y in range(ry, 15):
+			pol.set_pixel(x, y, p_wht_hi if y == ry else (p_wht_md if y <= ry + 2 else p_navy))
+	for x in range(22, 51):
+		if x >= 37 and x <= 39:
+			continue
+		var wt: int = 6 + ((26 - x) * 2 if x < 26 else ((x - 47) * 2 if x > 47 else 0))
+		for y in range(wt, 14):
+			pol.set_pixel(x, y, c_glass_dk)
+	for gx in [27, 30, 34, 42, 47]:
+		_safe_px(pol, gx, 6, c_glass_sh)
+		_safe_px(pol, gx, 13, c_glass_md)
+	# Police door gold shield badge + cruiser blue/gold stripe
+	for x in range(25, 48):
+		pol.set_pixel(x, 19, Color("#2f639e") if x % 5 != 0 else Color("#d9a24c"))
+	pol.fill_rect(Rect2i(32, 16, 4, 3), Color("#ebbc63"))
+	_safe_px(pol, 33, 17, Color("#996426"))
+	for y in range(14, 23):
+		_safe_px(pol, 24, y, c_deep)
+		_safe_px(pol, 38, y, c_deep)
+		_safe_px(pol, 49, y, c_deep)
+	# Dead cracked red/blue roof lightbar (y = 0..3, x = 31..43)
+	for x in range(31, 44):
+		if x == 37:
+			continue # busted center dome gap
+		for y in range(1, 4):
+			var rc: Color = Color("#8f2940") if x < 37 else (Color("#5e6e94") if x == 36 else Color("#285578"))
+			if y == 1:
+				rc = Color("#bf3b59") if x < 37 else Color("#3c7ea6")
+			pol.set_pixel(x, y, rc)
+	# Bent front push bullbar + popped hood + rust & bullet marks
+	for rpt in [[18, 20, 5, 3], [28, 20, 4, 2], [44, 17, 5, 3], [55, 16, 5, 2], [33, 4, 4, 2]]:
+		pol.fill_rect(Rect2i(rpt[0], rpt[1], rpt[2], rpt[3]), c_rust_dk)
+		_safe_px(pol, rpt[0] + 1, rpt[1], c_rust_md)
+	for i in range(15):
+		var hx: int = 21 - i
+		var hy: int = 13 - int(floor(float(i) * 0.25))
+		pol.fill_rect(Rect2i(hx, hy + 2, 1, maxi(1, 15 - hy)), c_deep)
+		pol.set_pixel(hx, hy - 1, out_col)
+		pol.set_pixel(hx, hy, p_navy_hi if i > 3 else c_rust_md)
+		pol.set_pixel(hx, hy + 1, p_navy)
+	pol.fill_rect(Rect2i(9, 13, 6, 3), Color("#4f5c7a"))
+	# Police steel ram bullbar on left nose (x = 0..5, y = 16..24)
+	_draw_rect_outline(pol, 1, 20, 5, 4, Color("#566385"), out_col)
+	pol.fill_rect(Rect2i(1, 16, 2, 5), Color("#6d7da3"))
+	pol.fill_rect(Rect2i(2, 17, 3, 2), Color("#3d4863"))
+	_draw_rect_outline(pol, 61, 20, 6, 3, Color("#495573"), out_col)
+	_draw_rect_outline(pol, 61, 16, 3, 3, Color("#591c2b"), out_col)
+	_draw_flat_tire(pol, 16, 28, false, true, out_col)
+	_draw_flat_tire(pol, 52, 28, false, false, out_col)
+	_apply_pixel_outline(pol, out_col)
+	pol.save_png("res://assets/obstacles/px_wrecked_police.png")
+
+	# ------------------------------------------------------------------
+	# 3. Wrecked Abandoned City Bus (94 x 34) — long climbable roof & shattered window row
+	# ------------------------------------------------------------------
+	var bw: int = 94
+	var bh: int = 34
+	var bus := Image.create(bw, bh, false, Image.FORMAT_RGBA8)
+	var b_top := Color("#d9e1ed")
+	var b_hi := Color("#b7c4d9")
+	var b_mid := Color("#8898b5")
+	var b_sh := Color("#54627d")
+	var b_stripe_hi := Color("#e8ae54")
+	var b_stripe_md := Color("#c77b36")
+	var b_teal := Color("#39617a")
+	# Main elongated transit bus hull (x = 3..90, y = 3..27) with sloped front windshield nose
+	for x in range(3, 91):
+		var top_y: int = 3
+		if x < 9:
+			top_y = 3 + (9 - x) * 2
+		elif x >= 44 and x <= 58:
+			top_y = 4 # sagged center bus roof panel
+		for y in range(top_y, 28):
+			var col: Color = b_mid
+			if y == top_y:
+				col = b_top
+			elif y <= top_y + 2:
+				col = b_hi
+			elif y >= 17 and y <= 20:
+				col = b_stripe_md if y >= 19 else b_stripe_hi
+			elif y >= 21 and y <= 24:
+				col = b_teal
+			elif y >= 25:
+				col = b_sh
+			bus.set_pixel(x, y, col)
+	# Roof AC vents & destination board header (x = 8..17, y = 5..7)
+	bus.fill_rect(Rect2i(31, 1, 11, 2), Color("#596682"))
+	bus.fill_rect(Rect2i(67, 1, 12, 2), Color("#596682"))
+	bus.fill_rect(Rect2i(8, 5, 9, 3), Color("#181e30"))
+	_safe_px(bus, 10, 6, Color("#ab6433"))
+	_safe_px(bus, 12, 6, Color("#ab6433"))
+	# 5 Shattered Bus Windows along passenger side (x = 7..84, y = 7..15)
+	var win_ranges := [[6, 15], [27, 38], [41, 52], [55, 66], [69, 80]]
+	for wr in win_ranges:
+		var wx0: int = wr[0]
+		var wx1: int = wr[1]
+		for x in range(wx0, wx1 + 1):
+			var yt: int = 8 if x < 9 else 7
+			for y in range(yt, 16):
+				bus.set_pixel(x, y, c_glass_dk)
+		# Crooked seat silhouette inside + broken cyan glass fangs
+		bus.fill_rect(Rect2i(wx0 + 3, 12, 3, 4), Color("#283452"))
+		_safe_px(bus, wx0 + 2, 8, c_glass_sh)
+		_safe_px(bus, wx1 - 2, 14, c_glass_md)
+		_safe_px(bus, wx0 + 6, 7, c_glass_sh)
+	# Bent busted folding accordion front transit door (x = 17..24, y = 8..26)
+	bus.fill_rect(Rect2i(17, 8, 8, 19), Color("#14192b"))
+	bus.fill_rect(Rect2i(18, 9, 3, 17), Color("#637291"))
+	bus.fill_rect(Rect2i(22, 11, 2, 14), Color("#3e4a66"))
+	bus.fill_rect(Rect2i(18, 10, 2, 5), c_glass_md)
+	# Heavy rust streaks, busted rear engine grille & bumpers
+	bus.fill_rect(Rect2i(82, 12, 7, 12), Color("#3b4661"))
+	for gy in [14, 17, 20]:
+		bus.fill_rect(Rect2i(83, gy, 5, 1), c_deep)
+	for rpt in [[10, 22, 5, 3], [32, 21, 7, 4], [48, 22, 8, 4], [62, 19, 6, 3], [73, 22, 7, 3], [46, 4, 9, 2]]:
+		bus.fill_rect(Rect2i(rpt[0], rpt[1], rpt[2], rpt[3]), c_rust_dk)
+		_safe_px(bus, rpt[0] + 1, rpt[1], c_rust_md)
+		_safe_px(bus, rpt[0] + 3, rpt[1] + 1, c_rust_lt)
+	# Popped rear engine flap / smoked panel at left grille
+	_draw_rect_outline(bus, 1, 22, 5, 4, Color("#495573"), out_col)
+	_draw_rect_outline(bus, 88, 23, 5, 4, Color("#495573"), out_col)
+	_draw_rect_outline(bus, 2, 19, 3, 3, Color("#4a3423"), out_col)
+	_draw_flat_tire(bus, 15, 33, false, true, out_col)
+	_draw_flat_tire(bus, 74, 33, true, true, out_col)
+	_apply_pixel_outline(bus, out_col)
+	bus.save_png("res://assets/obstacles/px_wrecked_bus.png")
+
+	# ------------------------------------------------------------------
+	# 4. Precast Concrete Jersey Highway Barrier (32 x 26) — replacing ugly red cones!
+	# Matches real stepped Jersey barrier silhouette: top bevel, vertical neck,
+	# flared concrete base skirt, central slab joint & two bottom drainage notches.
+	# ------------------------------------------------------------------
+	var bw_j: int = 32
+	var bh_j: int = 26
+	var bar := Image.create(bw_j, bh_j, false, Image.FORMAT_RGBA8)
+	var j_top := Color("#cfd7e3")
+	var j_hi := Color("#b3bdc9")
+	var j_mid := Color("#8e99aa")
+	var j_sh := Color("#6b7687")
+	var j_dk := Color("#454e5e")
+	var j_seam := Color("#232938")
+
+	for y in range(1, 25):
+		# Precast Jersey cross-section profile (tapers inward at top, flares wide at foot y=15..24)
+		var inset: int = 5
+		if y <= 2:
+			inset = 6
+		elif y <= 13:
+			inset = 5
+		elif y <= 18:
+			inset = 5 - (y - 13) / 2 # sloped Jersey shoulder flare!
+		else:
+			inset = 2 # wide sturdy lower foot
+		var x0: int = inset
+		var x1: int = bw_j - 1 - inset
+		for x in range(x0, x1 + 1):
+			# Two iconic square forklift/drainage cutouts along bottom foot (y = 22..24)
+			var in_pocket: bool = (y >= 22 and ((x >= 6 and x <= 9) or (x >= 22 and x <= 25)))
+			if in_pocket:
+				continue
+			var col: Color
+			if y == 1 or y == 2:
+				col = j_top if x <= bw_j - 9 else j_hi
+			elif y <= 13:
+				col = j_hi if x == x0 + 1 else (j_dk if x >= x1 - 1 else j_mid)
+			elif y <= 18:
+				# Bright angled concrete shoulder catching sunset sky light!
+				col = j_top if y <= 15 else j_hi
+				if x >= x1 - 2:
+					col = j_sh
+			else:
+				col = j_mid if y <= 21 else j_sh
+			# Subtle pixel concrete speckle/aggregate
+			if ((x * 7 + y * 13) % 19 == 0) and y > 2 and y < 23:
+				col = j_sh if col == j_mid else j_hi
+			bar.set_pixel(x, y, col)
+
+	# Vertical precast joint seam splitting two coupled barrier blocks + subtle hairline cracks
+	for y in range(1, 25):
+		bar.set_pixel(15, y, j_seam)
+		bar.set_pixel(16, y, j_dk)
+	# Weathering water streaks & chipped edge details
+	for sx in [8, 21, 24]:
+		bar.fill_rect(Rect2i(sx, 3, 1, 6), j_sh)
+	_safe_px(bar, 15, 2, out_col)
+	_safe_px(bar, 10, 8, j_dk)
+	_safe_px(bar, 11, 9, j_dk)
+	_safe_px(bar, 20, 10, j_dk)
+	_safe_px(bar, 21, 11, j_dk)
+	# Crisp dark interior pocket ceilings
+	bar.fill_rect(Rect2i(6, 21, 4, 1), out_col)
+	bar.fill_rect(Rect2i(22, 21, 4, 1), out_col)
+
+	_apply_pixel_outline(bar, out_col)
+	bar.save_png("res://assets/obstacles/px_concrete_barrier.png")
+
 
 
 

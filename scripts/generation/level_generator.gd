@@ -57,7 +57,9 @@ enum PatternType {
 	CAR_WRECK_SOLO,
 	CAR_WRECK_MEDKIT,
 	CAR_WRECK_WALKER,
-	CAR_WRECK_SPIKES
+	CAR_WRECK_SPIKES,
+	POLICE_ROADBLOCK,
+	BUS_WRECK_STOP
 }
 
 var _last_pattern: PatternType = PatternType.FLAT_START
@@ -114,8 +116,10 @@ func _choose_fair_pattern() -> PatternType:
 		PatternType.WALKER_TRIO,
 		PatternType.RUNNER_RUSH,
 		PatternType.SPIKE_HURDLE,
+		PatternType.BARRICADE_SOLO,
 		PatternType.PLATFORM_HIGHWAY,
-		PatternType.CAR_WRECK_SOLO
+		PatternType.CAR_WRECK_SOLO,
+		PatternType.BUS_WRECK_STOP
 	]
 
 	# 2. Mid Tier Patterns (Unlocked at diff > 1.2, ~100m+)
@@ -123,11 +127,11 @@ func _choose_fair_pattern() -> PatternType:
 		choices.append(PatternType.RUNNER_TWIN)
 		choices.append(PatternType.SPIKE_DOUBLE)
 		choices.append(PatternType.PIT_STANDARD)
-		choices.append(PatternType.BARRICADE_SOLO)
 		choices.append(PatternType.BARRICADE_WALKER)
 		choices.append(PatternType.PLATFORM_OVER_PIT)
 		choices.append(PatternType.CAR_WRECK_MEDKIT)
 		choices.append(PatternType.CAR_WRECK_WALKER)
+		choices.append(PatternType.POLICE_ROADBLOCK)
 
 	# 3. High Tier Patterns (Unlocked at diff > 1.45, ~250m+)
 	if diff >= 1.45:
@@ -285,8 +289,9 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 
 		PatternType.CAR_WRECK_SOLO:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 180.0, ground_y)
-			if _can_spawn_medkit(true):
+			var variant: String = ["sedan", "police", "ambulance"].pick_random()
+			_spawn_vehicle(chunk, variant, 180.0, ground_y)
+			if variant == "ambulance" and _can_spawn_medkit(true):
 				if randf() < 0.5:
 					_spawn_pickup(chunk, MEDKIT_SCENE, 232.0, ground_y - 4.0)
 				else:
@@ -295,30 +300,45 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 
 		PatternType.CAR_WRECK_MEDKIT:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 180.0, ground_y)
+			_spawn_vehicle(chunk, "ambulance", 180.0, ground_y)
 			if _can_spawn_medkit(true):
 				_spawn_pickup(chunk, MEDKIT_SCENE, 190.0, ground_y - 36.0)
 				_chunks_since_medkit = 0
 
 		PatternType.CAR_WRECK_WALKER:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 150.0, ground_y)
+			var variant: String = ["sedan", "police", "ambulance"].pick_random()
+			_spawn_vehicle(chunk, variant, 150.0, ground_y)
 			_spawn_enemy(chunk, WALKER_SCENE, 315.0, ground_y - 12.0)
-			if _can_spawn_medkit(true):
+			if variant == "ambulance" and _can_spawn_medkit(true):
 				_spawn_pickup(chunk, MEDKIT_SCENE, 160.0, ground_y - 36.0)
 				_chunks_since_medkit = 0
 
 		PatternType.CAR_WRECK_SPIKES:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 140.0, ground_y)
+			var variant: String = ["sedan", "ambulance"].pick_random()
+			_spawn_vehicle(chunk, variant, 140.0, ground_y)
 			_spawn_platform(chunk, 235.0, ground_y - 52.0)
 			_spawn_hazard(chunk, SPIKES_SCENE, 270.0, ground_y)
-			if _can_spawn_medkit(true):
+			if variant == "ambulance" and _can_spawn_medkit(true):
 				_spawn_pickup(chunk, MEDKIT_SCENE, 235.0, ground_y - 60.0)
 				_chunks_since_medkit = 0
 
-	# Rare fallback Medkit drop on non-ambulance chunks only after long dry streak
-	if not (pattern in [PatternType.FLAT_START, PatternType.CAR_WRECK_SOLO, PatternType.CAR_WRECK_MEDKIT, PatternType.CAR_WRECK_WALKER, PatternType.CAR_WRECK_SPIKES]):
+		PatternType.POLICE_ROADBLOCK:
+			chunk.add_ground_segment(0.0, chunk_width)
+			_spawn_vehicle(chunk, "police", 140.0, ground_y)
+			_spawn_hazard(chunk, BARRICADE_SCENE, 265.0, ground_y)
+			if randf() < 0.65:
+				_spawn_enemy(chunk, WALKER_SCENE, 335.0, ground_y - 12.0)
+
+		PatternType.BUS_WRECK_STOP:
+			chunk.add_ground_segment(0.0, chunk_width)
+			_spawn_vehicle(chunk, "bus", 175.0, ground_y)
+			if randf() < 0.5:
+				_spawn_enemy(chunk, WALKER_SCENE, 320.0, ground_y - 12.0)
+
+	# Rare fallback Medkit drop only when not already rolling an Ambulance medkit drop
+	if not (pattern in [PatternType.FLAT_START, PatternType.CAR_WRECK_MEDKIT]):
 		if _can_spawn_medkit(false):
 			var spot: Vector2 = _get_safe_medkit_spot(pattern)
 			_spawn_pickup(chunk, MEDKIT_SCENE, spot.x, spot.y)
@@ -348,8 +368,18 @@ func _get_safe_medkit_spot(pattern: PatternType) -> Vector2:
 			return Vector2(250.0, ground_y - 83.0)
 		PatternType.CAR_WRECK_SOLO, PatternType.CAR_WRECK_WALKER:
 			return Vector2(190.0 if pattern == PatternType.CAR_WRECK_SOLO else 160.0, ground_y - 36.0)
+		PatternType.BUS_WRECK_STOP:
+			return Vector2(175.0, ground_y - 38.0)
+		PatternType.POLICE_ROADBLOCK:
+			return Vector2(200.0, ground_y - 4.0)
 		_:
 			return Vector2(250.0, ground_y - 4.0)
+
+func _spawn_vehicle(chunk: Node2D, variant: String, x_offset: float, y_pos: float) -> void:
+	var inst: WreckedCar = WRECKED_CAR_SCENE.instantiate() as WreckedCar
+	inst.vehicle_variant = variant
+	inst.position = Vector2(x_offset, y_pos)
+	chunk.add_child(inst)
 
 func _spawn_hazard(chunk: Node2D, scene: PackedScene, x_offset: float, y_pos: float) -> void:
 	var inst: Node2D = scene.instantiate() as Node2D
