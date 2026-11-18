@@ -73,32 +73,83 @@ func _make_clean_horde_wall() -> void:
 
 func _make_foreground_overpass() -> void:
 	# Layer 4 (Parallax 0.60): Regular static street lamps every 96px (5 lamps per 480px repeat)
-	# plus rusted highway guardrail along the road edge (y = 213..224).
+	# plus grounded highway guardrail firmly anchored into the curb (y = 212..227).
 	var fore := Image.create(480, 270, false, Image.FORMAT_RGBA8)
 	var rail_dark := Color8(36, 26, 38, 255)
-	var rail_hi := Color8(78, 52, 64, 255)
+	var rail_hi := Color8(88, 62, 76, 255)
+	var rail_ridge := Color8(62, 44, 54, 255)
+	var rail_channel := Color8(24, 17, 26, 255)
 	var pole_col := Color8(24, 28, 44, 255)
-	var pole_hi := Color8(48, 56, 84, 255)
+	var pole_hi := Color8(56, 64, 96, 255)
 	var lamp_amber := Color("#f28c38")
 	var lamp_core := Color("#fff3b0")
 
-	# Continuous guardrail beam along road edge
-	_draw_rect_outline(fore, 0, 213, 480, 5, rail_dark, OUTLINE)
-	fore.fill_rect(Rect2i(0, 214, 480, 1), rail_hi)
-	for gx in range(0, 480, 24):
-		_draw_rect_outline(fore, gx, 210, 4, 14, rail_dark, OUTLINE)
+	# Continuous corrugated highway W-beam guardrail (y = 212..218)
+	for x in range(480):
+		fore.set_pixel(x, 212, OUTLINE)
+		fore.set_pixel(x, 213, rail_hi)
+		fore.set_pixel(x, 214, rail_ridge)
+		fore.set_pixel(x, 215, rail_channel)
+		fore.set_pixel(x, 216, rail_ridge)
+		fore.set_pixel(x, 217, rail_dark)
+		fore.set_pixel(x, 218, OUTLINE)
 
-	# 5 evenly spaced static street lamps (every 96px: x = 36, 132, 228, 324, 420)
+	# Splicing rivets every 48px
+	for sx in range(12, 480, 48):
+		fore.set_pixel(sx, 213, Color8(140, 100, 120, 255))
+		fore.set_pixel(sx + 1, 213, OUTLINE)
+		fore.set_pixel(sx, 217, Color8(140, 100, 120, 255))
+		fore.set_pixel(sx + 1, 217, OUTLINE)
+
+	# Guardrail vertical posts (Tiang Pagar) every 24px - anchored firmly into the curb (y = 209..227)
+	for gx in range(0, 480, 24):
+		for x in range(gx, gx + 4):
+			fore.set_pixel(x, 209, OUTLINE)
+		for y in range(210, 224):
+			fore.set_pixel(gx, y, OUTLINE)
+			fore.set_pixel(gx + 1, y, Color8(46, 34, 48, 255))
+			fore.set_pixel(gx + 2, y, Color8(70, 50, 72, 255))
+			fore.set_pixel(gx + 3, y, OUTLINE)
+
+		# Reinforced baseplate bracket firmly seated on curb at y = 224..227 (ZERO FLOATING)
+		for x in range(gx - 2, gx + 6):
+			fore.set_pixel(x, 224, Color8(88, 66, 92, 255))
+		for y in range(225, 228):
+			for x in range(gx - 2, gx + 6):
+				if x == gx - 2 or x == gx + 5 or y == 227:
+					fore.set_pixel(x, y, OUTLINE)
+				elif x == gx - 1 or x == gx + 4:
+					fore.set_pixel(x, y, Color8(18, 14, 22, 255))
+				else:
+					fore.set_pixel(x, y, Color8(52, 40, 56, 255))
+
+	# 5 evenly spaced street lamps (every 96px: x = 36, 132, 228, 324, 420)
 	for lx: int in [36, 132, 228, 324, 420]:
-		# Vertical pole
-		_draw_rect_outline(fore, lx, 142, 4, 82, pole_col, OUTLINE)
-		fore.fill_rect(Rect2i(lx + 2, 143, 1, 79), pole_hi)
+		# Vertical mast pole: y = 142 down to y = 223
+		for y in range(142, 223):
+			fore.set_pixel(lx, y, OUTLINE)
+			fore.set_pixel(lx + 1, y, pole_col)
+			fore.set_pixel(lx + 2, y, pole_hi)
+			fore.set_pixel(lx + 3, y, OUTLINE)
+
+		# Heavy octagonal mounting pedestal at curb (y = 223..227)
+		for x in range(lx - 1, lx + 5):
+			fore.set_pixel(x, 223, Color8(74, 86, 125, 255))
+		for y in range(224, 228):
+			for x in range(lx - 3, lx + 7):
+				if x == lx - 3 or x == lx + 6 or y == 227:
+					fore.set_pixel(x, y, OUTLINE)
+				elif x == lx - 2 or x == lx + 5:
+					fore.set_pixel(x, y, Color8(18, 22, 36, 255))
+				else:
+					fore.set_pixel(x, y, Color8(42, 50, 76, 255))
+
 		# Horizontal mast arm
-		_draw_rect_outline(fore, lx, 140, 16, 4, pole_col, OUTLINE)
+		_draw_rect_outline(fore, lx, 140, 18, 3, pole_col, OUTLINE)
 		# Lamp housing & static warm amber bulb
-		_draw_rect_outline(fore, lx + 12, 142, 8, 4, pole_col, OUTLINE)
-		fore.fill_rect(Rect2i(lx + 13, 145, 6, 2), lamp_amber)
-		fore.fill_rect(Rect2i(lx + 14, 145, 4, 1), lamp_core)
+		_draw_rect_outline(fore, lx + 12, 142, 9, 5, pole_col, OUTLINE)
+		fore.fill_rect(Rect2i(lx + 13, 145, 7, 2), lamp_amber)
+		fore.fill_rect(Rect2i(lx + 14, 145, 5, 1), lamp_core)
 
 		# Subtle static pixel-stepped light cone onto the road verge
 		for y in range(147, 213):
