@@ -28,7 +28,7 @@ var max_distance: float = 0.0
 
 # Difficulty multipliers
 var difficulty_factor: float = 1.0 # starts at 1.0, increases smoothly over time
-var base_player_speed: float = 170.0
+var base_player_speed: float = 145.0
 
 const SAVE_PATH: String = "user://cube_lastrun_save.json"
 
@@ -39,9 +39,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if current_state == State.PLAYING:
 		survival_time += delta
-		# Difficulty increases slowly over distance and time
-		difficulty_factor = 1.0 + (distance / 500.0) + (survival_time / 90.0)
-		difficulty_factor = clampf(difficulty_factor, 1.0, 2.5)
+		# Difficulty increases gently over distance and time for fair pacing
+		difficulty_factor = 1.0 + (distance / 850.0) + (survival_time / 150.0)
+		difficulty_factor = clampf(difficulty_factor, 1.0, 1.85)
 		if combo_count > 0:
 			combo_timer -= delta
 			if combo_timer <= 0.0:

@@ -355,9 +355,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -180.0
-offset_top = -108.0
+offset_top = -114.0
 offset_right = 180.0
-offset_bottom = 108.0
+offset_bottom = 114.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -376,6 +376,7 @@ horizontal_alignment = 1
 layout_mode = 2
 text = "- AUTO-RUN: CONTINUOUS RIGHTWARD RUN
 - JUMP: [SPACE] / [W] / [UP ARROW]
+- FAST FALL: [S] / [DOWN ARROW] (IN AIR)
 - AIM: [MOUSE] 360 AIM (OR RIGHT STICK)
 - SHOOT: [LEFT CLICK] / [X] (2 SHELLS)
 - RECOIL JUMP: SHOOT DOWNWARD TO VAULT!

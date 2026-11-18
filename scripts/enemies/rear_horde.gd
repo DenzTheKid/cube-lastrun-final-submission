@@ -7,7 +7,7 @@ class_name RearHorde
 
 @export var max_safe_distance: float = 230.0
 @export var catch_threshold: float = 16.0 # distance at which player is grabbed
-@export var base_catchup_speed: float = 165.0 # slightly less than player base speed
+@export var base_catchup_speed: float = 135.0 # slightly less than player base speed
 
 var target_player: Player = null
 var current_x_offset: float = 220.0

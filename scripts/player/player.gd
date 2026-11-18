@@ -18,10 +18,13 @@ const LIGHT_TEXTURE: Texture2D = preload("res://assets/environment/point_light_r
 const RECOIL_DUST_SCENE: PackedScene = preload("res://scenes/effects/recoil_dust.tscn")
 const SPARK_SCENE: PackedScene = preload("res://scenes/effects/bullet_spark.tscn")
 
-@export var base_run_speed: float = 175.0
+@export var base_run_speed: float = 145.0
 @export var jump_velocity: float = -380.0
 @export var gravity: float = 980.0
 @export var max_fall_speed: float = 650.0
+@export var fast_fall_max_speed: float = 780.0
+@export var fast_fall_gravity_mult: float = 2.8
+@export var fast_fall_dive_speed: float = 340.0
 @export var max_upward_velocity: float = -540.0
 
 @export var max_hp: int = 2
@@ -48,6 +51,7 @@ var _footstep_timer: float = 0.0
 var _anim_timer: float = 0.0
 var _anim_frame: int = 0
 var _was_on_floor: bool = true
+var _fast_fall_burst_used: bool = false
 var current_aim_angle: float = 0.0
 var current_aim_vector: Vector2 = Vector2.RIGHT
 
@@ -154,13 +158,27 @@ func _physics_process(delta: float) -> void:
 		GameManager.add_distance(velocity.x * delta * 0.05)
 
 	# Gravity & Ground Contact
+	var is_fast_falling: bool = false
 	if not is_on_floor():
-		velocity.y = minf(velocity.y + gravity * delta, max_fall_speed)
+		if _spawn_input_grace_frames <= 0 and _is_fast_fall_held():
+			is_fast_falling = true
+			if not _fast_fall_burst_used:
+				_fast_fall_burst_used = true
+				if velocity.y < fast_fall_dive_speed:
+					velocity.y = maxf(velocity.y * 0.15, fast_fall_dive_speed)
+					_visual_scale = Vector2(0.78, 1.26)
+					_spawn_footstep_dust(0.6)
+			velocity.y = minf(velocity.y + gravity * fast_fall_gravity_mult * delta, fast_fall_max_speed)
+		else:
+			if not _is_fast_fall_held():
+				_fast_fall_burst_used = false
+			velocity.y = minf(velocity.y + gravity * delta, max_fall_speed)
 		coyote_timer -= delta
 		# Apex hang-time subtle horizontal poise
-		if absf(velocity.y) < 42.0:
+		if not is_fast_falling and absf(velocity.y) < 42.0:
 			_visual_scale = _visual_scale.lerp(Vector2(1.08, 0.92), 1.0 - exp(-12.0 * delta))
 	else:
+		_fast_fall_burst_used = false
 		coyote_timer = COYOTE_TIME
 		if not _was_on_floor:
 			# Landed impact squash + dust burst!
@@ -242,6 +260,9 @@ func _is_physical_jump_held() -> bool:
 		or Input.is_key_pressed(KEY_UP)
 	)
 
+func _is_fast_fall_held() -> bool:
+	return Input.is_action_pressed("fast_fall") or Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN)
+
 func _perform_jump() -> void:
 	velocity.y = jump_velocity
 	coyote_timer = 0.0
@@ -271,6 +292,7 @@ func _on_shotgun_aim_changed(aim_angle: float, aim_vec: Vector2) -> void:
 func _on_shotgun_recoil(force: Vector2) -> void:
 	# Downward shot -> Upward boost
 	if force.y < 0.0:
+		_fast_fall_burst_used = false
 		if velocity.y > 0.0:
 			velocity.y = 0.0
 		velocity.y += force.y
