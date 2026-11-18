@@ -121,14 +121,14 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -18.0
+offset_top = -12.0
 offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer" unique_id=91489931]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 alignment = 1
 
 [node name="TitleBanner" type="VBoxContainer" parent="CenterContainer/VBox" unique_id=362023199]
@@ -250,7 +250,7 @@ theme_override_constants/separation = 3
 alignment = 2
 
 [node name="HeroShowcaseBox" type="Control" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn" unique_id=1292365405]
-custom_minimum_size = Vector2(158, 62)
+custom_minimum_size = Vector2(172, 70)
 layout_mode = 2
 mouse_filter = 2
 
@@ -267,12 +267,11 @@ stretch_mode = 5
 
 [node name="HeroShowcaseSprite" type="Sprite2D" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/HeroShowcaseBox" unique_id=983492035]
 unique_name_in_owner = true
-position = Vector2(0, -6)
 texture = ExtResource("15_showcase")
 centered = false
 
 [node name="RecordPanel" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn" unique_id=1680946084]
-custom_minimum_size = Vector2(158, 0)
+custom_minimum_size = Vector2(172, 0)
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_styles/panel = SubResource("StyleBoxTexture_RecordCard")

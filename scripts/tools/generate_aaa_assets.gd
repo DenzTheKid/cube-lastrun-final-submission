@@ -356,79 +356,79 @@ func _draw_pixel_keycap_plate(
 	return img
 
 func _make_pixel_button_plates() -> void:
-	# Primary Action Button Plates (PLAY MISSION / RESUME / TRY AGAIN) — Warm Amber & Crimson 3D cartridge keycap
+	# Primary Action Button Plates (PLAY MISSION / RESUME / TRY AGAIN) — Warm mellow Amber & Crimson 3D keycap
 	var pri_idle := _draw_pixel_keycap_plate(
 		72, 26,
-		Color("#341b2c"), Color("#221224"),
-		Color("#fff3b0"), Color("#6b1e2c"),
-		Color("#f28c38"), Color("#fff3b0"), Color("#f28c38"), false, true
+		Color("#331d2d"), Color("#231424"),
+		Color("#f2c879"), Color("#632030"),
+		Color("#e08743"), Color("#f5d287"), Color("#d9783b"), false, true
 	)
 	pri_idle.save_png("res://assets/ui/px_btn_primary_idle.png")
 
 	var pri_hover := _draw_pixel_keycap_plate(
 		72, 26,
-		Color("#4f2433"), Color("#331727"),
-		Color("#fff8d6"), Color("#8c2838"),
-		Color("#fff3b0"), Color("#fff8d6"), Color("#f28c38"), false, true
+		Color("#4a2736"), Color("#321a28"),
+		Color("#ffe29e"), Color("#7d293a"),
+		Color("#f5c26b"), Color("#ffe29e"), Color("#e88c48"), false, true
 	)
 	pri_hover.save_png("res://assets/ui/px_btn_primary_hover.png")
 
 	var pri_pressed := _draw_pixel_keycap_plate(
 		72, 26,
-		Color("#2b1523"), Color("#1b0d1b"),
-		Color("#f28c38"), Color("#42121d"),
-		Color("#f28c38"), Color("#f28c38"), Color("#a84824"), true, true
+		Color("#2b1724"), Color("#1b0f1b"),
+		Color("#d97c3e"), Color("#421520"),
+		Color("#d97c3e"), Color("#d97c3e"), Color("#944527"), true, true
 	)
 	pri_pressed.save_png("res://assets/ui/px_btn_primary_pressed.png")
 
-	# Secondary Action Button Plates (CONTROLS / SFX / BGM / EXIT) — Brushed Steel-Indigo with Cyan clasp
+	# Secondary Action Button Plates (CONTROLS / SFX / BGM / EXIT) — Smooth Brushed Slate-Indigo with Soft Aqua clasp
 	var sec_idle := _draw_pixel_keycap_plate(
 		72, 26,
-		Color("#222a4d"), Color("#151a33"),
-		Color("#6979b0"), Color("#090b16"),
-		Color("#39446e"), Color("#38d8f2"), Color("#1e7e9c"), false, true
+		Color("#242d52"), Color("#181e38"),
+		Color("#6d7eb5"), Color("#0b0e1c"),
+		Color("#3f4c7a"), Color("#4ec8de"), Color("#297b96"), false, true
 	)
 	sec_idle.save_png("res://assets/ui/px_btn_secondary_idle.png")
 
 	var sec_hover := _draw_pixel_keycap_plate(
 		72, 26,
-		Color("#2d3661"), Color("#1d2342"),
-		Color("#f2a85c"), Color("#0d101f"),
-		Color("#f28c38"), Color("#fff3b0"), Color("#f28c38"), false, true
+		Color("#2f3966"), Color("#202747"),
+		Color("#edb072"), Color("#101426"),
+		Color("#e38c46"), Color("#f5d287"), Color("#e38c46"), false, true
 	)
 	sec_hover.save_png("res://assets/ui/px_btn_secondary_hover.png")
 
 	var sec_pressed := _draw_pixel_keycap_plate(
 		72, 26,
-		Color("#161b33"), Color("#0e1121"),
-		Color("#38d8f2"), Color("#06070f"),
-		Color("#38d8f2"), Color("#f2f4fa"), Color("#38d8f2"), true, true
+		Color("#181e38"), Color("#101426"),
+		Color("#4ec8de"), Color("#080a14"),
+		Color("#4ec8de"), Color("#e3edf5"), Color("#4ec8de"), true, true
 	)
 	sec_pressed.save_png("res://assets/ui/px_btn_secondary_pressed.png")
 
 	var btn_dis := _draw_pixel_keycap_plate(
 		72, 26,
-		Color("#141729"), Color("#0e101c"),
-		Color("#2b324f"), Color("#080912"),
-		Color("#232946"), Color("#3b4466"), Color("#232946"), true, true
+		Color("#171b2e"), Color("#111321"),
+		Color("#2f3654"), Color("#090b14"),
+		Color("#272e4d"), Color("#3e486b"), Color("#272e4d"), true, true
 	)
 	btn_dis.save_png("res://assets/ui/px_btn_disabled.png")
 
 	# Unified Chamfered Panel Plate (Modals, HUD Plates, Controls)
 	var panel_plate := _draw_pixel_keycap_plate(
 		64, 36,
-		Color("#121526"), Color("#0b0d19"),
-		Color("#4a588a"), Color("#070810"),
-		Color("#2e3659"), Color("#38d8f2"), Color("#1e7e9c"), false, false
+		Color("#14182b"), Color("#0d101f"),
+		Color("#4e5e91"), Color("#080a14"),
+		Color("#343e66"), Color("#4ec8de"), Color("#297b96"), false, false
 	)
 	panel_plate.save_png("res://assets/ui/px_panel_plate.png")
 
-	# Survivor Record Armored Plaque (Chamfered Terminal Badge with glowing cyan crest)
+	# Survivor Record Armored Plaque (Chamfered Terminal Badge with soft aqua crest)
 	var record_card := _draw_pixel_keycap_plate(
 		64, 40,
-		Color("#14182b"), Color("#0c0e1a"),
-		Color("#38d8f2"), Color("#070810"),
-		Color("#39446e"), Color("#fff3b0"), Color("#f28c38"), false, false
+		Color("#161b30"), Color("#0e1121"),
+		Color("#4ec8de"), Color("#080a14"),
+		Color("#3f4c7a"), Color("#f5d287"), Color("#e08743"), false, false
 	)
 	for x in range(8, 56):
 		_safe_px(record_card, x, 5, Color("#1f2747"))
@@ -787,17 +787,19 @@ func _make_title_logo_and_ribbon() -> void:
 				var is_bot_edge: bool = (y + 1 < lh and mask.get_pixel(x, y + 1).a < 0.5)
 				var col: Color
 				if is_top_edge:
-					col = Color("#fff8d6")
+					col = Color("#fce5a2")
 				elif rel_y <= 4:
-					col = Color("#fff3b0")
-				elif rel_y <= 10:
-					col = Color("#f7b267") if rel_y <= 6 else Color("#f28c38")
+					col = Color("#f7d488")
+				elif rel_y <= 8:
+					col = Color("#f2ac5e")
+				elif rel_y <= 12:
+					col = Color("#eb834b")
 				elif rel_y <= 16:
-					col = Color("#e63962")
+					col = Color("#de4a68")
 				else:
-					col = Color("#a8223d")
+					col = Color("#ad2d4a")
 				if is_bot_edge and not is_top_edge:
-					col = Color("#7a2832")
+					col = Color("#7d273b")
 				logo.set_pixel(x, y, col)
 
 	logo.save_png("res://assets/ui/px_title_logo.png")
@@ -807,17 +809,17 @@ func _make_empty_and_hero_showcase() -> void:
 	var empty_img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
 	empty_img.save_png("res://assets/ui/px_empty.png")
 
-	var sw: int = 158
-	var sh: int = 62
+	var sw: int = 172
+	var sh: int = 70
 
-	# A. Centered Full-Width (158x62) Chamfered Sunset-Sky Frame Backdrop matching SURVIVOR RECORD width
-	# Places a glowing dusk sun corona directly behind the centered Hero so every edge pops clearly.
+	# A. Centered Full-Width (172x70) Velvety Sunset-Sky Portrait Backdrop matching SURVIVOR RECORD width
+	# Uses smooth 8-band dithered twilight-to-peach glow so dark Hero silhouette separates effortlessly without harsh glare.
 	var bg := Image.create(sw, sh, false, Image.FORMAT_RGBA8)
 	var fx0: int = 0
 	var fx1: int = sw - 1
 	var fy0: int = 0
 	var fy1: int = sh - 1
-	var sun_c := Vector2(79.0, 31.0)
+	var sun_c := Vector2(86.0, 35.0)
 	for y in range(sh):
 		for x in range(sw):
 			var dx: int = mini(x - fx0, fx1 - x)
@@ -828,115 +830,118 @@ func _make_empty_and_hero_showcase() -> void:
 				bg.set_pixel(x, y, OUTLINE)
 				continue
 			if x == fx0 + 1 or x == fx1 - 1 or y == fy0 + 1 or y == fy1 - 1 or dx + dy == 4:
-				var trim_col: Color = Color("#38d8f2") if y < 14 else (Color("#f28c38") if y > 49 else Color("#4a588a"))
+				var trim_col: Color = Color("#4ec8de") if y < 16 else (Color("#e08743") if y > 56 else Color("#4a588a"))
 				bg.set_pixel(x, y, trim_col)
 				continue
 
 			# Dark recessed road deck at bottom behind boots & pedestal
-			if y >= 52:
-				bg.set_pixel(x, y, Color("#0c0e1b") if y % 2 == 0 else Color("#12162b"))
+			if y >= 59:
+				bg.set_pixel(x, y, Color("#0d101f") if y % 2 == 0 else Color("#14182b"))
 				continue
 
-			# Base stepped twilight-to-amber dusk sky bands
+			# Smooth 8-stop dithered twilight-plum -> dusty rose -> mellow peach dusk sky
 			var checker: int = (x + y) % 2
 			var col: Color
-			if y < 12:
-				col = Color("#1e183b") if (y < 10 or checker == 0) else Color("#39224d")
-			elif y < 22:
-				col = Color("#4a234a") if (y < 20 or checker == 0) else Color("#7a2832")
-			elif y < 33:
-				col = Color("#8f2c38") if (y < 31 or checker == 0) else Color("#c94e36")
-			elif y < 44:
-				col = Color("#d96a36") if (y < 42 or checker == 0) else Color("#f28c38")
+			if y < 11:
+				col = Color("#201a3b") if (y < 9 or checker == 0) else Color("#33224a")
+			elif y < 20:
+				col = Color("#3c244d") if (y < 18 or checker == 0) else Color("#592a4d")
+			elif y < 30:
+				col = Color("#6e2e49") if (y < 28 or checker == 0) else Color("#8f3747")
+			elif y < 40:
+				col = Color("#ab4746") if (y < 38 or checker == 0) else Color("#c96248")
+			elif y < 50:
+				col = Color("#db7c4c") if (y < 48 or checker == 0) else Color("#eb9957")
 			else:
-				col = Color("#f7b267") if y < 49 else Color("#f28c38")
+				col = Color("#f0ae67") if y < 55 else Color("#de8652")
 
-			# Crisp stepped pixel sunset halo centered right behind the Hero (x=79) for high silhouette contrast
-			var d_sun: float = Vector2(float(x) - sun_c.x, (float(y) - sun_c.y) * 1.15).length()
-			if d_sun < 22.0:
-				col = Color("#fff8d6")
-			elif d_sun < 27.0:
-				col = Color("#fff3b0") if checker == 0 else Color("#f7b267")
-			elif d_sun < 33.0:
-				col = Color("#f2a85c") if checker == 0 else Color("#f28c38")
+			# Soft mellow peach-gold sunset disc behind Hero (smoothly dithered edges, no harsh stark yellow)
+			var d_sun: float = Vector2(float(x) - sun_c.x, (float(y) - sun_c.y) * 1.12).length()
+			if d_sun < 19.0:
+				col = Color("#f7cf86")
+			elif d_sun < 24.0:
+				col = Color("#f7cf86") if checker == 0 else Color("#f2b168")
+			elif d_sun < 29.0:
+				col = Color("#f2b168") if checker == 0 else Color("#eb9254")
+			elif d_sun < 34.0:
+				col = Color("#eb9254") if checker == 0 else col
 			bg.set_pixel(x, y, col)
 
-	# Framing low ruined skyline silhouettes along left/right edges (keeping center sunset halo clear)
-	for bld in [[4, 14, 34], [18, 12, 39], [30, 10, 44], [118, 10, 43], [128, 14, 38], [142, 12, 33]]:
+	# Softened low city silhouettes on left/right inside window + serene dim pixel stars
+	for bld in [[4, 15, 39], [19, 13, 45], [32, 10, 50], [130, 10, 49], [140, 13, 44], [153, 15, 38]]:
 		var bx: int = bld[0]
 		var bw: int = bld[1]
 		var by: int = bld[2]
-		for yy in range(by, 52):
+		for yy in range(by, 59):
 			for xx in range(bx, bx + bw):
-				bg.set_pixel(xx, yy, Color("#151a30") if yy < 46 else Color("#0f1324"))
-		bg.fill_rect(Rect2i(bx, by, bw, 1), Color("#2e3659"))
-	# Crisp static mini pixel stars in upper indigo corner sky + golden frame rivets
-	for st in [[11, 7], [24, 10], [42, 6], [116, 7], [134, 10], [146, 6]]:
-		_safe_px(bg, st[0], st[1], Color("#fff3b0"))
+				bg.set_pixel(xx, yy, Color("#1b213d") if yy < 52 else Color("#12172b"))
+		bg.fill_rect(Rect2i(bx, by, bw, 1), Color("#343e66"))
+	for st in [[12, 8], [27, 11], [44, 7], [128, 7], [145, 11], [158, 8]]:
+		_safe_px(bg, st[0], st[1], Color("#f2d59b"))
 	for rx in [4, sw - 5]:
-		_safe_px(bg, rx, 4, Color("#fff3b0"))
-		_safe_px(bg, rx, sh - 5, Color("#f28c38"))
+		_safe_px(bg, rx, 4, Color("#f2d59b"))
+		_safe_px(bg, rx, sh - 5, Color("#e08743"))
 	bg.save_png("res://assets/ui/px_hero_backdrop.png")
 
-	# B. Centered Flagship Cube Survivor Hero Showcase (158 x 62 native 1x pixel art, centered at x = 79)
+	# B. Larger, Smoother-Shaded Centered Flagship Hero Showcase (172 x 70, hero centered at x = 86)
 	var hero := Image.create(sw, sh, false, Image.FORMAT_RGBA8)
 
-	# 1. Centered Stepped Asphalt Curb Pedestal at Hero's Feet (y = 51..60, x = 42..116, center = 79)
-	for y in range(51, 61):
+	# 1. Centered Stepped Asphalt Curb Pedestal at Hero's Feet (y = 58..68, x = 44..128)
+	for y in range(58, 69):
 		var inset: int = 0
-		if y == 51 or y == 60:
+		if y == 58 or y == 68:
 			inset = 2
-		elif y == 52 or y == 59:
+		elif y == 59 or y == 67:
 			inset = 1
-		for x in range(42 + inset, 117 - inset):
-			var ex: int = mini(x - (42 + inset), (116 - inset) - x)
-			if y == 51 or y == 60 or ex == 0:
+		for x in range(44 + inset, 129 - inset):
+			var ex: int = mini(x - (44 + inset), (128 - inset) - x)
+			if y == 58 or y == 68 or ex == 0:
 				hero.set_pixel(x, y, OUTLINE)
-			elif y == 52:
-				hero.set_pixel(x, y, Color("#6979b0") if x > 58 else Color("#38d8f2"))
-			elif y == 53:
-				hero.set_pixel(x, y, Color("#28325c"))
-			elif y >= 58:
-				hero.set_pixel(x, y, Color("#0a0c18"))
+			elif y == 59:
+				hero.set_pixel(x, y, Color("#6f7fb5") if x > 62 else Color("#4ec8de"))
+			elif y == 60:
+				hero.set_pixel(x, y, Color("#2c3661"))
+			elif y >= 65:
+				hero.set_pixel(x, y, Color("#0d101f"))
 			else:
-				hero.set_pixel(x, y, Color("#161c36"))
-	hero.fill_rect(Rect2i(72, 54, 14, 3), Color("#f28c38"))
-	hero.fill_rect(Rect2i(73, 54, 12, 1), Color("#fff3b0"))
+				hero.set_pixel(x, y, Color("#1a2240"))
+	hero.fill_rect(Rect2i(78, 61, 16, 3), Color("#eb9249"))
+	hero.fill_rect(Rect2i(79, 61, 14, 1), Color("#f7d488"))
 
-	# Two spent red/brass shotgun shells resting symmetrically on pedestal
-	_draw_rect_outline(hero, 51, 49, 6, 3, Color("#e63962"), OUTLINE)
-	hero.fill_rect(Rect2i(55, 50, 1, 1), Color("#f28c38"))
-	_draw_rect_outline(hero, 102, 49, 6, 3, Color("#e63962"), OUTLINE)
-	hero.fill_rect(Rect2i(103, 50, 1, 1), Color("#f28c38"))
+	# Two spent red/brass shotgun shells resting symmetrically at Hero's feet
+	_draw_rect_outline(hero, 54, 56, 7, 3, Color("#db4663"), OUTLINE)
+	hero.fill_rect(Rect2i(59, 57, 1, 1), Color("#eb9249"))
+	_draw_rect_outline(hero, 111, 56, 7, 3, Color("#db4663"), OUTLINE)
+	hero.fill_rect(Rect2i(112, 57, 1, 1), Color("#eb9249"))
 
-	# 2. Striding Action Legs & Combat Boots centered under body (y = 41..51)
-	_draw_rect_outline(hero, 66, 42, 7, 9, Color("#22305c"), OUTLINE)
-	hero.fill_rect(Rect2i(67, 43, 2, 5), Color("#4e629c"))
-	_draw_rect_outline(hero, 64, 47, 9, 5, Color("#121830"), OUTLINE)
-	hero.fill_rect(Rect2i(65, 48, 5, 1), Color("#5c6d9e"))
-	_draw_rect_outline(hero, 84, 42, 7, 9, Color("#182245"), OUTLINE)
-	hero.fill_rect(Rect2i(85, 43, 2, 5), Color("#394980"))
-	_draw_rect_outline(hero, 84, 47, 9, 5, Color("#0f1429"), OUTLINE)
-	hero.fill_rect(Rect2i(85, 48, 5, 1), Color("#4a588a"))
+	# 2. Larger Striding Action Legs & Combat Boots (y = 48..58)
+	_draw_rect_outline(hero, 71, 48, 8, 10, Color("#253463"), OUTLINE)
+	hero.fill_rect(Rect2i(72, 49, 2, 6), Color("#566aa3"))
+	_draw_rect_outline(hero, 69, 53, 10, 6, Color("#141c38"), OUTLINE)
+	hero.fill_rect(Rect2i(70, 54, 6, 1), Color("#6375ab"))
+	_draw_rect_outline(hero, 92, 48, 8, 10, Color("#1c274d"), OUTLINE)
+	hero.fill_rect(Rect2i(93, 49, 2, 6), Color("#42548a"))
+	_draw_rect_outline(hero, 92, 53, 10, 6, Color("#11172e"), OUTLINE)
+	hero.fill_rect(Rect2i(93, 54, 6, 1), Color("#4e5e94"))
 
-	# 3. Trailing Headband Ribbon Tails waving dynamically rightward (x = 97..118)
+	# 3. Flowing Rose-Crimson Headband Tails waving rightward (x = 108..131)
 	for dy in range(2):
-		for k in range(19):
-			var wave_y: int = 16 + dy * 4 + int(sin(float(k) * 0.45 + float(dy)) * 2.0)
-			var rx: int = 97 + k
-			var rcol: Color = Color("#e63962") if k < 12 else Color("#8f2438")
+		for k in range(21):
+			var wave_y: int = 18 + dy * 4 + int(sin(float(k) * 0.42 + float(dy)) * 2.0)
+			var rx: int = 108 + k
+			var rcol: Color = Color("#e0466b") if k < 13 else Color("#962a48")
 			if k < 4:
-				rcol = Color("#f28c38")
+				rcol = Color("#eb8d52")
 			_safe_px(hero, rx, wave_y - 1, OUTLINE)
-			_safe_px(hero, rx, wave_y, Color("#ff85a3") if dy == 0 and k < 8 else rcol)
+			_safe_px(hero, rx, wave_y, Color("#ff8ea8") if dy == 0 and k < 9 else rcol)
 			_safe_px(hero, rx, wave_y + 1, rcol)
 			_safe_px(hero, rx, wave_y + 2, OUTLINE)
 
-	# 4. Main Beveled Heroic Cube Torso/Head centered cleanly at x = 58..99 (center = 78.5, y = 11..43)
-	var bx0: int = 58
-	var bx1: int = 99
-	var by0: int = 11
-	var by1: int = 43
+	# 4. Larger, Smoother-Shaded Beveled Cube Torso/Head centered cleanly at x = 62..109 (48px wide, y = 12..49)
+	var bx0: int = 62
+	var bx1: int = 109
+	var by0: int = 12
+	var by1: int = 49
 	for y in range(by0, by1 + 1):
 		for x in range(bx0, bx1 + 1):
 			var dx: int = mini(x - bx0, bx1 - x)
@@ -947,132 +952,217 @@ func _make_empty_and_hero_showcase() -> void:
 				hero.set_pixel(x, y, OUTLINE)
 				continue
 			if x == bx0 + 1:
-				hero.set_pixel(x, y, Color("#38d8f2") if y > 22 else Color("#fff3b0"))
+				hero.set_pixel(x, y, Color("#56cde3") if y > 26 else Color("#f7d488"))
 			elif x == bx1 - 1:
-				hero.set_pixel(x, y, Color("#fff3b0") if y < 29 else Color("#38d8f2"))
+				hero.set_pixel(x, y, Color("#f5c678") if y < 32 else Color("#56cde3"))
 			elif y == by0 + 1:
-				hero.set_pixel(x, y, Color("#8aa0db"))
-			elif x >= 88:
-				hero.set_pixel(x, y, Color("#1c294f") if y < 29 else Color("#151e3d"))
+				hero.set_pixel(x, y, Color("#8ea4db"))
+			elif x >= 97:
+				hero.set_pixel(x, y, Color("#202d57") if y < 32 else Color("#182142"))
 			else:
-				hero.set_pixel(x, y, Color("#2f4278") if y < 28 else Color("#22325e"))
+				hero.set_pixel(x, y, Color("#334780") if y < 29 else (Color("#293969") if y < 40 else Color("#212f59")))
 
-	# Utility belt + golden buckle
-	hero.fill_rect(Rect2i(60, 38, 28, 2), Color("#0a0c18"))
-	hero.fill_rect(Rect2i(68, 37, 6, 4), Color("#f28c38"))
-	hero.fill_rect(Rect2i(69, 38, 4, 2), Color("#fff3b0"))
+	# Utility belt + smooth brass buckle
+	hero.fill_rect(Rect2i(64, 43, 33, 2), Color("#0d101f"))
+	hero.fill_rect(Rect2i(74, 42, 7, 4), Color("#eb9249"))
+	hero.fill_rect(Rect2i(75, 43, 5, 2), Color("#f7d488"))
 
-	# 5. Signature Crimson Headband Across Forehead (y = 14..19)
-	for y in range(14, 20):
+	# 5. Signature Rose-Crimson Headband Across Brow (y = 16..22)
+	for y in range(16, 23):
 		for x in range(bx0, bx1 + 1):
-			if y == 14 or y == 19:
+			if y == 16 or y == 22:
 				hero.set_pixel(x, y, OUTLINE)
 			elif x == bx0 + 1:
-				hero.set_pixel(x, y, Color("#fff3b0"))
-			elif x >= 88:
-				hero.set_pixel(x, y, Color("#8f2438"))
-			elif y == 15:
-				hero.set_pixel(x, y, Color("#ff85a3"))
+				hero.set_pixel(x, y, Color("#f7d488"))
+			elif x >= 97:
+				hero.set_pixel(x, y, Color("#962a48"))
+			elif y == 17:
+				hero.set_pixel(x, y, Color("#ff8ea8"))
+			elif y >= 20:
+				hero.set_pixel(x, y, Color("#bd3356"))
 			else:
-				hero.set_pixel(x, y, Color("#e63962"))
-	_draw_rect_outline(hero, 95, 14, 5, 6, Color("#e63962"), OUTLINE)
-	hero.fill_rect(Rect2i(96, 15, 2, 2), Color("#ff85a3"))
+				hero.set_pixel(x, y, Color("#e0466b"))
+	_draw_rect_outline(hero, 105, 16, 5, 7, Color("#e0466b"), OUTLINE)
+	hero.fill_rect(Rect2i(106, 17, 2, 2), Color("#ff8ea8"))
 
-	# 6. Recessed Dark Visor & Glowing Twin Cyan Eyes (x = 61..83, y = 21..30)
-	_draw_rect_outline(hero, 61, 21, 22, 9, Color("#070912"), OUTLINE)
-	hero.fill_rect(Rect2i(62, 22, 20, 1), Color("#1e2b54"))
-	for ex in [64, 74]:
-		hero.fill_rect(Rect2i(ex, 23, 5, 5), Color("#38d8f2"))
-		hero.fill_rect(Rect2i(ex + 1, 24, 2, 2), Color("#f2f4fa"))
-		_safe_px(hero, ex, 23, Color("#fff8d6"))
+	# 6. Larger Tactical Dark Visor & Soft Glowing Cyan Eyes (x = 66..91, y = 24..34)
+	_draw_rect_outline(hero, 66, 24, 25, 10, Color("#090b14"), OUTLINE)
+	hero.fill_rect(Rect2i(67, 25, 23, 1), Color("#233261"))
+	for ex in [69, 80]:
+		hero.fill_rect(Rect2i(ex, 26, 6, 6), Color("#4ec8de"))
+		hero.fill_rect(Rect2i(ex + 1, 27, 4, 4), Color("#80e5f5"))
+		hero.fill_rect(Rect2i(ex + 1, 27, 2, 2), Color("#e6f9ff"))
 
-	# 7. Heavy Combat Double-Barrel Shotgun held cleanly centered across chest (x = 38..89)
-	for i in range(36):
-		var gx: int = 38 + i
-		var gy: int = 25 + int(float(i) * 0.16)
-		_safe_px(hero, gx, gy - 1, OUTLINE)
-		_safe_px(hero, gx, gy, Color("#f2f4fa") if i < 26 else Color("#8e9ec7"))
-		_safe_px(hero, gx, gy + 1, Color("#8e9ec7"))
-		_safe_px(hero, gx, gy + 2, Color("#39446e"))
-		_safe_px(hero, gx, gy + 3, OUTLINE)
-	for i in range(28):
-		var gx: int = 42 + i
+	# 7. Larger Heavy Combat Double-Barrel Shotgun (x = 39..100, angled heroically across chest)
+	for i in range(42):
+		var gx: int = 39 + i
 		var gy: int = 29 + int(float(i) * 0.16)
-		var is_grip: bool = (i >= 10 and i <= 20)
-		_safe_px(hero, gx, gy, Color("#a85822") if is_grip else Color("#4a588a"))
-		_safe_px(hero, gx, gy + 1, Color("#5e2912") if is_grip else Color("#232946"))
+		_safe_px(hero, gx, gy - 1, OUTLINE)
+		_safe_px(hero, gx, gy, Color("#e6eef7") if i < 30 else Color("#9aa9cf"))
+		_safe_px(hero, gx, gy + 1, Color("#9aa9cf"))
+		_safe_px(hero, gx, gy + 2, Color("#495887"))
+		_safe_px(hero, gx, gy + 3, OUTLINE)
+	for i in range(32):
+		var gx: int = 44 + i
+		var gy: int = 33 + int(float(i) * 0.16)
+		var is_grip: bool = (i >= 11 and i <= 23)
+		_safe_px(hero, gx, gy, Color("#b86632") if is_grip else Color("#536396"))
+		_safe_px(hero, gx, gy + 1, Color("#6b3519") if is_grip else Color("#283052"))
 		_safe_px(hero, gx, gy + 2, OUTLINE)
-	_safe_px(hero, 39, 23, OUTLINE)
-	_safe_px(hero, 39, 24, Color("#f28c38"))
-	_draw_rect_outline(hero, 70, 30, 8, 6, Color("#39446e"), OUTLINE)
-	hero.fill_rect(Rect2i(72, 31, 3, 2), Color("#fff3b0"))
-	for i in range(15):
-		var sx: int = 77 + i
-		var sy: int = 32 + int(float(i) * 0.35)
+	_safe_px(hero, 40, 27, OUTLINE)
+	_safe_px(hero, 40, 28, Color("#eb9249"))
+	_draw_rect_outline(hero, 76, 35, 9, 6, Color("#43507d"), OUTLINE)
+	hero.fill_rect(Rect2i(78, 36, 4, 2), Color("#f7d488"))
+	for i in range(17):
+		var sx: int = 84 + i
+		var sy: int = 36 + int(float(i) * 0.35)
 		_safe_px(hero, sx, sy - 1, OUTLINE)
-		_safe_px(hero, sx, sy, Color("#f28c38"))
-		_safe_px(hero, sx, sy + 1, Color("#a85822"))
-		_safe_px(hero, sx, sy + 2, Color("#5e2912"))
+		_safe_px(hero, sx, sy, Color("#e88c48"))
+		_safe_px(hero, sx, sy + 1, Color("#b5602d"))
+		_safe_px(hero, sx, sy + 2, Color("#6b3519"))
 		_safe_px(hero, sx, sy + 3, OUTLINE)
 
-	_draw_rect_outline(hero, 56, 30, 6, 5, Color("#2c3866"), OUTLINE)
-	hero.fill_rect(Rect2i(57, 31, 3, 2), Color("#38d8f2"))
-	_draw_rect_outline(hero, 73, 33, 6, 5, Color("#2c3866"), OUTLINE)
-	hero.fill_rect(Rect2i(74, 34, 3, 2), Color("#5c6d9e"))
+	_draw_rect_outline(hero, 60, 34, 7, 6, Color("#33457d"), OUTLINE)
+	hero.fill_rect(Rect2i(61, 35, 3, 2), Color("#56cde3"))
+	_draw_rect_outline(hero, 80, 38, 7, 6, Color("#33457d"), OUTLINE)
+	hero.fill_rect(Rect2i(81, 39, 3, 2), Color("#697ab5"))
 
-	# Subtle warm barrel gleam spark ahead of muzzle
-	_safe_px(hero, 34, 25, Color("#fff3b0"))
-	_safe_px(hero, 33, 25, Color("#f28c38"))
-	_safe_px(hero, 35, 25, Color("#f28c38"))
-	_safe_px(hero, 34, 24, Color("#f28c38"))
-	_safe_px(hero, 34, 26, Color("#f28c38"))
+	# Gentle warm muzzle sparkle ahead of barrel tip
+	_safe_px(hero, 35, 29, Color("#f7d488"))
+	_safe_px(hero, 34, 29, Color("#e88c48"))
+	_safe_px(hero, 36, 29, Color("#e88c48"))
+	_safe_px(hero, 35, 28, Color("#e88c48"))
+	_safe_px(hero, 35, 30, Color("#e88c48"))
 
 	hero.save_png("res://assets/ui/px_hero_showcase.png")
 
 func _make_pixel_hearts() -> void:
-	# 14x12 crisp hand-pixelled Heart icons for top-left HUD HP display
-	var full_map := {
-		"o": OUTLINE,
-		"w": Color("#fff8e8"),
-		"*": Color("#ff85a3"),
-		"#": Color("#e63962"),
-		"s": Color("#8f1c37")
-	}
-	_draw_bitmap_icon(PackedStringArray([
-		"..oooo..oooo..",
-		".o*##*oo*##*o.",
-		"oww###**####so",
-		"oww#########so",
-		"ow##########so",
-		"o*#########sso",
-		".o########sso.",
-		"..o######sso..",
-		"..oo####ssoo..",
-		"....o##sso....",
-		".....osso.....",
-		"......oo......"
-	]), full_map).save_png("res://assets/ui/px_heart_full.png")
+	# Smoothly-shaded 20x17 Pixel Hearts (soft rose-blush highlights, velvety ruby body, clear cracked empty heart)
+	# Plus upright 14x22 Shotgun Shell icons for clear, well-proportioned HUD Ammo display.
+	var outline_soft := Color("#171124")
+	var shape := PackedStringArray([
+		"...ooooo....ooooo...",
+		"..o12221oooo12221o..",
+		".o12www2122122222so.",
+		"o12ww2222222222222so",
+		"o12w22222222222222so",
+		"o1222222222222222sso",
+		"o2222222222222222sso",
+		".o22222222222222sso.",
+		".o2222222222222ssso.",
+		"..o22222222222ssso..",
+		"..oo222222222sssoo..",
+		"....o2222222ssso....",
+		".....o22222ssso.....",
+		"......o222ssso......",
+		".......o2ssso.......",
+		"........osso........",
+		".........oo........."
+	])
+	var w: int = shape[0].length()
+	var h: int = shape.size()
+	var full_img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var empty_img := Image.create(w, h, false, Image.FORMAT_RGBA8)
 
-	var empty_map := {
-		"o": OUTLINE,
-		"r": Color("#39446e"),
-		"e": Color("#12162b"),
-		"d": Color("#0b0d19")
-	}
-	_draw_bitmap_icon(PackedStringArray([
-		"..oooo..oooo..",
-		".orrrroorrrro.",
-		"orreeeooeeeero",
-		"oreeeoeeeeedro",
-		"oreeoeeeeeedro",
-		"oreeoeoeeeedro",
-		".oreoeeeeddro.",
-		"..oroeeeeddo..",
-		"..oooeeddooo..",
-		"....oeddoo....",
-		".....oooo.....",
-		"......oo......"
-	]), empty_map).save_png("res://assets/ui/px_heart_empty.png")
+	# Crack path coordinates across empty socket
+	var crack := {}
+	for pt in [[10, 3], [9, 4], [9, 5], [8, 6], [9, 7], [10, 8], [10, 9], [9, 10], [9, 11], [10, 12]]:
+		crack[Vector2i(pt[0], pt[1])] = true
+
+	for y in range(h):
+		var row: String = shape[y]
+		for x in range(w):
+			var ch: String = row.substr(x, 1)
+			if ch == ".":
+				continue
+			if ch == "o":
+				full_img.set_pixel(x, y, outline_soft)
+				empty_img.set_pixel(x, y, outline_soft)
+			else:
+				# Full heart 6-stop silky coral-crimson gradient (pleasant, zero stark white)
+				var fcol: Color
+				if ch == "w":
+					fcol = Color("#ffd9e2")
+				elif ch == "1":
+					fcol = Color("#ff8da8")
+				elif ch == "s":
+					fcol = Color("#8f2242") if y < 11 else Color("#701833")
+				else:
+					if y <= 3:
+						fcol = Color("#ff7094")
+					elif y <= 7:
+						fcol = Color("#e3426b")
+					elif y <= 11:
+						fcol = Color("#c73056")
+					else:
+						fcol = Color("#a32447")
+				full_img.set_pixel(x, y, fcol)
+
+				# Empty heart socket: clearly visible muted steel-indigo rim + dimmed berry crack inside
+				var ecol: Color
+				if crack.has(Vector2i(x, y)):
+					ecol = Color("#120e1c")
+				elif crack.has(Vector2i(x - 1, y)):
+					ecol = Color("#54293d")
+				elif ch == "1":
+					ecol = Color("#56669c")
+				elif ch == "s":
+					ecol = Color("#1f2540")
+				elif y <= 3:
+					ecol = Color("#3b466e")
+				else:
+					ecol = Color("#242b47") if x < 10 else Color("#1c223b")
+				empty_img.set_pixel(x, y, ecol)
+
+	full_img.save_png("res://assets/ui/px_heart_full.png")
+	empty_img.save_png("res://assets/ui/px_heart_empty.png")
+
+	# Upright 14x22 Shotgun Shells (clear & nicely scaled for HUD Bottom-Left)
+	var sw_sh: int = 14
+	var sh_sh: int = 22
+	var sh_full := Image.create(sw_sh, sh_sh, false, Image.FORMAT_RGBA8)
+	var sh_empty := Image.create(sw_sh, sh_sh, false, Image.FORMAT_RGBA8)
+	for y in range(sh_sh):
+		for x in range(sw_sh):
+			# Tapered shell tip y=0..2, wider brass rim y=15..21
+			var x_min: int = 3
+			var x_max: int = 10
+			if y == 0 or y == 21:
+				x_min = 4; x_max = 9
+			elif y >= 15:
+				x_min = 2; x_max = 11
+			if x < x_min or x > x_max:
+				continue
+			if x == x_min or x == x_max or y == 0 or y == 21 or (y == 15 and (x == 2 or x == 11)):
+				sh_full.set_pixel(x, y, outline_soft)
+				sh_empty.set_pixel(x, y, outline_soft)
+			elif y == 15:
+				sh_full.set_pixel(x, y, outline_soft)
+				sh_empty.set_pixel(x, y, outline_soft)
+			elif y > 15:
+				# Golden-brass head (vs dull weathered bronze when spent)
+				var fc: Color = Color("#f5d182") if x <= 5 else (Color("#cf9342") if x <= 8 else Color("#8f5c24"))
+				if y == 16:
+					fc = Color("#fae0a2") if x <= 6 else fc
+				var ec: Color = Color("#70645a") if x <= 5 else Color("#4a413b")
+				sh_full.set_pixel(x, y, fc)
+				sh_empty.set_pixel(x, y, ec)
+			else:
+				# Cylindrical crimson shell hull (or dark smoked slate when spent)
+				var fc: Color
+				if x == 4 or x == 5:
+					fc = Color("#ff8299") if y <= 3 else Color("#eb546f")
+				elif x <= 8:
+					fc = Color("#cc3753") if y % 3 != 1 else Color("#bf2e4a")
+				else:
+					fc = Color("#8c2038")
+				if y == 1:
+					fc = Color("#ffa6b8")
+				var ec: Color = Color("#545e82") if x <= 5 else Color("#343b57")
+				sh_full.set_pixel(x, y, fc)
+				sh_empty.set_pixel(x, y, ec)
+	sh_full.save_png("res://assets/ui/px_shell_full.png")
+	sh_empty.save_png("res://assets/ui/px_shell_empty.png")
 
 
 

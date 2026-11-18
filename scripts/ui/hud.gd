@@ -7,6 +7,8 @@ class_name HUD
 
 const PIP_FULL_TEX: Texture2D = preload("res://assets/ui/px_heart_full.png")
 const PIP_EMPTY_TEX: Texture2D = preload("res://assets/ui/px_heart_empty.png")
+const SHELL_FULL_TEX: Texture2D = preload("res://assets/ui/px_shell_full.png")
+const SHELL_EMPTY_TEX: Texture2D = preload("res://assets/ui/px_shell_empty.png")
 const PALETTE = preload("res://scripts/ui/theme_palette.gd")
 
 @onready var root_control: Control = $RootControl
@@ -78,7 +80,7 @@ func _on_health_changed(hp: int, max_hp: int) -> void:
 		_hp_pip_2.texture = PIP_FULL_TEX if hp >= 2 else PIP_EMPTY_TEX
 
 	if hp < _last_hp and hp == 1 and _hp_pip_2:
-		_hp_pip_2.pivot_offset = Vector2(7.0, 6.0)
+		_hp_pip_2.pivot_offset = Vector2(10.0, 8.5)
 		_hp_pip_2.scale = Vector2(1.35, 1.35)
 		var tw: Tween = create_tween()
 		tw.tween_property(_hp_pip_2, "scale", Vector2.ONE, 0.16)
@@ -90,8 +92,12 @@ func _on_health_changed(hp: int, max_hp: int) -> void:
 		hp_label.modulate = Color.WHITE
 
 func _on_ammo_changed(current: int, _max_ammo: int) -> void:
-	shell_1.modulate = Color.WHITE if current >= 1 else Color(0.25, 0.25, 0.3, 0.45)
-	shell_2.modulate = Color.WHITE if current >= 2 else Color(0.25, 0.25, 0.3, 0.45)
+	if shell_1:
+		shell_1.texture = SHELL_FULL_TEX if current >= 1 else SHELL_EMPTY_TEX
+		shell_1.modulate = Color.WHITE
+	if shell_2:
+		shell_2.texture = SHELL_FULL_TEX if current >= 2 else SHELL_EMPTY_TEX
+		shell_2.modulate = Color.WHITE
 
 func _on_reload_started(duration: float) -> void:
 	_is_reloading = true
