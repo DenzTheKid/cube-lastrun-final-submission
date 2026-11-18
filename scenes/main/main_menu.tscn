@@ -280,6 +280,7 @@ centered = false
 custom_minimum_size = Vector2(172, 0)
 layout_mode = 2
 size_flags_vertical = 8
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_RecordCard")
 
 [node name="RecordBox" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/RecordPanel" unique_id=865766498]

@@ -68,10 +68,12 @@ func _process(delta: float) -> void:
 func setup_player(player: Player) -> void:
 	if player:
 		player.health_changed.connect(_on_health_changed)
+		_on_health_changed(player.current_hp, player.max_hp)
 		if player.shotgun:
 			player.shotgun.ammo_changed.connect(_on_ammo_changed)
 			player.shotgun.reload_started.connect(_on_reload_started)
 			player.shotgun.reload_finished.connect(_on_reload_finished)
+			_on_ammo_changed(player.shotgun.current_ammo, player.shotgun.max_ammo)
 
 func _on_score_updated(new_score: int) -> void:
 	score_label.text = "SCORE: %05d" % new_score
