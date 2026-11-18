@@ -11,6 +11,9 @@ class_name RearHorde
 
 var target_player: Player = null
 var current_x_offset: float = 220.0
+var _pushback_stun_timer: float = 0.0
+var _flash_timer: float = 0.0
+var _last_pushback_callout_usec: int = 0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -18,6 +21,8 @@ var current_x_offset: float = 220.0
 func _ready() -> void:
 	collision_layer = 32 # Layer 6: Horde
 	collision_mask = 2   # Layer 2: Player
+	monitoring = true
+	monitorable = true
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
 
@@ -31,6 +36,13 @@ func _physics_process(delta: float) -> void:
 	# Horde speed dynamically catches up based on difficulty and player progression
 	var diff: float = GameManager.difficulty_factor if GameManager else 1.0
 	var current_catchup_speed: float = (base_catchup_speed + (diff - 1.0) * 15.0)
+	if _pushback_stun_timer > 0.0:
+		_pushback_stun_timer -= delta
+		current_catchup_speed *= 0.40
+	if _flash_timer > 0.0:
+		_flash_timer -= delta
+		if _flash_timer <= 0.0 and sprite:
+			sprite.modulate = Color.WHITE
 
 	# If player is moving fast, offset increases toward max_safe_distance
 	# If player slows or stops, offset shrinks rapidly!
@@ -71,3 +83,30 @@ func _on_area_entered(area: Area2D) -> void:
 	var body: Node = area.get_parent()
 	if body is Player:
 		_catch_player()
+
+func take_damage(_amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
+	if not is_instance_valid(target_player) or target_player.is_dead or target_player.is_transforming:
+		return
+	if knockback_dir.x >= -0.2:
+		return
+
+	var min_horde_x: float = target_player.global_position.x - max_safe_distance
+	global_position.x = maxf(global_position.x - 10.0, min_horde_x)
+	_pushback_stun_timer = 0.55
+	_flash_timer = 0.09
+	if sprite:
+		sprite.modulate = Color(1.45, 0.65, 0.50, 1.0)
+
+	if AudioManager:
+		AudioManager.play_sfx("zombie_hit", 0.12)
+
+	var dist_to_player: float = target_player.global_position.x - global_position.x
+	var now: int = Time.get_ticks_usec()
+	if dist_to_player <= 165.0 and (now - _last_pushback_callout_usec) >= 1500000:
+		_last_pushback_callout_usec = now
+		if GameManager:
+			GameManager.add_bonus_score(50)
+		if GameFeel:
+			GameFeel.camera_shake(0.28)
+			GameFeel.spawn_voxel_debris(Vector2(global_position.x + 12.0, global_position.y), Color(0.75, 0.18, 0.22), 5)
+			GameFeel.spawn_floating_text(Vector2(target_player.global_position.x - 32.0, target_player.global_position.y - 24.0), "HORDE PUSHBACK! +50", Color(1.0, 0.58, 0.22), 1.06)

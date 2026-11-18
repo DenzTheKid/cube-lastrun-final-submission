@@ -57,9 +57,15 @@ func _setup_focus_neighbors() -> void:
 		menu_btn.focus_neighbor_top = restart_btn.get_path()
 	menu_btn.focus_neighbor_bottom = resume_btn.get_path()
 
+var _is_transitioning: bool = false
+
+func _exit_tree() -> void:
+	if get_tree().paused:
+		get_tree().paused = false
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and not event.is_echo():
-		if GameManager and GameManager.current_state == GameManager.State.PLAYING:
+		if GameManager and (GameManager.current_state == GameManager.State.PLAYING or GameManager.current_state == GameManager.State.PAUSED):
 			toggle_pause()
 
 func toggle_pause() -> void:
@@ -69,10 +75,20 @@ func toggle_pause() -> void:
 	if dimmer:
 		dimmer.visible = paused
 	if paused:
+		if GameManager:
+			GameManager.current_state = GameManager.State.PAUSED
+		Input.action_release("shoot")
+		Input.action_release("jump")
 		_sync_audio_toggles()
 		resume_btn.grab_focus()
 		if AudioManager:
 			AudioManager.play_sfx("ui_click")
+	else:
+		if GameManager:
+			GameManager.current_state = GameManager.State.PLAYING
+		if GameFeel:
+			GameFeel.reset_hitstop()
+		Engine.time_scale = 1.0
 
 func _sync_audio_toggles() -> void:
 	if AudioManager:
@@ -86,14 +102,22 @@ func _sync_audio_toggles() -> void:
 			UI_ANIMATOR._update_toggle_visual(music_check, bgm_on, music_check.has_focus())
 
 func _on_resume_pressed() -> void:
+	if _is_transitioning:
+		return
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
 	toggle_pause()
 
 func _on_restart_pressed() -> void:
+	if _is_transitioning:
+		return
+	_is_transitioning = true
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
 	get_tree().paused = false
+	if GameFeel:
+		GameFeel.reset_hitstop()
+	Engine.time_scale = 1.0
 	if GameManager:
 		GameManager.restart_game()
 
@@ -108,8 +132,14 @@ func _on_music_toggled(toggled_on: bool) -> void:
 		AudioManager.set_music_volume(1.0 if toggled_on else 0.0)
 
 func _on_menu_pressed() -> void:
+	if _is_transitioning:
+		return
+	_is_transitioning = true
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
 	get_tree().paused = false
+	if GameFeel:
+		GameFeel.reset_hitstop()
+	Engine.time_scale = 1.0
 	if GameManager:
 		GameManager.go_to_menu()

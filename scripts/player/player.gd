@@ -11,6 +11,7 @@ class_name Player
 # - Hit-flash shader, hitstop, and glowing tactical visor PointLight2D
 
 signal health_changed(current_hp: int, max_hp: int)
+signal shield_changed(current_shield: int, max_shield: int)
 signal died
 
 const HIT_FLASH_SHADER: Shader = preload("res://shaders/hit_flash.gdshader")
@@ -26,13 +27,25 @@ const SPARK_SCENE: PackedScene = preload("res://scenes/effects/bullet_spark.tscn
 @export var fast_fall_gravity_mult: float = 2.8
 @export var fast_fall_dive_speed: float = 340.0
 @export var max_upward_velocity: float = -540.0
+@export var external_momentum_decay: float = 7.0
+@export var max_forward_momentum: float = 240.0
+@export var max_backward_momentum: float = -110.0
+
+var _external_velocity_x: float = 0.0
 
 @export var max_hp: int = 2
 var current_hp: int = 2
+@export var max_shield: int = 1
+@export var shield_duration: float = 8.0
+var shield_hp: int = 0
+var shield_time_left: float = 0.0
 
 var is_dead: bool = false
 var is_transforming: bool = false
 var is_invulnerable: bool = false
+var was_recoil_launched: bool = false
+var _shield_anim_time: float = 0.0
+var _last_callout_usec: int = 0
 
 # Jump helpers
 var coyote_timer: float = 0.0
@@ -75,12 +88,18 @@ var _visor_light: PointLight2D = null
 @onready var shotgun: Shotgun = $Shotgun
 @onready var invuln_timer: Timer = $InvulnTimer
 
+func _exit_tree() -> void:
+	if GameManager and GameManager.skin_changed.is_connected(apply_equipped_skin):
+		GameManager.skin_changed.disconnect(apply_equipped_skin)
+
 func _ready() -> void:
 	velocity = Vector2.ZERO
 	_wait_shoot_release = _is_physical_shoot_held()
 	_wait_jump_release = _is_physical_jump_held()
 	current_hp = max_hp
+	shield_hp = 0
 	health_changed.emit(current_hp, max_hp)
+	shield_changed.emit(shield_hp, max_shield)
 
 	_setup_visual_enhancements()
 
@@ -139,6 +158,28 @@ func _setup_visual_enhancements() -> void:
 	_visor_light.position = Vector2(4.0, -2.0)
 	add_child(_visor_light)
 
+	if GameManager:
+		if not GameManager.skin_changed.is_connected(apply_equipped_skin):
+			GameManager.skin_changed.connect(apply_equipped_skin)
+		apply_equipped_skin()
+
+func apply_equipped_skin(_skin_id: String = "") -> void:
+	if is_dead or is_transforming or not GameManager:
+		return
+	var data: Dictionary = GameManager.get_skin_data(_skin_id)
+	GameManager.apply_skin_to_material(_shader_mat, data.get("id", "crimson"), false)
+	var light_col: Color = data.get("light", Color(0.25, 0.92, 1.0, 1.0))
+	if _shader_mat:
+		_shader_mat.set_shader_parameter("rim_color", light_col)
+	if _scarf_line and _scarf_line.gradient:
+		var scarf_col: Color = data.get("scarf", Color(0.92, 0.18, 0.25, 1.0))
+		var tip_col: Color = data.get("band_hi", Color(1.0, 0.42, 0.32))
+		tip_col.a = 0.85
+		_scarf_line.gradient.set_color(0, scarf_col)
+		_scarf_line.gradient.set_color(1, tip_col)
+	if _visor_light:
+		_visor_light.color = light_col
+
 func _physics_process(delta: float) -> void:
 	if is_dead or is_transforming:
 		if not is_on_floor():
@@ -149,13 +190,17 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 		return
 
-	# Auto-running speed scaled smoothly by difficulty
+	# Auto-running base speed scaled smoothly by difficulty
 	var speed_mult: float = GameManager.difficulty_factor if GameManager else 1.0
-	velocity.x = base_run_speed * speed_mult
+	var base_run_x: float = base_run_speed * speed_mult
 
-	# Distance tracking
-	if GameManager:
-		GameManager.add_distance(velocity.x * delta * 0.05)
+	# Smooth decay/friction on external horizontal momentum (higher friction on ground for punchy responsiveness)
+	var friction_rate: float = external_momentum_decay if is_on_floor() else (external_momentum_decay * 0.72)
+	_external_velocity_x = lerpf(_external_velocity_x, 0.0, 1.0 - exp(-friction_rate * delta))
+	if absf(_external_velocity_x) < 0.8:
+		_external_velocity_x = 0.0
+
+	velocity.x = base_run_x + _external_velocity_x
 
 	# Gravity & Ground Contact
 	var is_fast_falling: bool = false
@@ -179,6 +224,7 @@ func _physics_process(delta: float) -> void:
 			_visual_scale = _visual_scale.lerp(Vector2(1.08, 0.92), 1.0 - exp(-12.0 * delta))
 	else:
 		_fast_fall_burst_used = false
+		was_recoil_launched = false
 		coyote_timer = COYOTE_TIME
 		if not _was_on_floor:
 			# Landed impact squash + dust burst!
@@ -239,9 +285,33 @@ func _physics_process(delta: float) -> void:
 		global_position.y = MIN_CEILING_Y
 		if velocity.y < 0.0:
 			velocity.y = 0.0
+
+	# Collision stability: absorb external horizontal momentum when obstructed by walls
+	if is_on_wall():
+		var wall_norm: Vector2 = get_wall_normal()
+		if wall_norm.x < -0.5 and _external_velocity_x > 0.0:
+			_external_velocity_x = 0.0
+		elif wall_norm.x > 0.5 and _external_velocity_x < 0.0:
+			_external_velocity_x = 0.0
+
+	# Correct distance tracking based on actual forward motion
+	var forward_motion: float = maxf(0.0, get_real_velocity().x) if is_on_wall() else maxf(0.0, velocity.x)
+	if GameManager:
+		GameManager.add_distance(forward_motion * delta * 0.05)
+
 	_update_animation(delta)
 	_update_juice_visuals(delta, speed_mult)
-	if shotgun and shotgun.is_reloading:
+	if shield_hp > 0:
+		_shield_anim_time += delta
+		shield_time_left -= delta
+		if shield_time_left <= 0.0:
+			shield_hp = 0
+			shield_time_left = 0.0
+			shield_changed.emit(shield_hp, max_shield)
+			if GameFeel:
+				GameFeel.spawn_floating_text(global_position + Vector2(0, -16), "SHIELD FADED", Color(0.55, 0.72, 0.92), 0.95)
+		queue_redraw()
+	elif shotgun and shotgun.is_reloading:
 		queue_redraw()
 
 func _is_physical_shoot_held() -> bool:
@@ -257,11 +327,10 @@ func _is_physical_jump_held() -> bool:
 		Input.is_action_pressed("jump")
 		or Input.is_key_pressed(KEY_SPACE)
 		or Input.is_key_pressed(KEY_W)
-		or Input.is_key_pressed(KEY_UP)
 	)
 
 func _is_fast_fall_held() -> bool:
-	return Input.is_action_pressed("fast_fall") or Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN)
+	return Input.is_action_pressed("fast_fall") or Input.is_key_pressed(KEY_S)
 
 func _perform_jump() -> void:
 	velocity.y = jump_velocity
@@ -293,6 +362,8 @@ func _on_shotgun_recoil(force: Vector2) -> void:
 	# Downward shot -> Upward boost
 	if force.y < 0.0:
 		_fast_fall_burst_used = false
+		if force.y <= -80.0:
+			was_recoil_launched = true
 		if velocity.y > 0.0:
 			velocity.y = 0.0
 		velocity.y += force.y
@@ -308,8 +379,11 @@ func _on_shotgun_recoil(force: Vector2) -> void:
 	else:
 		_visual_scale = Vector2(0.88, 1.12)
 
-	# Apply horizontal impulse
-	velocity.x += force.x
+	# Apply horizontal impulse into external momentum with stacking bounds
+	_external_velocity_x += force.x
+	_external_velocity_x = clampf(_external_velocity_x, max_backward_momentum, max_forward_momentum)
+	var speed_mult: float = GameManager.difficulty_factor if GameManager else 1.0
+	velocity.x = (base_run_speed * speed_mult) + _external_velocity_x
 
 func _update_animation(delta: float) -> void:
 	_anim_timer += delta
@@ -357,6 +431,20 @@ func _update_juice_visuals(delta: float, speed_mult: float) -> void:
 		_scarf_line.points = PackedVector2Array(_scarf_points)
 
 func _draw() -> void:
+	# Tactical Blue Energy Shield Aura around Cube Survivor
+	if shield_hp > 0 and not is_dead and not is_transforming:
+		var flicker: float = 1.0
+		if shield_time_left <= 2.0:
+			flicker = 0.30 + 0.70 * (0.5 + 0.5 * sin(_shield_anim_time * 24.0))
+		var pulse: float = 0.5 + 0.5 * sin(_shield_anim_time * 5.2)
+		var ring_r: float = 16.5 + 0.6 * pulse
+		var center := Vector2(0.0, 2.0)
+		draw_circle(center, ring_r - 1.0, Color(0.18, 0.65, 1.0, (0.11 + 0.06 * pulse) * flicker))
+		draw_arc(center, ring_r, 0.0, TAU, 28, Color(0.28, 0.80, 1.0, (0.42 + 0.18 * pulse) * flicker), 1.2)
+		var base_ang: float = _shield_anim_time * 2.6
+		draw_arc(center, ring_r + 1.0, base_ang, base_ang + 1.35, 12, Color(0.62, 0.96, 1.0, 0.88 * flicker), 1.6)
+		draw_arc(center, ring_r + 1.0, base_ang + PI, base_ang + PI + 1.35, 12, Color(0.62, 0.96, 1.0, 0.88 * flicker), 1.6)
+
 	# Diegetic Reload Progress Bar directly under the Cube Survivor
 	if shotgun and shotgun.is_reloading and not is_dead and not is_transforming:
 		var pct: float = clampf(shotgun.reload_timer / maxf(shotgun.reload_time, 0.01), 0.0, 1.0)
@@ -370,6 +458,42 @@ func _draw() -> void:
 
 func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 	if is_dead or is_transforming or is_invulnerable:
+		return
+
+	if shield_hp > 0:
+		shield_hp = maxi(shield_hp - 1, 0)
+		shield_time_left = 0.0
+		shield_changed.emit(shield_hp, max_shield)
+		is_invulnerable = true
+		invuln_timer.start(0.95)
+		if AudioManager:
+			AudioManager.play_sfx("impact_metal", 0.06)
+			AudioManager.play_sfx("player_hurt", 0.08)
+		if GameFeel:
+			GameFeel.hitstop(0.04, 0.06)
+			GameFeel.camera_shake(0.55)
+			GameFeel.spawn_shockwave_ring(global_position, Color(0.32, 0.86, 1.0, 0.95))
+			GameFeel.spawn_voxel_debris(global_position, Color(0.32, 0.82, 1.0), 8)
+			GameFeel.spawn_floating_text(global_position + Vector2(0, -16), "SHIELD BLOCK!", Color(0.42, 0.92, 1.0), 1.15)
+		if _shader_mat:
+			_shader_mat.set_shader_parameter("flash_color", Color(0.45, 0.92, 1.0, 1.0))
+			_shader_mat.set_shader_parameter("flash_modifier", 1.0)
+			var tw_sh: Tween = create_tween()
+			tw_sh.tween_method(func(v: float):
+				if is_instance_valid(self) and _shader_mat:
+					_shader_mat.set_shader_parameter("flash_modifier", v)
+					if v <= 0.02:
+						_shader_mat.set_shader_parameter("flash_color", Color.WHITE)
+			, 1.0, 0.0, 0.16)
+		_visual_scale = Vector2(1.25, 0.78)
+		if knockback_dir != Vector2.ZERO:
+			var kb_dir: Vector2 = knockback_dir.normalized()
+			_external_velocity_x += kb_dir.x * 115.0
+			_external_velocity_x = clampf(_external_velocity_x, max_backward_momentum, max_forward_momentum)
+			var speed_mult: float = GameManager.difficulty_factor if GameManager else 1.0
+			velocity.x = (base_run_speed * speed_mult) + _external_velocity_x
+			velocity.y += kb_dir.y * 115.0
+		queue_redraw()
 		return
 
 	current_hp -= amount
@@ -408,7 +532,12 @@ func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 		invuln_timer.start(0.85)
 		sprite.modulate = Color(1.0, 0.35, 0.35, 0.85)
 		if knockback_dir != Vector2.ZERO:
-			velocity += knockback_dir.normalized() * 140.0
+			var kb_dir: Vector2 = knockback_dir.normalized()
+			_external_velocity_x += kb_dir.x * 140.0
+			_external_velocity_x = clampf(_external_velocity_x, max_backward_momentum, max_forward_momentum)
+			var speed_mult: float = GameManager.difficulty_factor if GameManager else 1.0
+			velocity.x = (base_run_speed * speed_mult) + _external_velocity_x
+			velocity.y += kb_dir.y * 140.0
 
 func heal(amount: int = 1) -> bool:
 	if is_dead or is_transforming or amount <= 0:
@@ -439,16 +568,76 @@ func heal(amount: int = 1) -> bool:
 			if is_instance_valid(self) and _shader_mat:
 				_shader_mat.set_shader_parameter("rim_strength", v)
 				if v <= 0.36:
-					_shader_mat.set_shader_parameter("rim_color", Color(0.45, 0.95, 1.0, 1.0))
+					var rest_col: Color = Color(0.45, 0.95, 1.0, 1.0)
+					if GameManager:
+						rest_col = GameManager.get_skin_data().get("light", rest_col)
+					_shader_mat.set_shader_parameter("rim_color", rest_col)
 		, 0.75, 0.35, 0.35)
 
 	_visual_scale = Vector2(0.86, 1.20)
 	return gained > 0
 
+func grant_shield(amount: int = 1) -> bool:
+	if is_dead or is_transforming or amount <= 0:
+		return false
+
+	var prev_shield: int = shield_hp
+	shield_hp = mini(shield_hp + amount, max_shield)
+	shield_time_left = shield_duration
+	var gained: int = shield_hp - prev_shield
+	shield_changed.emit(shield_hp, max_shield)
+
+	if AudioManager:
+		AudioManager.play_sfx("heal", 0.05)
+
+	if GameFeel:
+		if gained > 0:
+			GameFeel.spawn_floating_text(global_position + Vector2(0, -18), "SHIELD UP!", Color(0.36, 0.88, 1.0), 1.12)
+		else:
+			if GameManager:
+				GameManager.add_bonus_score(50)
+			GameFeel.spawn_floating_text(global_position + Vector2(0, -18), "SHIELD +50!", Color(0.55, 0.94, 1.0), 1.0)
+		GameFeel.spawn_shockwave_ring(global_position, Color(0.32, 0.86, 1.0, 0.90))
+
+	if _shader_mat:
+		_shader_mat.set_shader_parameter("rim_color", Color(0.34, 0.86, 1.0, 1.0))
+		_shader_mat.set_shader_parameter("rim_strength", 0.85)
+		var tw: Tween = create_tween()
+		tw.tween_method(func(v: float):
+			if is_instance_valid(self) and _shader_mat:
+				_shader_mat.set_shader_parameter("rim_strength", v)
+				if v <= 0.36:
+					var rest_col: Color = Color(0.45, 0.95, 1.0, 1.0)
+					if GameManager:
+						rest_col = GameManager.get_skin_data().get("light", rest_col)
+					_shader_mat.set_shader_parameter("rim_color", rest_col)
+		, 0.85, 0.35, 0.35)
+
+	_visual_scale = Vector2(0.88, 1.18)
+	queue_redraw()
+	return gained > 0
+
+func can_trigger_style_callout(cooldown_sec: float = 0.9) -> bool:
+	var now: int = Time.get_ticks_usec()
+	if now - _last_callout_usec < int(cooldown_sec * 1000000.0):
+		return false
+	_last_callout_usec = now
+	return true
+
+func _disable_skin_swap() -> void:
+	if _shader_mat:
+		_shader_mat.set_shader_parameter("skin_swap_enabled", 0.0)
+		_shader_mat.set_shader_parameter("visor_swap_enabled", 0.0)
+
 func die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	shield_hp = 0
+	shield_time_left = 0.0
+	shield_changed.emit(shield_hp, max_shield)
+	_disable_skin_swap()
+	_external_velocity_x = 0.0
 	velocity = Vector2.ZERO
 	shotgun.visible = false
 	if _scarf_line:
@@ -469,6 +658,11 @@ func trigger_horde_catch() -> void:
 	if is_dead or is_transforming:
 		return
 	is_transforming = true
+	shield_hp = 0
+	shield_time_left = 0.0
+	shield_changed.emit(shield_hp, max_shield)
+	_disable_skin_swap()
+	_external_velocity_x = 0.0
 	velocity = Vector2.ZERO
 	shotgun.visible = false
 	if _scarf_line:

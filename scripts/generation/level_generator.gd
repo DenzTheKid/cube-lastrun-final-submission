@@ -25,6 +25,7 @@ const WRECKED_CAR_SCENE: PackedScene = preload("res://scenes/obstacles/wrecked_c
 const PLATFORM_SCENE: PackedScene = preload("res://scenes/obstacles/platform.tscn")
 const PIT_SCENE: PackedScene = preload("res://scenes/obstacles/pit_killzone.tscn")
 const MEDKIT_SCENE: PackedScene = preload("res://scenes/pickups/medkit.tscn")
+const SHIELD_SCENE: PackedScene = preload("res://scenes/pickups/shield_pickup.tscn")
 
 const WALKER_SCENE: PackedScene = preload("res://scenes/enemies/zombie_walker.tscn")
 const RUNNER_SCENE: PackedScene = preload("res://scenes/enemies/zombie_runner.tscn")
@@ -66,6 +67,7 @@ var _last_pattern: PatternType = PatternType.FLAT_START
 var _chunks_spawned: int = 0
 var _consecutive_hazard_chunks: int = 0
 var _chunks_since_medkit: int = 0
+var _chunks_since_shield: int = 0
 
 func setup(player: Player) -> void:
 	target_player = player
@@ -159,8 +161,19 @@ func _choose_fair_pattern() -> PatternType:
 		PatternType.THE_GAUNTLET
 	]
 
+	var last_was_pit: bool = _last_pattern in [
+		PatternType.PIT_STANDARD,
+		PatternType.PLATFORM_OVER_PIT,
+		PatternType.RECOIL_DOUBLE_VAULT
+	]
+	var candidate_is_pit: bool = candidate in [
+		PatternType.PIT_STANDARD,
+		PatternType.PLATFORM_OVER_PIT,
+		PatternType.RECOIL_DOUBLE_VAULT
+	]
+
 	if is_severe_hazard:
-		if _consecutive_hazard_chunks >= 1 or _last_pattern == candidate:
+		if _consecutive_hazard_chunks >= 1 or _last_pattern == candidate or (last_was_pit and candidate_is_pit):
 			# Substitute with a breather or standard encounter
 			candidate = [PatternType.WALKER_LONE, PatternType.PLATFORM_HIGHWAY, PatternType.SPIKE_HURDLE].pick_random()
 			_consecutive_hazard_chunks = 0
@@ -168,12 +181,18 @@ func _choose_fair_pattern() -> PatternType:
 			_consecutive_hazard_chunks += 1
 	else:
 		_consecutive_hazard_chunks = 0
+		# Prevent immediate duplicate repeats of complex encounters to preserve variety
+		if candidate == _last_pattern and candidate != PatternType.WALKER_LONE:
+			var breathers: Array[PatternType] = [PatternType.WALKER_LONE, PatternType.PLATFORM_HIGHWAY, PatternType.SPIKE_HURDLE, PatternType.CAR_WRECK_SOLO]
+			candidate = breathers.pick_random()
 
+	_last_pattern = candidate
 	return candidate
 
 func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 	if pattern != PatternType.FLAT_START:
 		_chunks_since_medkit += 1
+		_chunks_since_shield += 1
 
 	match pattern:
 		PatternType.FLAT_START:
@@ -185,164 +204,181 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 
 		PatternType.WALKER_TRIO:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_enemy(chunk, WALKER_SCENE, 160.0, ground_y - 12.0)
-			_spawn_enemy(chunk, WALKER_SCENE, 240.0, ground_y - 12.0)
-			_spawn_enemy(chunk, WALKER_SCENE, 310.0, ground_y - 12.0)
+			_spawn_enemy(chunk, WALKER_SCENE, 150.0, ground_y - 12.0)
+			_spawn_enemy(chunk, WALKER_SCENE, 215.0, ground_y - 12.0)
+			_spawn_enemy(chunk, WALKER_SCENE, 280.0, ground_y - 12.0)
 
 		PatternType.RUNNER_RUSH:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_enemy(chunk, RUNNER_SCENE, 320.0, ground_y - 12.0)
+			_spawn_enemy(chunk, RUNNER_SCENE, 290.0, ground_y - 12.0)
 
 		PatternType.RUNNER_TWIN:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_enemy(chunk, RUNNER_SCENE, 200.0, ground_y - 12.0)
-			_spawn_enemy(chunk, RUNNER_SCENE, 330.0, ground_y - 12.0)
+			_spawn_enemy(chunk, RUNNER_SCENE, 180.0, ground_y - 12.0)
+			_spawn_enemy(chunk, RUNNER_SCENE, 280.0, ground_y - 12.0)
 
 		PatternType.SPIKE_HURDLE:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, SPIKES_SCENE, 190.0, ground_y)
+			_spawn_hazard(chunk, SPIKES_SCENE, 170.0, ground_y)
 			if randf() > 0.4:
-				_spawn_enemy(chunk, WALKER_SCENE, 320.0, ground_y - 12.0)
+				_spawn_enemy(chunk, WALKER_SCENE, 290.0, ground_y - 12.0)
 
 		PatternType.SPIKE_DOUBLE:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, SPIKES_SCENE, 160.0, ground_y)
-			_spawn_hazard(chunk, SPIKES_SCENE, 210.0, ground_y)
+			_spawn_hazard(chunk, SPIKES_SCENE, 155.0, ground_y)
+			_spawn_hazard(chunk, SPIKES_SCENE, 195.0, ground_y)
 
 		PatternType.PIT_STANDARD:
-			# 136px runway -> 72px pit -> 176px landing runway
-			chunk.add_ground_segment(0.0, 136.0)
-			_spawn_hazard(chunk, PIT_SCENE, 172.0, ground_y + 40.0)
-			chunk.add_ground_segment(208.0, 176.0)
+			# 144px runway (9 tiles) -> 80px pit (5 tiles) -> 160px landing runway (10 tiles)
+			chunk.add_ground_segment(0.0, 144.0)
+			_spawn_hazard(chunk, PIT_SCENE, 184.0, ground_y + 40.0)
+			chunk.add_ground_segment(224.0, 160.0)
 
 		PatternType.PLATFORM_HIGHWAY:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, SPIKES_SCENE, 180.0, ground_y)
-			_spawn_platform(chunk, 180.0, ground_y - 50.0)
-			_spawn_enemy(chunk, WALKER_SCENE, 310.0, ground_y - 12.0)
+			_spawn_hazard(chunk, SPIKES_SCENE, 170.0, ground_y)
+			_spawn_platform(chunk, 170.0, ground_y - 48.0)
+			_spawn_enemy(chunk, WALKER_SCENE, 290.0, ground_y - 12.0)
 
 		PatternType.PLATFORM_OVER_PIT:
-			# Wide 100px pit with a solid platform bridging across
-			chunk.add_ground_segment(0.0, 120.0)
-			_spawn_hazard(chunk, PIT_SCENE, 170.0, ground_y + 40.0)
-			_spawn_platform(chunk, 170.0, ground_y - 45.0)
-			chunk.add_ground_segment(220.0, 164.0)
+			# 144px runway (9 tiles) -> 80px pit bridged by solid platform -> 160px landing runway
+			chunk.add_ground_segment(0.0, 144.0)
+			_spawn_hazard(chunk, PIT_SCENE, 184.0, ground_y + 40.0)
+			_spawn_platform(chunk, 184.0, ground_y - 46.0)
+			chunk.add_ground_segment(224.0, 160.0)
 
 		PatternType.BARRICADE_SOLO:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, BARRICADE_SCENE, 180.0, ground_y)
+			_spawn_hazard(chunk, BARRICADE_SCENE, 170.0, ground_y)
 
 		PatternType.BARRICADE_WALKER:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, BARRICADE_SCENE, 160.0, ground_y)
-			_spawn_enemy(chunk, WALKER_SCENE, 260.0, ground_y - 12.0)
+			_spawn_hazard(chunk, BARRICADE_SCENE, 140.0, ground_y)
+			_spawn_enemy(chunk, WALKER_SCENE, 280.0, ground_y - 12.0)
 
 		PatternType.BRUTE_TANK:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_enemy(chunk, BRUTE_SCENE, 270.0, ground_y - 16.0)
+			_spawn_enemy(chunk, BRUTE_SCENE, 260.0, ground_y - 16.0)
 
 		PatternType.BARRICADE_BRUTE:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, BARRICADE_SCENE, 140.0, ground_y)
+			_spawn_hazard(chunk, BARRICADE_SCENE, 120.0, ground_y)
+			_spawn_platform(chunk, 190.0, ground_y - 48.0)
 			_spawn_enemy(chunk, BRUTE_SCENE, 270.0, ground_y - 16.0)
 
 		PatternType.MUTANT_AMBUSH:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, SPIKES_SCENE, 150.0, ground_y)
-			_spawn_enemy(chunk, MUTANT_SCENE, 280.0, ground_y - 14.0)
+			_spawn_hazard(chunk, SPIKES_SCENE, 140.0, ground_y)
+			_spawn_enemy(chunk, MUTANT_SCENE, 260.0, ground_y - 14.0)
 
 		PatternType.MUTANT_AND_SPIKES:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, SPIKES_SCENE, 140.0, ground_y)
-			_spawn_enemy(chunk, MUTANT_SCENE, 240.0, ground_y - 14.0)
-			_spawn_hazard(chunk, SPIKES_SCENE, 320.0, ground_y)
+			_spawn_hazard(chunk, SPIKES_SCENE, 120.0, ground_y)
+			_spawn_platform(chunk, 190.0, ground_y - 48.0)
+			_spawn_enemy(chunk, MUTANT_SCENE, 210.0, ground_y - 14.0)
+			_spawn_hazard(chunk, SPIKES_SCENE, 270.0, ground_y)
 
 		PatternType.RECOIL_DOUBLE_VAULT:
-			# High barricade followed by pit: perfect test for diagonal/downward recoil boost
-			chunk.add_ground_segment(0.0, 130.0)
-			_spawn_hazard(chunk, BARRICADE_SCENE, 110.0, ground_y)
-			_spawn_hazard(chunk, PIT_SCENE, 175.0, ground_y + 40.0)
-			chunk.add_ground_segment(220.0, 164.0)
-			_spawn_platform(chunk, 175.0, ground_y - 65.0)
+			# High barricade with 42px recovery runway, followed by pit bridged by elevated platform
+			# Viable via normal jump + platform or high diagonal/downward recoil boost
+			chunk.add_ground_segment(0.0, 144.0)
+			_spawn_hazard(chunk, BARRICADE_SCENE, 88.0, ground_y)
+			_spawn_hazard(chunk, PIT_SCENE, 184.0, ground_y + 40.0)
+			_spawn_platform(chunk, 184.0, ground_y - 46.0)
+			chunk.add_ground_segment(224.0, 160.0)
 
 		PatternType.PLATFORM_CASCADE:
 			# Step 1: Low platform -> Step 2: High platform
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, SPIKES_SCENE, 160.0, ground_y)
-			_spawn_hazard(chunk, SPIKES_SCENE, 240.0, ground_y)
-			_spawn_platform(chunk, 150.0, ground_y - 45.0)
-			_spawn_platform(chunk, 250.0, ground_y - 75.0)
-			_spawn_enemy(chunk, WALKER_SCENE, 340.0, ground_y - 12.0)
+			_spawn_hazard(chunk, SPIKES_SCENE, 130.0, ground_y)
+			_spawn_platform(chunk, 130.0, ground_y - 42.0)
+			_spawn_hazard(chunk, SPIKES_SCENE, 210.0, ground_y)
+			_spawn_platform(chunk, 210.0, ground_y - 68.0)
+			_spawn_enemy(chunk, WALKER_SCENE, 290.0, ground_y - 12.0)
 
 		PatternType.RUNNER_AMBUSH_HIGH:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_platform(chunk, 160.0, ground_y - 50.0)
-			_spawn_enemy(chunk, RUNNER_SCENE, 180.0, ground_y - 62.0)
-			_spawn_hazard(chunk, SPIKES_SCENE, 270.0, ground_y)
+			_spawn_platform(chunk, 160.0, ground_y - 48.0)
+			_spawn_enemy(chunk, RUNNER_SCENE, 170.0, ground_y - 60.0)
+			_spawn_hazard(chunk, SPIKES_SCENE, 260.0, ground_y)
 
 		PatternType.THE_GAUNTLET:
 			# High difficulty crescendo: Spikes + Brute + overhead rescue platform
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_hazard(chunk, SPIKES_SCENE, 130.0, ground_y)
-			_spawn_platform(chunk, 180.0, ground_y - 60.0)
+			_spawn_hazard(chunk, SPIKES_SCENE, 120.0, ground_y)
+			_spawn_platform(chunk, 180.0, ground_y - 50.0)
 			_spawn_enemy(chunk, BRUTE_SCENE, 270.0, ground_y - 16.0)
 
 		PatternType.CAR_WRECK_SOLO:
 			chunk.add_ground_segment(0.0, chunk_width)
 			var variant: String = ["sedan", "police", "ambulance"].pick_random()
-			_spawn_vehicle(chunk, variant, 180.0, ground_y)
+			_spawn_vehicle(chunk, variant, 170.0, ground_y)
 			if variant == "ambulance" and _can_spawn_medkit(true):
 				if randf() < 0.5:
-					_spawn_pickup(chunk, MEDKIT_SCENE, 232.0, ground_y - 4.0)
+					_spawn_pickup(chunk, MEDKIT_SCENE, 220.0, ground_y - 4.0)
 				else:
-					_spawn_pickup(chunk, MEDKIT_SCENE, 190.0, ground_y - 36.0)
+					_spawn_pickup(chunk, MEDKIT_SCENE, 170.0, ground_y - 34.0)
 				_chunks_since_medkit = 0
 
 		PatternType.CAR_WRECK_MEDKIT:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_vehicle(chunk, "ambulance", 180.0, ground_y)
+			_spawn_vehicle(chunk, "ambulance", 170.0, ground_y)
 			if _can_spawn_medkit(true):
-				_spawn_pickup(chunk, MEDKIT_SCENE, 190.0, ground_y - 36.0)
+				_spawn_pickup(chunk, MEDKIT_SCENE, 170.0, ground_y - 34.0)
 				_chunks_since_medkit = 0
 
 		PatternType.CAR_WRECK_WALKER:
 			chunk.add_ground_segment(0.0, chunk_width)
 			var variant: String = ["sedan", "police", "ambulance"].pick_random()
-			_spawn_vehicle(chunk, variant, 150.0, ground_y)
-			_spawn_enemy(chunk, WALKER_SCENE, 315.0, ground_y - 12.0)
+			_spawn_vehicle(chunk, variant, 140.0, ground_y)
+			_spawn_enemy(chunk, WALKER_SCENE, 280.0, ground_y - 12.0)
 			if variant == "ambulance" and _can_spawn_medkit(true):
-				_spawn_pickup(chunk, MEDKIT_SCENE, 160.0, ground_y - 36.0)
+				_spawn_pickup(chunk, MEDKIT_SCENE, 140.0, ground_y - 34.0)
 				_chunks_since_medkit = 0
 
 		PatternType.CAR_WRECK_SPIKES:
 			chunk.add_ground_segment(0.0, chunk_width)
 			var variant: String = ["sedan", "ambulance"].pick_random()
-			_spawn_vehicle(chunk, variant, 140.0, ground_y)
-			_spawn_platform(chunk, 235.0, ground_y - 52.0)
-			_spawn_hazard(chunk, SPIKES_SCENE, 270.0, ground_y)
+			_spawn_vehicle(chunk, variant, 130.0, ground_y)
+			_spawn_hazard(chunk, SPIKES_SCENE, 240.0, ground_y)
+			_spawn_platform(chunk, 240.0, ground_y - 48.0)
 			if variant == "ambulance" and _can_spawn_medkit(true):
-				_spawn_pickup(chunk, MEDKIT_SCENE, 235.0, ground_y - 60.0)
+				_spawn_pickup(chunk, MEDKIT_SCENE, 240.0, ground_y - 56.0)
 				_chunks_since_medkit = 0
 
 		PatternType.POLICE_ROADBLOCK:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_vehicle(chunk, "police", 140.0, ground_y)
-			_spawn_hazard(chunk, BARRICADE_SCENE, 265.0, ground_y)
+			_spawn_vehicle(chunk, "police", 120.0, ground_y)
+			_spawn_hazard(chunk, BARRICADE_SCENE, 220.0, ground_y)
 			if randf() < 0.65:
-				_spawn_enemy(chunk, WALKER_SCENE, 335.0, ground_y - 12.0)
+				_spawn_enemy(chunk, WALKER_SCENE, 290.0, ground_y - 12.0)
 
 		PatternType.BUS_WRECK_STOP:
 			chunk.add_ground_segment(0.0, chunk_width)
-			_spawn_vehicle(chunk, "bus", 175.0, ground_y)
+			_spawn_vehicle(chunk, "bus", 150.0, ground_y)
 			if randf() < 0.5:
-				_spawn_enemy(chunk, WALKER_SCENE, 320.0, ground_y - 12.0)
+				_spawn_enemy(chunk, WALKER_SCENE, 280.0, ground_y - 12.0)
 
-	# Rare fallback Medkit drop only when not already rolling an Ambulance medkit drop
+	# Rare fallback Medkit drop only when not already rolling an Ambulance medkit drop;
+	# otherwise consider spawning a Tactical Shield pickup on a clean safe spot.
 	if not (pattern in [PatternType.FLAT_START, PatternType.CAR_WRECK_MEDKIT]):
 		if _can_spawn_medkit(false):
 			var spot: Vector2 = _get_safe_medkit_spot(pattern)
 			_spawn_pickup(chunk, MEDKIT_SCENE, spot.x, spot.y)
 			_chunks_since_medkit = 0
+		elif _chunks_since_medkit > 0 and _can_spawn_shield():
+			var s_spot: Vector2 = _get_safe_medkit_spot(pattern)
+			_spawn_pickup(chunk, SHIELD_SCENE, s_spot.x, s_spot.y)
+			_chunks_since_shield = 0
+
+func _can_spawn_shield() -> bool:
+	if _chunks_spawned < 6:
+		return false
+	var has_shield: bool = is_instance_valid(target_player) and target_player.shield_hp > 0
+	var cooldown: int = 18 if has_shield else 12
+	if _chunks_since_shield < cooldown:
+		return false
+	return randf() < 0.25 or _chunks_since_shield >= cooldown + 4
 
 func _can_spawn_medkit(is_ambulance: bool) -> bool:
 	var is_injured: bool = is_instance_valid(target_player) and target_player.current_hp < target_player.max_hp
@@ -357,21 +393,27 @@ func _can_spawn_medkit(is_ambulance: bool) -> bool:
 func _get_safe_medkit_spot(pattern: PatternType) -> Vector2:
 	match pattern:
 		PatternType.PIT_STANDARD:
-			return Vector2(280.0, ground_y - 2.0)
+			return Vector2(280.0, ground_y - 4.0)
 		PatternType.PLATFORM_OVER_PIT:
-			return Vector2(170.0, ground_y - 53.0)
-		PatternType.PLATFORM_HIGHWAY, PatternType.CAR_WRECK_SPIKES:
-			return Vector2(180.0 if pattern == PatternType.PLATFORM_HIGHWAY else 235.0, ground_y - 58.0)
+			return Vector2(184.0, ground_y - 54.0)
+		PatternType.PLATFORM_HIGHWAY:
+			return Vector2(170.0, ground_y - 56.0)
+		PatternType.CAR_WRECK_SPIKES:
+			return Vector2(240.0, ground_y - 56.0)
 		PatternType.RECOIL_DOUBLE_VAULT:
-			return Vector2(175.0, ground_y - 73.0)
+			return Vector2(184.0, ground_y - 54.0)
 		PatternType.PLATFORM_CASCADE:
-			return Vector2(250.0, ground_y - 83.0)
+			return Vector2(210.0, ground_y - 76.0)
 		PatternType.CAR_WRECK_SOLO, PatternType.CAR_WRECK_WALKER:
-			return Vector2(190.0 if pattern == PatternType.CAR_WRECK_SOLO else 160.0, ground_y - 36.0)
+			return Vector2(170.0 if pattern == PatternType.CAR_WRECK_SOLO else 140.0, ground_y - 34.0)
 		PatternType.BUS_WRECK_STOP:
-			return Vector2(175.0, ground_y - 38.0)
+			return Vector2(150.0, ground_y - 36.0)
 		PatternType.POLICE_ROADBLOCK:
-			return Vector2(200.0, ground_y - 4.0)
+			return Vector2(170.0, ground_y - 4.0)
+		PatternType.BARRICADE_BRUTE:
+			return Vector2(190.0, ground_y - 56.0)
+		PatternType.THE_GAUNTLET:
+			return Vector2(180.0, ground_y - 58.0)
 		_:
 			return Vector2(250.0, ground_y - 4.0)
 
@@ -462,12 +504,16 @@ class ChunkNode extends Node2D:
 			var tile_count: int = int(ceil(w / 16.0))
 
 			# 1. Base Road Surface: Pure dark aggregate asphalt (16x16 tiles)
+			# Strictly clipped to segment bounds so no visual overhang into pit voids occurs
 			for i in range(tile_count):
 				var tx: float = sx + i * 16.0
-				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y, 16, 16), Rect2(0, 0, 16, 16))
+				var draw_w: float = minf(16.0, (sx + w) - tx)
+				if draw_w <= 0.0:
+					break
+				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y, draw_w, 16), Rect2(0, 0, draw_w, 16))
 				# Concrete girder deck coping & pier sub-layers
-				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y + 16, 16, 16), Rect2(32, 0, 16, 16))
-				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y + 32, 16, 16), Rect2(32, 0, 16, 16))
+				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y + 16, draw_w, 16), Rect2(32, 0, draw_w, 16))
+				draw_texture_rect_region(tiles_texture, Rect2(tx, ground_y + 32, draw_w, 16), Rect2(32, 0, draw_w, 16))
 
 			# 2. Straight, Consistent, Proportional Dashed Lane Markings (Traffic Yellow)
 			# Anchored to global world X coordinate for perfect continuity across all chunk borders

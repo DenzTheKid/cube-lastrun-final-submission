@@ -5,6 +5,7 @@
 [ext_resource type="Theme" path="res://assets/ui/game_theme.tres" id="3_theme"]
 [ext_resource type="Texture2D" path="res://assets/ui/px_heart_full.png" id="4_heartfull"]
 [ext_resource type="Shader" path="res://shaders/critical_hp_vignette.gdshader" id="5_critshader"]
+[ext_resource type="Texture2D" path="res://assets/ui/px_shield_empty.png" id="6_shldempty"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_crit"]
 shader = ExtResource("5_critshader")
@@ -95,6 +96,21 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.902, 0.224, 0.384, 1)
 text = "2/2"
+
+[node name="ShieldDivider" type="ColorRect" parent="RootControl/SafeFrame/TopMargin/TopBar/HeartPlate/HeartsBox"]
+custom_minimum_size = Vector2(1, 12)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+color = Color(0.32, 0.42, 0.62, 0.65)
+
+[node name="ShieldIcon" type="TextureRect" parent="RootControl/SafeFrame/TopMargin/TopBar/HeartPlate/HeartsBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(17, 17)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("6_shldempty")
+stretch_mode = 5
 
 [node name="Spacer" type="Control" parent="RootControl/SafeFrame/TopMargin/TopBar"]
 layout_mode = 2
@@ -267,3 +283,41 @@ custom_minimum_size = Vector2(76, 8)
 layout_mode = 2
 mouse_filter = 2
 show_percentage = false
+
+[node name="MilestoneBanner" type="CenterContainer" parent="RootControl/SafeFrame"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 42.0
+offset_bottom = 82.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="MilestonePanel" type="PanelContainer" parent="RootControl/SafeFrame/MilestoneBanner"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="MilestoneBox" type="VBoxContainer" parent="RootControl/SafeFrame/MilestoneBanner/MilestonePanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+alignment = 1
+
+[node name="MilestoneTitle" type="Label" parent="RootControl/SafeFrame/MilestoneBanner/MilestonePanel/MilestoneBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)
+text = "ZONE 2: DOWNTOWN"
+horizontal_alignment = 1
+
+[node name="MilestoneSub" type="Label" parent="RootControl/SafeFrame/MilestoneBanner/MilestonePanel/MilestoneBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.86, 0.94, 1, 1)
+text = "250m MILESTONE"
+horizontal_alignment = 1
