@@ -67,7 +67,7 @@ var _last_pattern: PatternType = PatternType.FLAT_START
 var _chunks_spawned: int = 0
 var _consecutive_hazard_chunks: int = 0
 var _chunks_since_medkit: int = 0
-var _chunks_since_shield: int = 3
+var _chunks_since_shield: int = 0
 
 func setup(player: Player) -> void:
 	target_player = player
@@ -353,11 +353,13 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 			_chunks_since_shield = 0
 
 func _can_spawn_shield() -> bool:
+	if _chunks_spawned < 6:
+		return false
 	var has_shield: bool = is_instance_valid(target_player) and target_player.shield_hp > 0
-	var cooldown: int = 11 if has_shield else 6
+	var cooldown: int = 18 if has_shield else 12
 	if _chunks_since_shield < cooldown:
 		return false
-	return randf() < 0.40 or _chunks_since_shield >= cooldown + 3
+	return randf() < 0.25 or _chunks_since_shield >= cooldown + 4
 
 func _can_spawn_medkit(is_ambulance: bool) -> bool:
 	var is_injured: bool = is_instance_valid(target_player) and target_player.current_hp < target_player.max_hp

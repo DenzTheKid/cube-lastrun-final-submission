@@ -56,6 +56,7 @@ var _is_low_hp: bool = false
 var _last_hp: int = 2
 var _has_shield: bool = false
 var _last_shield: int = 0
+var _tracked_player: Player = null
 var _combo_tween: Tween = null
 var _milestone_tween: Tween = null
 var _milestone_style: StyleBoxFlat = null
@@ -172,7 +173,15 @@ func _process(delta: float) -> void:
 		if hp_label:
 			hp_label.modulate = PALETTE.ACCENT_MAGENTA.lerp(Color(1.0, 0.52, 0.62, 1.0), beat * 0.65)
 
+	if _has_shield and _shield_icon and is_instance_valid(_tracked_player):
+		if _tracked_player.shield_time_left <= 2.0:
+			var warn_pulse: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.024)
+			_shield_icon.modulate.a = 0.35 + 0.65 * warn_pulse
+		else:
+			_shield_icon.modulate.a = 1.0
+
 func setup_player(player: Player) -> void:
+	_tracked_player = player
 	if player:
 		player.health_changed.connect(_on_health_changed)
 		player.shield_changed.connect(_on_shield_changed)

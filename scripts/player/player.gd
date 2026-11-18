@@ -31,7 +31,9 @@ const SPARK_SCENE: PackedScene = preload("res://scenes/effects/bullet_spark.tscn
 @export var max_hp: int = 2
 var current_hp: int = 2
 @export var max_shield: int = 1
+@export var shield_duration: float = 8.0
 var shield_hp: int = 0
+var shield_time_left: float = 0.0
 
 var is_dead: bool = false
 var is_transforming: bool = false
@@ -274,6 +276,13 @@ func _physics_process(delta: float) -> void:
 	_update_juice_visuals(delta, speed_mult)
 	if shield_hp > 0:
 		_shield_anim_time += delta
+		shield_time_left -= delta
+		if shield_time_left <= 0.0:
+			shield_hp = 0
+			shield_time_left = 0.0
+			shield_changed.emit(shield_hp, max_shield)
+			if GameFeel:
+				GameFeel.spawn_floating_text(global_position + Vector2(0, -16), "SHIELD FADED", Color(0.55, 0.72, 0.92), 0.95)
 		queue_redraw()
 	elif shotgun and shotgun.is_reloading:
 		queue_redraw()
@@ -395,14 +404,17 @@ func _update_juice_visuals(delta: float, speed_mult: float) -> void:
 func _draw() -> void:
 	# Tactical Blue Energy Shield Aura around Cube Survivor
 	if shield_hp > 0 and not is_dead and not is_transforming:
+		var flicker: float = 1.0
+		if shield_time_left <= 2.0:
+			flicker = 0.30 + 0.70 * (0.5 + 0.5 * sin(_shield_anim_time * 24.0))
 		var pulse: float = 0.5 + 0.5 * sin(_shield_anim_time * 5.2)
 		var ring_r: float = 16.5 + 0.6 * pulse
 		var center := Vector2(0.0, 2.0)
-		draw_circle(center, ring_r - 1.0, Color(0.18, 0.65, 1.0, 0.11 + 0.06 * pulse))
-		draw_arc(center, ring_r, 0.0, TAU, 28, Color(0.28, 0.80, 1.0, 0.42 + 0.18 * pulse), 1.2)
+		draw_circle(center, ring_r - 1.0, Color(0.18, 0.65, 1.0, (0.11 + 0.06 * pulse) * flicker))
+		draw_arc(center, ring_r, 0.0, TAU, 28, Color(0.28, 0.80, 1.0, (0.42 + 0.18 * pulse) * flicker), 1.2)
 		var base_ang: float = _shield_anim_time * 2.6
-		draw_arc(center, ring_r + 1.0, base_ang, base_ang + 1.35, 12, Color(0.62, 0.96, 1.0, 0.88), 1.6)
-		draw_arc(center, ring_r + 1.0, base_ang + PI, base_ang + PI + 1.35, 12, Color(0.62, 0.96, 1.0, 0.88), 1.6)
+		draw_arc(center, ring_r + 1.0, base_ang, base_ang + 1.35, 12, Color(0.62, 0.96, 1.0, 0.88 * flicker), 1.6)
+		draw_arc(center, ring_r + 1.0, base_ang + PI, base_ang + PI + 1.35, 12, Color(0.62, 0.96, 1.0, 0.88 * flicker), 1.6)
 
 	# Diegetic Reload Progress Bar directly under the Cube Survivor
 	if shotgun and shotgun.is_reloading and not is_dead and not is_transforming:
@@ -421,6 +433,7 @@ func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 
 	if shield_hp > 0:
 		shield_hp = maxi(shield_hp - 1, 0)
+		shield_time_left = 0.0
 		shield_changed.emit(shield_hp, max_shield)
 		is_invulnerable = true
 		invuln_timer.start(0.95)
@@ -531,6 +544,7 @@ func grant_shield(amount: int = 1) -> bool:
 
 	var prev_shield: int = shield_hp
 	shield_hp = mini(shield_hp + amount, max_shield)
+	shield_time_left = shield_duration
 	var gained: int = shield_hp - prev_shield
 	shield_changed.emit(shield_hp, max_shield)
 
@@ -581,6 +595,7 @@ func die() -> void:
 		return
 	is_dead = true
 	shield_hp = 0
+	shield_time_left = 0.0
 	shield_changed.emit(shield_hp, max_shield)
 	_disable_skin_swap()
 	velocity = Vector2.ZERO
@@ -604,6 +619,7 @@ func trigger_horde_catch() -> void:
 		return
 	is_transforming = true
 	shield_hp = 0
+	shield_time_left = 0.0
 	shield_changed.emit(shield_hp, max_shield)
 	_disable_skin_swap()
 	velocity = Vector2.ZERO
