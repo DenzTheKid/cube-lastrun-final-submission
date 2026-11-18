@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://ci745v678910a"]
+
+[ext_resource type="Script" uid="uid://bv8v7u890123b" path="res://scripts/tools/verify_all_menu_buttons.gd" id="1_test"]
+
+[node name="VerifyAllMenuButtonsRunner" type="Node"]
+script = ExtResource("1_test")
