@@ -70,11 +70,22 @@ var _record_baseline_dist: float = 0.0
 var _last_unlock_check_dist: float = 0.0
 var _last_unlock_check_score: int = 0
 var _last_unlock_check_combo: int = 0
+var _last_vp_size: Vector2 = Vector2.ZERO
+var _last_win_size: Vector2i = Vector2i.ZERO
+var _last_fullscreen: bool = false
+var _last_displayed_dist: int = -1
+var _last_displayed_score: int = -1
 
 func _enter_tree() -> void:
 	_connect_viewport_signals()
 
 func _exit_tree() -> void:
+	if _milestone_tween and _milestone_tween.is_valid():
+		_milestone_tween.kill()
+	if _combo_tween and _combo_tween.is_valid():
+		_combo_tween.kill()
+	_banner_queue.clear()
+	_banner_active = false
 	_disconnect_viewport_signals()
 	_disconnect_game_manager_signals()
 	_disconnect_player_signals()
@@ -187,6 +198,12 @@ func _update_responsive_layout() -> void:
 
 	if win_size.x <= 0 or win_size.y <= 0:
 		win_size = Vector2i(int(roundf(vp_size.x * 2.0)), int(roundf(vp_size.y * 2.0)))
+
+	if vp_size == _last_vp_size and win_size == _last_win_size and is_fullscreen == _last_fullscreen:
+		return
+	_last_vp_size = vp_size
+	_last_win_size = win_size
+	_last_fullscreen = is_fullscreen
 
 	# 1. Base 16:9 focal dimensions constraint (SafeFrame architecture)
 	var target_aspect: float = 16.0 / 9.0
@@ -331,12 +348,17 @@ func _on_game_over_hide_banner(_s: int, _d: float, _t: float, _k: int, _n: bool)
 		milestone_banner.visible = false
 
 func _on_score_updated(new_score: int) -> void:
-	score_label.text = "SCORE: %05d" % new_score
+	if new_score != _last_displayed_score:
+		_last_displayed_score = new_score
+		score_label.text = "SCORE: %05d" % new_score
 	if GameManager and GameManager.current_state == GameManager.State.PLAYING:
 		_check_skin_unlock_banners(GameManager.distance, new_score, GameManager.best_combo)
 
 func _on_distance_updated(dist: float) -> void:
-	distance_label.text = "DIST: %dm" % int(dist)
+	var cur_dist_int: int = int(dist)
+	if cur_dist_int != _last_displayed_dist:
+		_last_displayed_dist = cur_dist_int
+		distance_label.text = "DIST: %dm" % cur_dist_int
 	if not GameManager or GameManager.current_state != GameManager.State.PLAYING:
 		return
 

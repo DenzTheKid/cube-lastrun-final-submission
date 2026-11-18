@@ -54,6 +54,12 @@ var _preview_skin_idx: int = 0
 var _preview_weapon_idx: int = 0
 
 func _ready() -> void:
+	get_tree().paused = false
+	Engine.time_scale = 1.0
+	if GameFeel:
+		GameFeel.reset_hitstop()
+	_is_transitioning = false
+
 	if AudioManager:
 		AudioManager.play_music("menu")
 		_sfx_enabled = AudioManager.sfx_volume_db > -40.0
@@ -197,7 +203,7 @@ func _setup_skin_selector() -> void:
 		_preview_weapon_idx = w_idx if w_idx >= 0 else 0
 
 func _cycle_skin(delta_idx: int) -> void:
-	if not GameManager:
+	if _is_transitioning or not GameManager:
 		return
 	var ids: Array[String] = GameManager.get_skin_ids()
 	if ids.is_empty():
@@ -215,7 +221,7 @@ func _cycle_skin(delta_idx: int) -> void:
 	refresh_skin_showcase(preview_id)
 
 func _cycle_weapon_skin(delta_idx: int) -> void:
-	if not GameManager:
+	if _is_transitioning or not GameManager:
 		return
 	var ids: Array[String] = GameManager.get_weapon_skin_ids()
 	if ids.is_empty():
@@ -325,6 +331,15 @@ func _on_play_pressed() -> void:
 	play_btn.disabled = true
 	controls_btn.disabled = true
 	exit_btn.disabled = true
+	if prev_skin_btn:
+		prev_skin_btn.disabled = true
+	if next_skin_btn:
+		next_skin_btn.disabled = true
+	if prev_weapon_btn:
+		prev_weapon_btn.disabled = true
+	if next_weapon_btn:
+		next_weapon_btn.disabled = true
+
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
 
@@ -335,6 +350,7 @@ func _on_play_pressed() -> void:
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(fade)
 	var tw: Tween = create_tween()
+	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tw.tween_property(fade, "color:a", 1.0, 0.18)
 	tw.tween_callback(func():
 		if GameManager:
@@ -347,6 +363,14 @@ func _on_play_pressed() -> void:
 			play_btn.disabled = false
 			controls_btn.disabled = false
 			exit_btn.disabled = false
+			if prev_skin_btn:
+				prev_skin_btn.disabled = false
+			if next_skin_btn:
+				next_skin_btn.disabled = false
+			if prev_weapon_btn:
+				prev_weapon_btn.disabled = false
+			if next_weapon_btn:
+				next_weapon_btn.disabled = false
 			if is_instance_valid(fade):
 				fade.queue_free()
 	)

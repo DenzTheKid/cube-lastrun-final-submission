@@ -18,6 +18,12 @@ const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 @onready var retry_btn: Button = %RetryButton
 @onready var menu_btn: Button = %MenuButton
 
+var _is_transitioning: bool = false
+
+func _exit_tree() -> void:
+	if GameManager and GameManager.game_over.is_connected(_on_game_over):
+		GameManager.game_over.disconnect(_on_game_over)
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	panel.visible = false
@@ -30,7 +36,8 @@ func _ready() -> void:
 	menu_btn.focus_neighbor_top = retry_btn.get_path()
 	menu_btn.focus_neighbor_bottom = retry_btn.get_path()
 	if GameManager:
-		GameManager.game_over.connect(_on_game_over)
+		if not GameManager.game_over.is_connected(_on_game_over):
+			GameManager.game_over.connect(_on_game_over)
 	retry_btn.pressed.connect(_on_retry_pressed)
 	menu_btn.pressed.connect(_on_menu_pressed)
 
@@ -88,13 +95,27 @@ func _on_game_over(final_score: int, distance: float, survival_time: float, kill
 	retry_btn.grab_focus()
 
 func _on_retry_pressed() -> void:
+	if _is_transitioning:
+		return
+	_is_transitioning = true
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
+	get_tree().paused = false
+	if GameFeel:
+		GameFeel.reset_hitstop()
+	Engine.time_scale = 1.0
 	if GameManager:
 		GameManager.restart_game()
 
 func _on_menu_pressed() -> void:
+	if _is_transitioning:
+		return
+	_is_transitioning = true
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
+	get_tree().paused = false
+	if GameFeel:
+		GameFeel.reset_hitstop()
+	Engine.time_scale = 1.0
 	if GameManager:
 		GameManager.go_to_menu()

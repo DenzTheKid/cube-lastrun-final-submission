@@ -88,6 +88,10 @@ var _visor_light: PointLight2D = null
 @onready var shotgun: Shotgun = $Shotgun
 @onready var invuln_timer: Timer = $InvulnTimer
 
+func _exit_tree() -> void:
+	if GameManager and GameManager.skin_changed.is_connected(apply_equipped_skin):
+		GameManager.skin_changed.disconnect(apply_equipped_skin)
+
 func _ready() -> void:
 	velocity = Vector2.ZERO
 	_wait_shoot_release = _is_physical_shoot_held()

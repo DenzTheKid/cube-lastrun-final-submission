@@ -20,8 +20,12 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if _is_in_hitstop:
 		if Time.get_ticks_usec() >= _hitstop_end_usec:
-			_is_in_hitstop = false
-			Engine.time_scale = 1.0
+			reset_hitstop()
+
+func reset_hitstop() -> void:
+	_is_in_hitstop = false
+	_hitstop_end_usec = 0
+	Engine.time_scale = 1.0
 
 func hitstop(duration: float = 0.035, target_time_scale: float = 0.05) -> void:
 	# Skip hitstop if tree is paused or running headless automated unit tests

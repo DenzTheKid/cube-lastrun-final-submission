@@ -55,6 +55,10 @@ const WEAPON_SKIN_TEXTURES: Dictionary = {
 
 var _tracer_color: Color = Color(1.0, 0.85, 0.42)
 
+func _exit_tree() -> void:
+	if GameManager and GameManager.weapon_skin_changed.is_connected(apply_equipped_weapon_skin):
+		GameManager.weapon_skin_changed.disconnect(apply_equipped_weapon_skin)
+
 func _ready() -> void:
 	current_ammo = max_ammo
 	muzzle_flash.visible = false

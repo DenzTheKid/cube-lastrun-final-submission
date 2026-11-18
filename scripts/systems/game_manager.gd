@@ -223,8 +223,12 @@ func start_game() -> void:
 	last_run_unlocked_weapons.clear()
 	difficulty_factor = 1.0
 	get_tree().paused = false
+	Engine.time_scale = 1.0
+	if GameFeel:
+		GameFeel.reset_hitstop()
 	Input.action_release("shoot")
 	Input.action_release("jump")
+	Input.action_release("pause")
 	game_started.emit()
 	combo_updated.emit(combo_count, combo_multiplier)
 	if AudioManager:
@@ -234,9 +238,11 @@ func add_distance(amount: float) -> void:
 	if current_state != State.PLAYING:
 		return
 	distance += amount
+	var prev_score: int = score
 	score += int(amount * 0.5)
 	distance_updated.emit(distance)
-	score_updated.emit(score)
+	if score != prev_score:
+		score_updated.emit(score)
 
 func add_kill(kill_score: int = 100) -> void:
 	if current_state != State.PLAYING:
@@ -305,12 +311,19 @@ func trigger_game_over() -> void:
 	game_over.emit(score, distance, survival_time, zombie_kills, is_new)
 
 func restart_game() -> void:
+	get_tree().paused = false
+	Engine.time_scale = 1.0
+	if GameFeel:
+		GameFeel.reset_hitstop()
 	start_game()
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/main/game_world.tscn")
 
 func go_to_menu() -> void:
 	current_state = State.MENU
 	get_tree().paused = false
+	Engine.time_scale = 1.0
+	if GameFeel:
+		GameFeel.reset_hitstop()
 	if AudioManager:
 		AudioManager.play_music("menu")
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/main/main_menu.tscn")
@@ -344,6 +357,8 @@ func get_newly_unlocked_skins(prev_dist: float, prev_score: int, new_dist: float
 func set_selected_skin(skin_id: String) -> bool:
 	if not SKIN_CATALOG.has(skin_id) or not is_skin_unlocked(skin_id):
 		return false
+	if selected_skin == skin_id:
+		return true
 	selected_skin = skin_id
 	save_game_data()
 	skin_changed.emit(selected_skin)
@@ -397,6 +412,8 @@ func get_newly_unlocked_weapon_skins(prev_combo: int, prev_score: int, new_combo
 func set_selected_weapon_skin(weapon_id: String) -> bool:
 	if not WEAPON_SKIN_CATALOG.has(weapon_id) or not is_weapon_skin_unlocked(weapon_id):
 		return false
+	if selected_weapon_skin == weapon_id:
+		return true
 	selected_weapon_skin = weapon_id
 	save_game_data()
 	weapon_skin_changed.emit(selected_weapon_skin)

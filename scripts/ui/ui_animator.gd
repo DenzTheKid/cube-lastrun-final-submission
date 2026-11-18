@@ -10,10 +10,19 @@ const ICON_SFX_ON: Texture2D = preload("res://assets/ui/px_icon_sfx_on.png")
 const ICON_SFX_OFF: Texture2D = preload("res://assets/ui/px_icon_sfx_off.png")
 const ICON_MUSIC_ON: Texture2D = preload("res://assets/ui/px_icon_music_on.png")
 const ICON_MUSIC_OFF: Texture2D = preload("res://assets/ui/px_icon_music_off.png")
+static var _cached_empty_icon: Texture2D = null
+
+static func _get_empty_icon() -> Texture2D:
+	if not _cached_empty_icon:
+		_cached_empty_icon = ImageTexture.create_from_image(Image.create(1, 1, false, Image.FORMAT_RGBA8))
+	return _cached_empty_icon
 
 static func style_button(btn: Button, is_primary: bool = false) -> void:
 	if not btn:
 		return
+	if btn.has_meta("styled_btn"):
+		return
+	btn.set_meta("styled_btn", true)
 
 	var raw_text: String = btn.text.strip_edges().trim_prefix("> ").trim_prefix("▶ ")
 	btn.set_meta("base_text", raw_text)
@@ -21,27 +30,18 @@ static func style_button(btn: Button, is_primary: bool = false) -> void:
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn.expand_icon = false
 	btn.theme_type_variation = &"PrimaryButton" if is_primary else &"Button"
-
 	btn.text = raw_text
-	btn.mouse_entered.connect(func(): _set_btn_active(btn, true))
-	btn.mouse_exited.connect(func(): _set_btn_active(btn, btn.has_focus()))
-	btn.focus_entered.connect(func(): _set_btn_active(btn, true))
-	btn.focus_exited.connect(func(): _set_btn_active(btn, false))
-
-static func _set_btn_active(btn: Button, active: bool) -> void:
-	if not is_instance_valid(btn):
-		return
-	var base_text: String = str(btn.get_meta("base_text", btn.text))
-	var target_text: String = ("> " + base_text) if active else base_text
-	if btn.text != target_text:
-		btn.text = target_text
 
 static func style_toggle_button(btn: Button, label_prefix: String) -> void:
 	if not btn:
 		return
+	if btn.has_meta("styled_toggle"):
+		return
+	btn.set_meta("styled_toggle", true)
+
 	btn.set_meta("toggle_prefix", label_prefix)
 	btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var empty_tex := ImageTexture.create_from_image(Image.create(1, 1, false, Image.FORMAT_RGBA8))
+	var empty_tex := _get_empty_icon()
 	btn.add_theme_icon_override("checked", empty_tex)
 	btn.add_theme_icon_override("unchecked", empty_tex)
 	btn.add_theme_icon_override("checked_disabled", empty_tex)
