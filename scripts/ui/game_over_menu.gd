@@ -12,7 +12,9 @@ const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 @onready var dist_lbl: Label = %FinalDistLabel
 @onready var time_lbl: Label = %FinalTimeLabel
 @onready var kills_lbl: Label = %FinalKillsLabel
+@onready var combo_lbl: Label = %FinalComboLabel
 @onready var record_banner: Label = %RecordBanner
+@onready var unlock_banner: Label = %UnlockBanner
 @onready var retry_btn: Button = %RetryButton
 @onready var menu_btn: Button = %MenuButton
 
@@ -42,7 +44,33 @@ func _on_game_over(final_score: int, distance: float, survival_time: float, kill
 	time_lbl.text = "TIME SURVIVED: %02d:%02d" % [mins, secs]
 	kills_lbl.text = "ZOMBIES PURGED: %d" % kills
 
-	record_banner.visible = is_new
+	var run_combo: int = GameManager.best_combo if GameManager else 0
+	var rec_combo: int = GameManager.all_time_best_combo if GameManager else 0
+	if combo_lbl:
+		if GameManager and GameManager.last_run_new_combo_record and run_combo >= 2:
+			combo_lbl.text = "BEST COMBO: %dx  (NEW BEST!)" % run_combo
+		else:
+			combo_lbl.text = "BEST COMBO: %dx  (RECORD: %dx)" % [run_combo, rec_combo]
+
+	var new_dist: bool = GameManager != null and GameManager.last_run_new_distance_record and distance >= 10.0
+	record_banner.visible = is_new or new_dist
+	if is_new and new_dist:
+		record_banner.text = "NEW SCORE & DISTANCE RECORD!"
+	elif is_new:
+		record_banner.text = "NEW HIGH SCORE RECORD!"
+	elif new_dist:
+		record_banner.text = "NEW DISTANCE RECORD!"
+
+	if unlock_banner:
+		var unlocked: Array[String] = GameManager.last_run_unlocked_skins if GameManager else []
+		if unlocked.is_empty():
+			unlock_banner.visible = false
+		else:
+			var names: Array[String] = []
+			for sid in unlocked:
+				names.append(str(GameManager.get_skin_data(sid).get("name", sid)))
+			unlock_banner.text = "SKIN UNLOCKED: %s" % ", ".join(names)
+			unlock_banner.visible = true
 
 	await get_tree().create_timer(0.6, true, false, true).timeout
 	if dimmer:

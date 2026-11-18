@@ -139,6 +139,28 @@ func _setup_visual_enhancements() -> void:
 	_visor_light.position = Vector2(4.0, -2.0)
 	add_child(_visor_light)
 
+	if GameManager:
+		if not GameManager.skin_changed.is_connected(apply_equipped_skin):
+			GameManager.skin_changed.connect(apply_equipped_skin)
+		apply_equipped_skin()
+
+func apply_equipped_skin(_skin_id: String = "") -> void:
+	if is_dead or is_transforming or not GameManager:
+		return
+	var data: Dictionary = GameManager.get_skin_data(_skin_id)
+	GameManager.apply_skin_to_material(_shader_mat, data.get("id", "crimson"), false)
+	var light_col: Color = data.get("light", Color(0.25, 0.92, 1.0, 1.0))
+	if _shader_mat:
+		_shader_mat.set_shader_parameter("rim_color", light_col)
+	if _scarf_line and _scarf_line.gradient:
+		var scarf_col: Color = data.get("scarf", Color(0.92, 0.18, 0.25, 1.0))
+		var tip_col: Color = data.get("band_hi", Color(1.0, 0.42, 0.32))
+		tip_col.a = 0.85
+		_scarf_line.gradient.set_color(0, scarf_col)
+		_scarf_line.gradient.set_color(1, tip_col)
+	if _visor_light:
+		_visor_light.color = light_col
+
 func _physics_process(delta: float) -> void:
 	if is_dead or is_transforming:
 		if not is_on_floor():
@@ -439,16 +461,25 @@ func heal(amount: int = 1) -> bool:
 			if is_instance_valid(self) and _shader_mat:
 				_shader_mat.set_shader_parameter("rim_strength", v)
 				if v <= 0.36:
-					_shader_mat.set_shader_parameter("rim_color", Color(0.45, 0.95, 1.0, 1.0))
+					var rest_col: Color = Color(0.45, 0.95, 1.0, 1.0)
+					if GameManager:
+						rest_col = GameManager.get_skin_data().get("light", rest_col)
+					_shader_mat.set_shader_parameter("rim_color", rest_col)
 		, 0.75, 0.35, 0.35)
 
 	_visual_scale = Vector2(0.86, 1.20)
 	return gained > 0
 
+func _disable_skin_swap() -> void:
+	if _shader_mat:
+		_shader_mat.set_shader_parameter("skin_swap_enabled", 0.0)
+		_shader_mat.set_shader_parameter("visor_swap_enabled", 0.0)
+
 func die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	_disable_skin_swap()
 	velocity = Vector2.ZERO
 	shotgun.visible = false
 	if _scarf_line:
@@ -469,6 +500,7 @@ func trigger_horde_catch() -> void:
 	if is_dead or is_transforming:
 		return
 	is_transforming = true
+	_disable_skin_swap()
 	velocity = Vector2.ZERO
 	shotgun.visible = false
 	if _scarf_line:

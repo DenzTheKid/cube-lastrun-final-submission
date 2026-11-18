@@ -31,6 +31,18 @@ const PALETTE = preload("res://scripts/ui/theme_palette.gd")
 @onready var combo_plate: PanelContainer = %ComboPlate
 @onready var combo_label: Label = %ComboLabel
 @onready var critical_vignette: ColorRect = %CriticalVignette
+@onready var milestone_banner: CenterContainer = %MilestoneBanner
+@onready var milestone_panel: PanelContainer = %MilestonePanel
+@onready var milestone_title: Label = %MilestoneTitle
+@onready var milestone_sub: Label = %MilestoneSub
+
+const ZONE_MILESTONES: Array[Dictionary] = [
+	{ "dist": 250, "title": "ZONE 2: DOWNTOWN", "sub": "250m MILESTONE", "color": Color(0.28, 0.94, 0.42) },
+	{ "dist": 500, "title": "ZONE 3: INDUSTRIAL", "sub": "500m MILESTONE", "color": Color(1.0, 0.80, 0.24) },
+	{ "dist": 1000, "title": "ZONE 4: QUARANTINE", "sub": "1000m MILESTONE", "color": Color(0.84, 0.40, 1.0) },
+	{ "dist": 1500, "title": "ZONE 5: DEAD HIGHWAY", "sub": "1500m MILESTONE", "color": Color(0.22, 0.96, 1.0) },
+	{ "dist": 2000, "title": "ZONE 6: ENDLESS NIGHT", "sub": "2000m SURVIVOR", "color": Color(1.0, 0.44, 0.48) }
+]
 
 var _is_reloading: bool = false
 var _reload_duration: float = 0.80
@@ -40,6 +52,16 @@ var _critical_pulse_timer: float = 0.0
 var _is_low_hp: bool = false
 var _last_hp: int = 2
 var _combo_tween: Tween = null
+var _milestone_tween: Tween = null
+var _milestone_style: StyleBoxFlat = null
+var _banner_queue: Array[Dictionary] = []
+var _banner_active: bool = false
+var _next_zone_idx: int = 0
+var _next_repeat_dist: int = 2500
+var _record_announced: bool = false
+var _record_baseline_dist: float = 0.0
+var _last_unlock_check_dist: float = 0.0
+var _last_unlock_check_score: int = 0
 
 func _ready() -> void:
 	_set_mouse_filter_ignore(root_control)
@@ -47,11 +69,15 @@ func _ready() -> void:
 	if vp and not vp.size_changed.is_connected(_update_responsive_layout):
 		vp.size_changed.connect(_update_responsive_layout)
 	_update_responsive_layout()
+	_setup_milestone_style()
 	if GameManager:
 		GameManager.score_updated.connect(_on_score_updated)
 		GameManager.distance_updated.connect(_on_distance_updated)
 		GameManager.horde_proximity_changed.connect(_on_horde_proximity_changed)
 		GameManager.combo_updated.connect(_on_combo_updated)
+		GameManager.game_started.connect(_reset_run_milestones)
+		GameManager.game_over.connect(_on_game_over_hide_banner)
+	_reset_run_milestones()
 	if reload_box:
 		reload_box.visible = false
 	reload_bar.visible = false
@@ -151,11 +177,159 @@ func setup_player(player: Player) -> void:
 			player.shotgun.reload_finished.connect(_on_reload_finished)
 			_on_ammo_changed(player.shotgun.current_ammo, player.shotgun.max_ammo)
 
+func _setup_milestone_style() -> void:
+	if not milestone_panel:
+		return
+	_milestone_style = StyleBoxFlat.new()
+	_milestone_style.bg_color = Color(0.05, 0.07, 0.14, 0.90)
+	_milestone_style.border_color = Color(1.0, 0.82, 0.25, 1.0)
+	_milestone_style.set_border_width_all(2)
+	_milestone_style.set_corner_radius_all(2)
+	_milestone_style.content_margin_left = 12
+	_milestone_style.content_margin_right = 12
+	_milestone_style.content_margin_top = 4
+	_milestone_style.content_margin_bottom = 4
+	milestone_panel.add_theme_stylebox_override("panel", _milestone_style)
+
+func _reset_run_milestones() -> void:
+	_next_zone_idx = 0
+	_next_repeat_dist = 2500
+	_record_announced = false
+	_banner_queue.clear()
+	_banner_active = false
+	if _milestone_tween and _milestone_tween.is_valid():
+		_milestone_tween.kill()
+	if milestone_banner:
+		milestone_banner.visible = false
+	if GameManager:
+		_record_baseline_dist = GameManager.run_start_max_distance
+		_last_unlock_check_dist = GameManager.run_start_max_distance
+		_last_unlock_check_score = GameManager.run_start_high_score
+
+func _on_game_over_hide_banner(_s: int, _d: float, _t: float, _k: int, _n: bool) -> void:
+	_banner_queue.clear()
+	_banner_active = false
+	if _milestone_tween and _milestone_tween.is_valid():
+		_milestone_tween.kill()
+	if milestone_banner:
+		milestone_banner.visible = false
+
 func _on_score_updated(new_score: int) -> void:
 	score_label.text = "SCORE: %05d" % new_score
+	if GameManager and GameManager.current_state == GameManager.State.PLAYING:
+		_check_skin_unlock_banners(GameManager.distance, new_score)
 
 func _on_distance_updated(dist: float) -> void:
 	distance_label.text = "DIST: %dm" % int(dist)
+	if not GameManager or GameManager.current_state != GameManager.State.PLAYING:
+		return
+
+	var crossed_skin_ids: Array[String] = GameManager.get_newly_unlocked_skins(
+		_last_unlock_check_dist,
+		_last_unlock_check_score,
+		maxf(_record_baseline_dist, dist),
+		maxi(GameManager.run_start_high_score, GameManager.score)
+	)
+	_last_unlock_check_dist = maxf(_last_unlock_check_dist, maxf(_record_baseline_dist, dist))
+	_last_unlock_check_score = maxi(_last_unlock_check_score, maxi(GameManager.run_start_high_score, GameManager.score))
+
+	# Advance crossed zone milestones; keep latest if jumped far in one step
+	var zone_entry: Dictionary = {}
+	while _next_zone_idx < ZONE_MILESTONES.size() and dist >= float(ZONE_MILESTONES[_next_zone_idx]["dist"]):
+		zone_entry = ZONE_MILESTONES[_next_zone_idx].duplicate()
+		_next_zone_idx += 1
+	while _next_zone_idx >= ZONE_MILESTONES.size() and dist >= float(_next_repeat_dist):
+		zone_entry = {
+			"dist": _next_repeat_dist,
+			"title": "%dm SURVIVED!" % _next_repeat_dist,
+			"sub": "UNSTOPPABLE RUN",
+			"color": Color(1.0, 0.78, 0.30)
+		}
+		_next_repeat_dist += 500
+
+	if not zone_entry.is_empty():
+		var sub_txt: String = str(zone_entry["sub"])
+		if not crossed_skin_ids.is_empty():
+			var first_skin: Dictionary = GameManager.get_skin_data(crossed_skin_ids[0])
+			sub_txt = "%s  |  UNLOCKED: %s" % [sub_txt, str(first_skin.get("name", ""))]
+			crossed_skin_ids.remove_at(0)
+		_queue_milestone_banner(str(zone_entry["title"]), sub_txt, zone_entry["color"])
+
+	for sid in crossed_skin_ids:
+		var sdata: Dictionary = GameManager.get_skin_data(sid)
+		_queue_milestone_banner(
+			"SKIN UNLOCKED!",
+			str(sdata.get("name", "")),
+			sdata.get("light", Color(1.0, 0.85, 0.30))
+		)
+
+	if not _record_announced and _record_baseline_dist >= 25.0 and dist > _record_baseline_dist:
+		_record_announced = true
+		_queue_milestone_banner("NEW DISTANCE RECORD!", "PREVIOUS BEST: %dm" % int(_record_baseline_dist), Color(1.0, 0.84, 0.24))
+
+func _check_skin_unlock_banners(dist: float, scr: int) -> void:
+	if not GameManager:
+		return
+	var cur_d: float = maxf(_record_baseline_dist, dist)
+	var cur_s: int = maxi(GameManager.run_start_high_score, scr)
+	var newly: Array[String] = GameManager.get_newly_unlocked_skins(_last_unlock_check_dist, _last_unlock_check_score, cur_d, cur_s)
+	_last_unlock_check_dist = maxf(_last_unlock_check_dist, cur_d)
+	_last_unlock_check_score = maxi(_last_unlock_check_score, cur_s)
+	for sid in newly:
+		var sdata: Dictionary = GameManager.get_skin_data(sid)
+		_queue_milestone_banner(
+			"SKIN UNLOCKED!",
+			str(sdata.get("name", "")),
+			sdata.get("light", Color(1.0, 0.85, 0.30))
+		)
+
+func _queue_milestone_banner(title: String, sub: String, accent: Color) -> void:
+	if _banner_queue.size() >= 3:
+		_banner_queue.remove_at(0)
+	_banner_queue.append({ "title": title, "sub": sub, "color": accent })
+	if not _banner_active:
+		_play_next_milestone_banner()
+
+func _play_next_milestone_banner() -> void:
+	if not is_instance_valid(milestone_banner) or not is_instance_valid(milestone_panel):
+		_banner_active = false
+		return
+	if _banner_queue.is_empty():
+		_banner_active = false
+		milestone_banner.visible = false
+		return
+
+	_banner_active = true
+	var item: Dictionary = _banner_queue.pop_front()
+	var accent: Color = item.get("color", Color(1.0, 0.82, 0.25))
+	milestone_title.text = str(item.get("title", ""))
+	milestone_sub.text = str(item.get("sub", ""))
+	milestone_title.add_theme_color_override("font_color", accent)
+	if _milestone_style:
+		_milestone_style.border_color = accent
+
+	if AudioManager:
+		AudioManager.play_sfx("heal", 0.08)
+
+	milestone_banner.visible = true
+	milestone_banner.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	var sz: Vector2 = milestone_panel.get_combined_minimum_size()
+	milestone_panel.pivot_offset = sz * 0.5
+	milestone_panel.scale = Vector2(0.86, 0.86)
+
+	if _milestone_tween and _milestone_tween.is_valid():
+		_milestone_tween.kill()
+	_milestone_tween = create_tween()
+	_milestone_tween.set_parallel(true)
+	_milestone_tween.tween_property(milestone_banner, "modulate:a", 1.0, 0.18)
+	_milestone_tween.tween_property(milestone_panel, "scale", Vector2.ONE, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_milestone_tween.set_parallel(false)
+	_milestone_tween.tween_interval(2.2)
+	_milestone_tween.tween_property(milestone_banner, "modulate:a", 0.0, 0.30)
+	_milestone_tween.tween_callback(func():
+		milestone_banner.visible = false
+		_play_next_milestone_banner()
+	)
 
 func _on_health_changed(hp: int, max_hp: int) -> void:
 	hp_label.text = "%d/%d" % [hp, max_hp]

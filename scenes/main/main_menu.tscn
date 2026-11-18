@@ -25,9 +25,9 @@
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_RecordCard"]
 content_margin_left = 10.0
-content_margin_top = 8.0
+content_margin_top = 5.0
 content_margin_right = 10.0
-content_margin_bottom = 9.0
+content_margin_bottom = 6.0
 texture = ExtResource("10_reccard")
 texture_margin_left = 8.0
 texture_margin_top = 8.0
@@ -126,14 +126,14 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -12.0
-offset_bottom = -40.0
+offset_top = 0.0
+offset_bottom = -16.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer" unique_id=91489931]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 5
 alignment = 1
 
 [node name="TitleBanner" type="VBoxContainer" parent="CenterContainer/VBox" unique_id=362023199]
@@ -198,15 +198,17 @@ theme_override_constants/separation = 26
 alignment = 1
 
 [node name="ControlButtons" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow" unique_id=1838146376]
+custom_minimum_size = Vector2(172, 0)
 layout_mode = 2
-size_flags_vertical = 8
+size_flags_vertical = 1
 theme_override_constants/separation = 6
-alignment = 2
+alignment = 1
 
 [node name="PlayButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons" unique_id=1682440827]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(166, 25)
+custom_minimum_size = Vector2(172, 28)
 layout_mode = 2
+size_flags_vertical = 3
 theme_type_variation = &"PrimaryButton"
 text = "PLAY MISSION"
 icon = ExtResource("11_iplay")
@@ -214,46 +216,54 @@ alignment = 0
 
 [node name="ControlsButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons" unique_id=1672245412]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(166, 23)
+custom_minimum_size = Vector2(172, 28)
 layout_mode = 2
+size_flags_vertical = 3
 text = "CONTROLS"
 icon = ExtResource("12_ictrl")
 alignment = 0
 
 [node name="AudioRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons" unique_id=1168885945]
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 6
 alignment = 1
 
 [node name="SfxCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons/AudioRow" unique_id=1734824947]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(80, 23)
+custom_minimum_size = Vector2(83, 28)
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
 button_pressed = true
 text = "SFX:ON"
 icon = ExtResource("16_isfx")
 
 [node name="MusicCheckButton" type="CheckButton" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons/AudioRow" unique_id=768354461]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(80, 23)
+custom_minimum_size = Vector2(83, 28)
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
 button_pressed = true
 text = "BGM:ON"
 icon = ExtResource("19_imusic")
 
 [node name="ExitButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/ControlButtons" unique_id=1486243931]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(166, 23)
+custom_minimum_size = Vector2(172, 28)
 layout_mode = 2
+size_flags_vertical = 3
 text = "EXIT GAME"
 icon = ExtResource("13_iexit")
 alignment = 0
 
 [node name="RightHeroColumn" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow" unique_id=1796178444]
+custom_minimum_size = Vector2(172, 0)
 layout_mode = 2
-size_flags_vertical = 8
-theme_override_constants/separation = 3
-alignment = 2
+size_flags_vertical = 1
+theme_override_constants/separation = 2
+alignment = 1
 
 [node name="HeroShowcaseBox" type="Control" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn" unique_id=1292365405]
 custom_minimum_size = Vector2(172, 70)
@@ -276,23 +286,67 @@ unique_name_in_owner = true
 texture = ExtResource("15_showcase")
 centered = false
 
+[node name="SkinSelectorPanel" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn" unique_id=1765110921]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(172, 0)
+layout_mode = 2
+
+[node name="SkinRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel" unique_id=1765110922]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="PrevSkinButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinRow" unique_id=1765110923]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(20, 16)
+layout_mode = 2
+text = "<"
+alignment = 1
+
+[node name="SkinInfoBox" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinRow" unique_id=1765110924]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = -1
+alignment = 1
+
+[node name="SkinNameLabel" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinRow/SkinInfoBox" unique_id=1765110925]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.49, 1)
+text = "RED BAND"
+horizontal_alignment = 1
+
+[node name="SkinStatusLabel" type="Label" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinRow/SkinInfoBox" unique_id=1765110926]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.96, 0.65, 1)
+text = "EQUIPPED"
+horizontal_alignment = 1
+
+[node name="NextSkinButton" type="Button" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/SkinSelectorPanel/SkinRow" unique_id=1765110927]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(20, 16)
+layout_mode = 2
+text = ">"
+alignment = 1
+
 [node name="RecordPanel" type="PanelContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn" unique_id=1680946084]
 custom_minimum_size = Vector2(172, 0)
 layout_mode = 2
-size_flags_vertical = 8
+size_flags_vertical = 1
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_RecordCard")
 
 [node name="RecordBox" type="VBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/RecordPanel" unique_id=865766498]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 2
 
 [node name="RecordHeaderRow" type="HBoxContainer" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/RecordPanel/RecordBox" unique_id=1555641816]
 layout_mode = 2
 theme_override_constants/separation = 5
 
 [node name="TrophyIcon" type="TextureRect" parent="CenterContainer/VBox/MenuBackdrop/MainContentRow/RightHeroColumn/RecordPanel/RecordBox/RecordHeaderRow" unique_id=1578424009]
-custom_minimum_size = Vector2(14, 14)
+custom_minimum_size = Vector2(12, 12)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("14_itrophy")

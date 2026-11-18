@@ -267,3 +267,41 @@ custom_minimum_size = Vector2(76, 8)
 layout_mode = 2
 mouse_filter = 2
 show_percentage = false
+
+[node name="MilestoneBanner" type="CenterContainer" parent="RootControl/SafeFrame"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 42.0
+offset_bottom = 82.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="MilestonePanel" type="PanelContainer" parent="RootControl/SafeFrame/MilestoneBanner"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="MilestoneBox" type="VBoxContainer" parent="RootControl/SafeFrame/MilestoneBanner/MilestonePanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+alignment = 1
+
+[node name="MilestoneTitle" type="Label" parent="RootControl/SafeFrame/MilestoneBanner/MilestonePanel/MilestoneBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)
+text = "ZONE 2: DOWNTOWN"
+horizontal_alignment = 1
+
+[node name="MilestoneSub" type="Label" parent="RootControl/SafeFrame/MilestoneBanner/MilestonePanel/MilestoneBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.86, 0.94, 1, 1)
+text = "250m MILESTONE"
+horizontal_alignment = 1
