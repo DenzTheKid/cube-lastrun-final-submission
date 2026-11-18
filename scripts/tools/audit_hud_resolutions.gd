@@ -41,14 +41,17 @@ func _run_audit() -> void:
 
 		for i in range(4):
 			await get_tree().process_frame
-			await RenderingServer.frame_post_draw
+			if DisplayServer.get_name() != "headless":
+				await RenderingServer.frame_post_draw
 
 		var vp = get_viewport()
-		var img: Image = vp.get_texture().get_image()
-		var fname: String = "hud_res_%dx%d.png" % [res.x, res.y]
-		var save_path: String = ProjectSettings.globalize_path("res://" + SCREENSHOT_DIR + "/" + fname)
-		if img:
-			img.save_png(save_path)
+		if DisplayServer.get_name() != "headless":
+			var img: Image = vp.get_texture().get_image()
+			var fname: String = "hud_res_%dx%d.png" % [res.x, res.y]
+			var save_path: String = ProjectSettings.globalize_path("res://" + SCREENSHOT_DIR + "/" + fname)
+			if img:
+				img.save_png(save_path)
+			print("  [SAVED SCREENSHOT]: %s" % fname)
 
 		var ammo_rect = ammo_plate.get_global_rect()
 		var horde_rect = horde_plate.get_global_rect()
@@ -61,7 +64,6 @@ func _run_audit() -> void:
 		print("  Horde Global: Pos=%s Size=%s" % [str(horde_rect.position), str(horde_rect.size)])
 		print("  Gap between Ammo & Horde: %.1f px (%.1f%% of HUD width)" % [gap, gap_ratio])
 		print("  Bottom HUD Y position: %.1f (offset from bottom: %.1f px)" % [ammo_rect.position.y, vp.get_visible_rect().size.y - (ammo_rect.position.y + ammo_rect.size.y)])
-		print("  [SAVED SCREENSHOT]: %s" % fname)
 
 	print("\n=================================================================")
 	print("  MULTI-RESOLUTION AUDIT COMPLETE — ALL RESOLUTIONS VERIFIED!     ")

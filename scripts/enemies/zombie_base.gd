@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
-	velocity.x = -move_speed
+	_apply_movement(delta)
 	if not is_on_floor():
 		velocity.y += gravity * delta
 
@@ -58,11 +58,14 @@ func _physics_process(delta: float) -> void:
 		sprite.scale = _visual_scale
 
 	# Despawn if far behind player / horde
-	var root: Node = get_tree().current_scene
+	var root: Node = get_tree().current_scene if get_tree() else null
 	if root:
 		var player: Node2D = root.find_child("Player", true, false) as Node2D
 		if player and global_position.x < player.global_position.x - 320.0:
 			queue_free()
+
+func _apply_movement(_delta: float) -> void:
+	velocity.x = -move_speed
 
 func _update_animation(delta: float) -> void:
 	_anim_timer += delta
@@ -80,7 +83,7 @@ func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 		AudioManager.play_sfx("zombie_hit", 0.1)
 		AudioManager.play_sfx("impact_flesh", 0.08)
 
-	var root: Node = get_tree().current_scene
+	var root: Node = get_tree().current_scene if get_tree() else null
 	if root:
 		var blood = BLOOD_BURST_SCENE.instantiate()
 		blood.global_position = global_position
@@ -159,8 +162,8 @@ func die() -> void:
 		GameFeel.spawn_floating_text(global_position + Vector2(0, -10), popup_txt, popup_col, popup_scale)
 
 		# Arcade Skill Style Callouts: AIRSHOT! / POINT BLANK!
-		var root_node: Node = get_tree().current_scene
-		if root_node and root_node.name != "TestRunner":
+		var root_node: Node = get_tree().current_scene if get_tree() else null
+		if root_node and root_node.name != "TestRunner" and root_node.name != "RegressionAuditRunner":
 			var player_node: Player = root_node.find_child("Player", true, false) as Player
 			if player_node and not player_node.is_dead:
 				var is_airborne_shot: bool = not player_node.is_on_floor() and (player_node.was_recoil_launched or player_node.global_position.y < 194.0)

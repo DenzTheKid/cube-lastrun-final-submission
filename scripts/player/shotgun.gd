@@ -23,6 +23,7 @@ signal aim_changed(aim_angle: float, aim_vector: Vector2)
 @export var recoil_jump_strength: float = 480.0
 @export var horizontal_vault_boost: float = 140.0
 @export var standard_horizontal_kick: float = 75.0
+@export var gamepad_deadzone: float = 0.18
 
 var current_ammo: int = 2
 var is_reloading: bool = false
@@ -31,6 +32,7 @@ var reload_timer: float = 0.0
 var aim_direction: Vector2 = Vector2.RIGHT
 var target_rotation: float = 0.0
 var _using_gamepad_or_keys: bool = false
+var _mouse_active: bool = true
 var _muzzle_light: PointLight2D = null
 
 @onready var weapon_visuals: Node2D = $WeaponVisuals
@@ -100,26 +102,48 @@ func _process(delta: float) -> void:
 		if flash_timer.time_left < 0.03:
 			muzzle_flash.frame = 1
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion or event is InputEventMouseButton:
+		_mouse_active = true
+
 func _handle_aiming(delta: float) -> void:
+	# 1. Gamepad Right Stick Aiming (Audit all connected joypads, no hardcoded device 0 only)
 	var gp_aim: Vector2 = Vector2.ZERO
-	gp_aim.x = Input.get_joy_axis(0, JOY_AXIS_RIGHT_X)
-	gp_aim.y = Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y)
+	var joypads: Array[int] = Input.get_connected_joypads()
+	for dev_id in joypads:
+		var rx: float = Input.get_joy_axis(dev_id, JOY_AXIS_RIGHT_X)
+		var ry: float = Input.get_joy_axis(dev_id, JOY_AXIS_RIGHT_Y)
+		var stick := Vector2(rx, ry)
+		if stick.length_squared() > gp_aim.length_squared():
+			gp_aim = stick
 
-	var kb_x: float = Input.get_axis("ui_left", "ui_right")
-	var kb_y: float = Input.get_axis("ui_up", "ui_down")
-	var kb_vec: Vector2 = Vector2(kb_x, kb_y)
+	var has_gp_input: bool = false
+	if gp_aim.length() > gamepad_deadzone:
+		has_gp_input = true
+		var mag: float = gp_aim.length()
+		var scaled_mag: float = clampf((mag - gamepad_deadzone) / (1.0 - gamepad_deadzone), 0.0, 1.0)
+		gp_aim = gp_aim.normalized() * scaled_mag
 
-	if gp_aim.length_squared() > 0.06:
+	# 2. Keyboard Aiming (Dedicated aim actions for 360-degree aiming, zero jump/fall conflicts)
+	var kb_x: float = Input.get_axis("aim_left", "aim_right")
+	var kb_y: float = Input.get_axis("aim_up", "aim_down")
+	var kb_aim := Vector2(kb_x, kb_y)
+	var has_kb_input: bool = kb_aim.length_squared() > 0.04
+
+	# 3. Seamless Multi-Input Routing
+	if has_gp_input:
+		_mouse_active = false
 		_using_gamepad_or_keys = true
 		aim_direction = gp_aim.normalized()
 		target_rotation = aim_direction.angle()
 		rotation = lerp_angle(rotation, target_rotation, 1.0 - exp(-30.0 * delta))
-	elif kb_vec.length_squared() > 0.06:
+	elif has_kb_input:
+		_mouse_active = false
 		_using_gamepad_or_keys = true
-		aim_direction = kb_vec.normalized()
+		aim_direction = kb_aim.normalized()
 		target_rotation = aim_direction.angle()
 		rotation = lerp_angle(rotation, target_rotation, 1.0 - exp(-25.0 * delta))
-	else:
+	elif _mouse_active:
 		_using_gamepad_or_keys = false
 		var mouse_world: Vector2 = get_global_mouse_position()
 		var to_mouse: Vector2 = mouse_world - global_position
@@ -127,6 +151,9 @@ func _handle_aiming(delta: float) -> void:
 			aim_direction = to_mouse.normalized()
 			target_rotation = aim_direction.angle()
 			rotation = target_rotation
+	else:
+		# Retain active aim direction when analog stick / keys return to neutral
+		rotation = lerp_angle(rotation, target_rotation, 1.0 - exp(-25.0 * delta))
 
 	var is_aiming_left: bool = aim_direction.x < -0.01
 	if is_aiming_left:
@@ -138,6 +165,7 @@ func _handle_aiming(delta: float) -> void:
 
 func set_aim_direction(dir: Vector2) -> void:
 	if dir.length_squared() > 0.001:
+		_mouse_active = false
 		aim_direction = dir.normalized()
 		target_rotation = aim_direction.angle()
 		rotation = target_rotation
@@ -213,9 +241,15 @@ func shoot() -> bool:
 			AudioManager.play_sfx("shotgun")
 			AudioManager.play_sfx("shotgun_acoustic", 0.04)
 
-	if aim_direction.y > 0.25 and aim_direction.x > 0.15:
-		recoil_force.x = horizontal_vault_boost * aim_direction.x
+	# Horizontal recoil / vault calculation:
+	# Diagonal-downward produces a noticeable forward vault impulse
+	if aim_direction.y > 0.25:
+		if absf(aim_direction.x) > 0.15:
+			recoil_force.x = horizontal_vault_boost * absf(aim_direction.x)
+		else:
+			recoil_force.x = 0.0
 	else:
+		# Forward shot produces backward recoil deceleration; backward shot gives forward kick
 		recoil_force.x = -aim_direction.x * standard_horizontal_kick
 
 	recoil_impulse.emit(recoil_force)

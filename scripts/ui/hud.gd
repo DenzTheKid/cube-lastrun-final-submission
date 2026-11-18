@@ -47,6 +47,8 @@ const ZONE_MILESTONES: Array[Dictionary] = [
 	{ "dist": 2000, "title": "ZONE 6: ENDLESS NIGHT", "sub": "2000m SURVIVOR", "color": Color(1.0, 0.44, 0.48) }
 ]
 
+var _player: Player = null
+var _game_manager: Object = null
 var _is_reloading: bool = false
 var _reload_duration: float = 0.80
 var _reload_elapsed: float = 0.0
@@ -56,7 +58,6 @@ var _is_low_hp: bool = false
 var _last_hp: int = 2
 var _has_shield: bool = false
 var _last_shield: int = 0
-var _tracked_player: Player = null
 var _combo_tween: Tween = null
 var _milestone_tween: Tween = null
 var _milestone_style: StyleBoxFlat = null
@@ -70,20 +71,24 @@ var _last_unlock_check_dist: float = 0.0
 var _last_unlock_check_score: int = 0
 var _last_unlock_check_combo: int = 0
 
+func _enter_tree() -> void:
+	_connect_viewport_signals()
+
+func _exit_tree() -> void:
+	_disconnect_viewport_signals()
+	_disconnect_game_manager_signals()
+	_disconnect_player_signals()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_SIZE_CHANGED:
+		_update_responsive_layout()
+
 func _ready() -> void:
 	_set_mouse_filter_ignore(root_control)
-	var vp = get_viewport()
-	if vp and not vp.size_changed.is_connected(_update_responsive_layout):
-		vp.size_changed.connect(_update_responsive_layout)
+	_connect_viewport_signals()
 	_update_responsive_layout()
 	_setup_milestone_style()
-	if GameManager:
-		GameManager.score_updated.connect(_on_score_updated)
-		GameManager.distance_updated.connect(_on_distance_updated)
-		GameManager.horde_proximity_changed.connect(_on_horde_proximity_changed)
-		GameManager.combo_updated.connect(_on_combo_updated)
-		GameManager.game_started.connect(_reset_run_milestones)
-		GameManager.game_over.connect(_on_game_over_hide_banner)
+	_connect_game_manager_signals()
 	_reset_run_milestones()
 	if reload_box:
 		reload_box.visible = false
@@ -95,19 +100,95 @@ func _ready() -> void:
 	if critical_vignette:
 		critical_vignette.visible = false
 
+func _connect_viewport_signals() -> void:
+	var vp: Viewport = get_viewport()
+	if vp and not vp.size_changed.is_connected(_update_responsive_layout):
+		vp.size_changed.connect(_update_responsive_layout)
+
+func _disconnect_viewport_signals() -> void:
+	var vp: Viewport = get_viewport()
+	if vp and vp.size_changed.is_connected(_update_responsive_layout):
+		vp.size_changed.disconnect(_update_responsive_layout)
+
+func _connect_game_manager_signals() -> void:
+	if has_node("/root/GameManager"):
+		_game_manager = get_node("/root/GameManager")
+		if not _game_manager.score_updated.is_connected(_on_score_updated):
+			_game_manager.score_updated.connect(_on_score_updated)
+		if not _game_manager.distance_updated.is_connected(_on_distance_updated):
+			_game_manager.distance_updated.connect(_on_distance_updated)
+		if not _game_manager.horde_proximity_changed.is_connected(_on_horde_proximity_changed):
+			_game_manager.horde_proximity_changed.connect(_on_horde_proximity_changed)
+		if not _game_manager.combo_updated.is_connected(_on_combo_updated):
+			_game_manager.combo_updated.connect(_on_combo_updated)
+		if not _game_manager.game_started.is_connected(_reset_run_milestones):
+			_game_manager.game_started.connect(_reset_run_milestones)
+		if not _game_manager.game_over.is_connected(_on_game_over_hide_banner):
+			_game_manager.game_over.connect(_on_game_over_hide_banner)
+
+func _disconnect_game_manager_signals() -> void:
+	if _game_manager and is_instance_valid(_game_manager):
+		if _game_manager.score_updated.is_connected(_on_score_updated):
+			_game_manager.score_updated.disconnect(_on_score_updated)
+		if _game_manager.distance_updated.is_connected(_on_distance_updated):
+			_game_manager.distance_updated.disconnect(_on_distance_updated)
+		if _game_manager.horde_proximity_changed.is_connected(_on_horde_proximity_changed):
+			_game_manager.horde_proximity_changed.disconnect(_on_horde_proximity_changed)
+		if _game_manager.combo_updated.is_connected(_on_combo_updated):
+			_game_manager.combo_updated.disconnect(_on_combo_updated)
+		if _game_manager.game_started.is_connected(_reset_run_milestones):
+			_game_manager.game_started.disconnect(_reset_run_milestones)
+		if _game_manager.game_over.is_connected(_on_game_over_hide_banner):
+			_game_manager.game_over.disconnect(_on_game_over_hide_banner)
+
+func _disconnect_player_signals() -> void:
+	if _player and is_instance_valid(_player):
+		if _player.health_changed.is_connected(_on_health_changed):
+			_player.health_changed.disconnect(_on_health_changed)
+		if _player.shield_changed.is_connected(_on_shield_changed):
+			_player.shield_changed.disconnect(_on_shield_changed)
+		if _player.shotgun and is_instance_valid(_player.shotgun):
+			if _player.shotgun.ammo_changed.is_connected(_on_ammo_changed):
+				_player.shotgun.ammo_changed.disconnect(_on_ammo_changed)
+			if _player.shotgun.reload_started.is_connected(_on_reload_started):
+				_player.shotgun.reload_started.disconnect(_on_reload_started)
+			if _player.shotgun.reload_finished.is_connected(_on_reload_finished):
+				_player.shotgun.reload_finished.disconnect(_on_reload_finished)
+
 func _update_responsive_layout() -> void:
 	if not is_instance_valid(safe_frame) or not is_instance_valid(root_control):
 		return
 
-	var vp_size: Vector2 = get_viewport().get_visible_rect().size
+	var vp: Viewport = get_viewport()
+	if not vp:
+		return
+
+	var vp_size: Vector2 = vp.get_visible_rect().size
 	if vp_size.x <= 0.0 or vp_size.y <= 0.0:
 		return
 
-	var win_size: Vector2i = DisplayServer.window_get_size()
-	if win_size.x <= 0 or win_size.y <= 0:
-		win_size = Vector2i(int(vp_size.x * 2.0), int(vp_size.y * 2.0))
+	# Retrieve exact window size and mode across windowed, maximized, and fullscreen states
+	var win: Window = get_window()
+	var win_size: Vector2i = Vector2i.ZERO
+	var is_fullscreen: bool = false
+	if win:
+		win_size = win.size
+		is_fullscreen = (
+			win.mode == Window.MODE_FULLSCREEN
+			or win.mode == Window.MODE_EXCLUSIVE_FULLSCREEN
+		)
+	else:
+		win_size = DisplayServer.window_get_size()
+		var mode: DisplayServer.WindowMode = DisplayServer.window_get_mode()
+		is_fullscreen = (
+			mode == DisplayServer.WINDOW_MODE_FULLSCREEN
+			or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
+		)
 
-	# 1. Base 16:9 focal dimensions constraint
+	if win_size.x <= 0 or win_size.y <= 0:
+		win_size = Vector2i(int(roundf(vp_size.x * 2.0)), int(roundf(vp_size.y * 2.0)))
+
+	# 1. Base 16:9 focal dimensions constraint (SafeFrame architecture)
 	var target_aspect: float = 16.0 / 9.0
 	var current_aspect: float = vp_size.x / maxf(vp_size.y, 1.0)
 
@@ -118,7 +199,7 @@ func _update_responsive_layout() -> void:
 		# Wider than 16:9 (e.g. 21:9 ultrawide) -> clamp focal width to 16:9
 		focal_w = vp_size.y * target_aspect
 	elif current_aspect < target_aspect:
-		# Taller than 16:9 (e.g. 16:10 like 1920x1200) -> clamp focal height to 16:9
+		# Taller than 16:9 (e.g. 16:10 like 1920x1200 or 4:3) -> clamp focal height to 16:9
 		focal_h = vp_size.x / target_aspect
 
 	var origin_y: float = (vp_size.y - focal_h) * 0.5
@@ -127,18 +208,29 @@ func _update_responsive_layout() -> void:
 	# 2. Responsive horizontal padding based on window size & fullscreen state
 	# Small window (960x540): compact pad_x (12px).
 	# Fullscreen & high resolutions (1080p, 1200p, 1440p): pad_x scales smoothly
-	# so HUD elements stay in the player's focal vision rather than drifting to the outer bezels.
-	var is_fullscreen: bool = (
-		DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
-		or DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
-	)
+	# so HUD elements stay in the player's focal vision rather than drifting to outer bezels.
 	var scale_factor: float = clampf(float(win_size.x) / 960.0, 1.0, 2.67)
 	var base_pad: float = lerpf(12.0, 32.0, clampf((scale_factor - 1.0) / 1.0, 0.0, 1.0))
 	if is_fullscreen:
 		base_pad = maxf(base_pad, 30.0)
 
-	safe_frame.position = Vector2(origin_x + base_pad, origin_y)
-	safe_frame.size = Vector2(focal_w - (base_pad * 2.0), focal_h)
+	# 3. Crisp pixel art integer snapping (avoid subpixel jitter, blurry fonts, and 1px edge bleeding)
+	base_pad = roundf(base_pad)
+	origin_x = roundf(origin_x)
+	origin_y = roundf(origin_y)
+	focal_w = roundf(focal_w)
+	focal_h = roundf(focal_h)
+
+	# Clamp padding to guarantee minimum comfortable width for HUD elements (avoid overlap in extreme aspect ratios)
+	var max_allowed_pad: float = floorf((focal_w - 340.0) * 0.5)
+	if max_allowed_pad > 12.0:
+		base_pad = clampf(base_pad, 12.0, max_allowed_pad)
+
+	var target_pos: Vector2 = Vector2(origin_x + base_pad, origin_y)
+	var target_size: Vector2 = Vector2(focal_w - (base_pad * 2.0), focal_h)
+
+	safe_frame.position = target_pos
+	safe_frame.size = target_size
 
 func _set_mouse_filter_ignore(node: Node) -> void:
 	if node is Control:
@@ -147,8 +239,8 @@ func _set_mouse_filter_ignore(node: Node) -> void:
 		_set_mouse_filter_ignore(child)
 
 func _process(delta: float) -> void:
-	if GameManager and GameManager.current_state == GameManager.State.PLAYING:
-		var t: int = int(GameManager.survival_time)
+	if _game_manager and _game_manager.current_state == _game_manager.State.PLAYING:
+		var t: int = int(_game_manager.survival_time)
 		var mins: int = int(t / 60.0)
 		var secs: int = t % 60
 		time_label.text = "TIME: %02d:%02d" % [mins, secs]
@@ -174,25 +266,31 @@ func _process(delta: float) -> void:
 		if hp_label:
 			hp_label.modulate = PALETTE.ACCENT_MAGENTA.lerp(Color(1.0, 0.52, 0.62, 1.0), beat * 0.65)
 
-	if _has_shield and _shield_icon and is_instance_valid(_tracked_player):
-		if _tracked_player.shield_time_left <= 2.0:
+	if _has_shield and _shield_icon and is_instance_valid(_player):
+		if _player.shield_time_left <= 2.0:
 			var warn_pulse: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.024)
 			_shield_icon.modulate.a = 0.35 + 0.65 * warn_pulse
 		else:
 			_shield_icon.modulate.a = 1.0
 
 func setup_player(player: Player) -> void:
-	_tracked_player = player
-	if player:
-		player.health_changed.connect(_on_health_changed)
-		player.shield_changed.connect(_on_shield_changed)
-		_on_health_changed(player.current_hp, player.max_hp)
-		_on_shield_changed(player.shield_hp, player.max_shield)
-		if player.shotgun:
-			player.shotgun.ammo_changed.connect(_on_ammo_changed)
-			player.shotgun.reload_started.connect(_on_reload_started)
-			player.shotgun.reload_finished.connect(_on_reload_finished)
-			_on_ammo_changed(player.shotgun.current_ammo, player.shotgun.max_ammo)
+	_disconnect_player_signals()
+	_player = player
+	if _player:
+		if not _player.health_changed.is_connected(_on_health_changed):
+			_player.health_changed.connect(_on_health_changed)
+		if not _player.shield_changed.is_connected(_on_shield_changed):
+			_player.shield_changed.connect(_on_shield_changed)
+		_on_health_changed(_player.current_hp, _player.max_hp)
+		_on_shield_changed(_player.shield_hp, _player.max_shield)
+		if _player.shotgun:
+			if not _player.shotgun.ammo_changed.is_connected(_on_ammo_changed):
+				_player.shotgun.ammo_changed.connect(_on_ammo_changed)
+			if not _player.shotgun.reload_started.is_connected(_on_reload_started):
+				_player.shotgun.reload_started.connect(_on_reload_started)
+			if not _player.shotgun.reload_finished.is_connected(_on_reload_finished):
+				_player.shotgun.reload_finished.connect(_on_reload_finished)
+			_on_ammo_changed(_player.shotgun.current_ammo, _player.shotgun.max_ammo)
 
 func _setup_milestone_style() -> void:
 	if not milestone_panel:
