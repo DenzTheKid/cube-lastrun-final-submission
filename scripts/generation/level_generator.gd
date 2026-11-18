@@ -21,8 +21,10 @@ var _active_chunks: Array[Node2D] = []
 # Preloaded obstacle and enemy scenes
 const SPIKES_SCENE: PackedScene = preload("res://scenes/obstacles/spikes.tscn")
 const BARRICADE_SCENE: PackedScene = preload("res://scenes/obstacles/barricade.tscn")
+const WRECKED_CAR_SCENE: PackedScene = preload("res://scenes/obstacles/wrecked_car.tscn")
 const PLATFORM_SCENE: PackedScene = preload("res://scenes/obstacles/platform.tscn")
 const PIT_SCENE: PackedScene = preload("res://scenes/obstacles/pit_killzone.tscn")
+const MEDKIT_SCENE: PackedScene = preload("res://scenes/pickups/medkit.tscn")
 
 const WALKER_SCENE: PackedScene = preload("res://scenes/enemies/zombie_walker.tscn")
 const RUNNER_SCENE: PackedScene = preload("res://scenes/enemies/zombie_runner.tscn")
@@ -51,12 +53,17 @@ enum PatternType {
 	RECOIL_DOUBLE_VAULT,
 	PLATFORM_CASCADE,
 	RUNNER_AMBUSH_HIGH,
-	THE_GAUNTLET
+	THE_GAUNTLET,
+	CAR_WRECK_SOLO,
+	CAR_WRECK_MEDKIT,
+	CAR_WRECK_WALKER,
+	CAR_WRECK_SPIKES
 }
 
 var _last_pattern: PatternType = PatternType.FLAT_START
 var _chunks_spawned: int = 0
 var _consecutive_hazard_chunks: int = 0
+var _chunks_since_medkit: int = 0
 
 func setup(player: Player) -> void:
 	target_player = player
@@ -107,7 +114,9 @@ func _choose_fair_pattern() -> PatternType:
 		PatternType.WALKER_TRIO,
 		PatternType.RUNNER_RUSH,
 		PatternType.SPIKE_HURDLE,
-		PatternType.PLATFORM_HIGHWAY
+		PatternType.PLATFORM_HIGHWAY,
+		PatternType.CAR_WRECK_SOLO,
+		PatternType.CAR_WRECK_MEDKIT
 	]
 
 	# 2. Mid Tier Patterns (Unlocked at diff > 1.2, ~100m+)
@@ -118,6 +127,7 @@ func _choose_fair_pattern() -> PatternType:
 		choices.append(PatternType.BARRICADE_SOLO)
 		choices.append(PatternType.BARRICADE_WALKER)
 		choices.append(PatternType.PLATFORM_OVER_PIT)
+		choices.append(PatternType.CAR_WRECK_WALKER)
 
 	# 3. High Tier Patterns (Unlocked at diff > 1.45, ~250m+)
 	if diff >= 1.45:
@@ -125,6 +135,7 @@ func _choose_fair_pattern() -> PatternType:
 		choices.append(PatternType.MUTANT_AMBUSH)
 		choices.append(PatternType.MUTANT_AND_SPIKES)
 		choices.append(PatternType.PLATFORM_CASCADE)
+		choices.append(PatternType.CAR_WRECK_SPIKES)
 
 	# 4. Expert Tier Patterns (Unlocked at diff > 1.75, ~450m+)
 	if diff >= 1.75:
@@ -269,7 +280,60 @@ func _build_chunk_content(chunk: ChunkNode, pattern: PatternType) -> void:
 			_spawn_platform(chunk, 180.0, ground_y - 60.0)
 			_spawn_enemy(chunk, BRUTE_SCENE, 270.0, ground_y - 16.0)
 
+		PatternType.CAR_WRECK_SOLO:
+			chunk.add_ground_segment(0.0, chunk_width)
+			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 180.0, ground_y)
+
+		PatternType.CAR_WRECK_MEDKIT:
+			chunk.add_ground_segment(0.0, chunk_width)
+			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 180.0, ground_y)
+			_spawn_pickup(chunk, MEDKIT_SCENE, 183.0, ground_y - 32.0)
+			_chunks_since_medkit = 0
+
+		PatternType.CAR_WRECK_WALKER:
+			chunk.add_ground_segment(0.0, chunk_width)
+			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 150.0, ground_y)
+			_spawn_enemy(chunk, WALKER_SCENE, 310.0, ground_y - 12.0)
+
+		PatternType.CAR_WRECK_SPIKES:
+			chunk.add_ground_segment(0.0, chunk_width)
+			_spawn_hazard(chunk, WRECKED_CAR_SCENE, 140.0, ground_y)
+			_spawn_platform(chunk, 235.0, ground_y - 52.0)
+			_spawn_hazard(chunk, SPIKES_SCENE, 270.0, ground_y)
+
+	# Smart periodic Medkit drop when injured or on safe interval
+	if pattern != PatternType.FLAT_START and pattern != PatternType.CAR_WRECK_MEDKIT:
+		_chunks_since_medkit += 1
+		var is_injured: bool = is_instance_valid(target_player) and target_player.current_hp < target_player.max_hp
+		var threshold: int = 3 if is_injured else 6
+		if _chunks_since_medkit >= threshold:
+			var spot: Vector2 = _get_safe_medkit_spot(pattern)
+			_spawn_pickup(chunk, MEDKIT_SCENE, spot.x, spot.y)
+			_chunks_since_medkit = 0
+
+func _get_safe_medkit_spot(pattern: PatternType) -> Vector2:
+	match pattern:
+		PatternType.PIT_STANDARD:
+			return Vector2(280.0, ground_y - 2.0)
+		PatternType.PLATFORM_OVER_PIT:
+			return Vector2(170.0, ground_y - 53.0)
+		PatternType.PLATFORM_HIGHWAY, PatternType.CAR_WRECK_SPIKES:
+			return Vector2(180.0 if pattern == PatternType.PLATFORM_HIGHWAY else 235.0, ground_y - 58.0)
+		PatternType.RECOIL_DOUBLE_VAULT:
+			return Vector2(175.0, ground_y - 73.0)
+		PatternType.PLATFORM_CASCADE:
+			return Vector2(250.0, ground_y - 83.0)
+		PatternType.CAR_WRECK_SOLO, PatternType.CAR_WRECK_WALKER:
+			return Vector2(183.0 if pattern == PatternType.CAR_WRECK_SOLO else 153.0, ground_y - 32.0)
+		_:
+			return Vector2(250.0, ground_y - 4.0)
+
 func _spawn_hazard(chunk: Node2D, scene: PackedScene, x_offset: float, y_pos: float) -> void:
+	var inst: Node2D = scene.instantiate() as Node2D
+	inst.position = Vector2(x_offset, y_pos)
+	chunk.add_child(inst)
+
+func _spawn_pickup(chunk: Node2D, scene: PackedScene, x_offset: float, y_pos: float) -> void:
 	var inst: Node2D = scene.instantiate() as Node2D
 	inst.position = Vector2(x_offset, y_pos)
 	chunk.add_child(inst)

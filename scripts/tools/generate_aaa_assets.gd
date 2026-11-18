@@ -18,6 +18,8 @@ func _init() -> void:
 	_make_title_logo_and_ribbon()
 	_make_empty_and_hero_showcase()
 	_make_pixel_hearts()
+	_make_wrecked_car_and_medkit()
+	_make_heal_sfx()
 	print("=== Asset Generation Complete ===")
 	quit(0)
 
@@ -1163,6 +1165,277 @@ func _make_pixel_hearts() -> void:
 				sh_empty.set_pixel(x, y, ec)
 	sh_full.save_png("res://assets/ui/px_shell_full.png")
 	sh_empty.save_png("res://assets/ui/px_shell_empty.png")
+
+func _make_wrecked_car_and_medkit() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/obstacles"))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/pickups"))
+	var out_col := Color("#0d101f")
+
+	# 1. Stationary Wrecked / Broken Sedan Car (68 x 28) facing left on the dusk highway
+	var cw: int = 68
+	var ch: int = 28
+	var car := Image.create(cw, ch, false, Image.FORMAT_RGBA8)
+
+	# Palette: softened steel-navy body, rust corrosion, cracked cyan glass, dead amber headlight
+	var c_roof_hi := Color("#7291bd")
+	var c_body_hi := Color("#546f9c")
+	var c_body_mid := Color("#394d75")
+	var c_body_sh := Color("#263454")
+	var c_deep := Color("#131829")
+	var c_rust_dk := Color("#7a372f")
+	var c_rust_md := Color("#a84f3b")
+	var c_rust_lt := Color("#cc734b")
+	var c_glass_dk := Color("#161f38")
+	var c_glass_sh := Color("#5bb4c9")
+	var c_glass_md := Color("#3b7c96")
+	var c_trim := Color("#cf9146")
+	var c_trim_lt := Color("#ebbf75")
+	var c_tire := Color("#1b2136")
+	var c_tire_hi := Color("#323c59")
+	var c_rim := Color("#7484a6")
+
+	# Lower Chassis Silhouette (x = 4..63, y = 13..22 with nose droop on left)
+	for x in range(4, 64):
+		var top_y: int = 13 if x >= 22 else (14 if x >= 8 else 15)
+		var bot_y: int = 23 if x <= 20 else 22
+		for y in range(top_y, bot_y + 1):
+			var col: Color = c_body_mid
+			if y == top_y:
+				col = c_body_hi
+			elif y >= bot_y - 2:
+				col = c_body_sh
+			car.set_pixel(x, y, col)
+
+	# Worn amber hazard/trim stripe along side door & fender (broken/scratched gaps)
+	for x in range(6, 61):
+		if x in [12, 13, 33, 34, 47, 48, 55]:
+			continue
+		var sy: int = 18 if x <= 21 else 17
+		car.set_pixel(x, sy, c_trim if x % 5 != 0 else c_trim_lt)
+
+	# Crushed / Dented Cabin & Pillars (x = 20..53, y = 2..13)
+	for x in range(20, 54):
+		# Sloped windshield A-pillar & rear C-pillar with 1px roof dent around x=33..39
+		var lx: int = x - 20
+		var rx: int = 53 - x
+		var roof_y: int = 2
+		if lx < 5:
+			roof_y = 2 + (5 - lx) * 2
+		elif rx < 5:
+			roof_y = 2 + (5 - rx) * 2
+		elif x >= 33 and x <= 39:
+			roof_y = 3 # visibly caved roof dent
+		for y in range(roof_y, 14):
+			var col: Color = c_body_mid
+			if y == roof_y or y == roof_y + 1:
+				col = c_roof_hi if y == roof_y else c_body_hi
+			car.set_pixel(x, y, col)
+
+	# Cabin Window Openings & Shattered Glass Shards
+	for x in range(22, 51):
+		var is_pillar: bool = (x >= 37 and x <= 39)
+		if is_pillar:
+			continue
+		var wx_top: int = 5
+		if x < 26:
+			wx_top = 5 + (26 - x) * 2
+		elif x > 47:
+			wx_top = 5 + (x - 47) * 2
+		for y in range(wx_top, 13):
+			car.set_pixel(x, y, c_glass_dk)
+	# Shattered cyan glass jagged fangs top & bottom
+	for gx in [26, 27, 29, 31, 35, 41, 44, 48]:
+		_safe_px(car, gx, 5, c_glass_sh)
+		_safe_px(car, gx + 1, 6, c_glass_md)
+	for gx in [25, 28, 33, 36, 42, 46]:
+		_safe_px(car, gx, 12, c_glass_md)
+		_safe_px(car, gx, 11, c_glass_sh)
+	# Visible crooked headrest silhouette inside busted rear cabin
+	car.fill_rect(Rect2i(32, 8, 3, 5), Color("#252d47"))
+	car.fill_rect(Rect2i(43, 9, 3, 4), Color("#202840"))
+
+	# Door panel seam, handle & bent fender rust corrosion
+	for y in range(13, 22):
+		_safe_px(car, 26, y, c_deep)
+		_safe_px(car, 39, y, c_deep)
+		_safe_px(car, 51, y, c_deep)
+	car.fill_rect(Rect2i(35, 15, 3, 1), Color("#8599bf"))
+	# Heavy rust blotches & streaks along hood edge, rocker panel, rear trunk
+	for rpt in [
+		[19, 14, 4, 2], [24, 19, 6, 3], [29, 20, 5, 2], [39, 18, 5, 4],
+		[45, 20, 4, 2], [54, 14, 6, 2], [56, 17, 4, 3], [33, 3, 5, 2], [8, 16, 4, 2]
+	]:
+		car.fill_rect(Rect2i(rpt[0], rpt[1], rpt[2], rpt[3]), c_rust_dk)
+		_safe_px(car, rpt[0] + 1, rpt[1], c_rust_md)
+		if rpt[2] >= 4:
+			_safe_px(car, rpt[0] + 2, rpt[1] + 1, c_rust_lt)
+
+	# Popped Crooked Engine Hood on Front Left (tilted upward from x=21 -> x=6)
+	for i in range(16):
+		var hx: int = 21 - i
+		var hy: int = 12 - int(floor(float(i) * 0.25)) # rises to y=8 at left tip
+		car.fill_rect(Rect2i(hx, hy + 2, 1, maxi(1, 14 - hy)), c_deep) # exposed engine bay below
+		car.set_pixel(hx, hy - 1, out_col)
+		car.set_pixel(hx, hy, c_roof_hi if i > 3 else c_rust_md)
+		car.set_pixel(hx, hy + 1, c_body_mid)
+	# Engine block, pulley & frayed copper wire peeking under popped hood
+	car.fill_rect(Rect2i(9, 12, 6, 3), Color("#4f5c7a"))
+	car.fill_rect(Rect2i(10, 12, 3, 1), Color("#7a8aad"))
+	_safe_px(car, 14, 11, c_rust_lt)
+	_safe_px(car, 15, 12, c_trim)
+
+	# Smashed Front Bumper, Dead Hanging Headlight & Cracked Grille (x = 1..6)
+	_draw_rect_outline(car, 1, 19, 5, 4, Color("#495573"), out_col)
+	car.fill_rect(Rect2i(2, 20, 3, 1), Color("#7f91b8"))
+	_draw_rect_outline(car, 3, 16, 3, 3, Color("#4a3423"), out_col) # dark smashed socket
+	_safe_px(car, 4, 17, Color("#a37136"))
+	_safe_px(car, 3, 19, c_trim) # dangling cracked lens
+
+	# Rear Bumper, Dented Trunk & Broken Taillight (x = 62..67)
+	_draw_rect_outline(car, 61, 19, 6, 3, Color("#495573"), out_col)
+	car.fill_rect(Rect2i(62, 20, 4, 1), Color("#7f91b8"))
+	_draw_rect_outline(car, 61, 15, 3, 3, Color("#591c2b"), out_col)
+	_safe_px(car, 62, 16, Color("#ab334d")) # dim cracked ruby taillight
+	car.fill_rect(Rect2i(62, 22, 5, 2), Color("#5c6887")) # drooping tailpipe
+
+	# Wheel Wells (x = 10..22 & 46..58) & Deflated Flat / Collapsed Tires (bottom at y = 27)
+	for wx in [16, 52]:
+		car.fill_rect(Rect2i(wx - 6, 19, 12, 5), c_deep)
+		car.fill_rect(Rect2i(wx - 5, 18, 10, 1), out_col)
+		# Deflated squat tire polygon (wider flat bottom rows y=25..27)
+		for dy in range(19, 28):
+			var hw: int = 5
+			if dy == 19:
+				hw = 3
+			elif dy == 20 or dy == 21:
+				hw = 4
+			elif dy >= 26:
+				hw = 6 if wx == 16 else 5 # extra pancaked front flat tire
+			for dx in range(-hw, hw + 1):
+				var tx: int = wx + dx
+				var is_rim: bool = (abs(dx) <= 2 and dy >= 22 and dy <= 25)
+				var is_edge: bool = (dy == 19 or dy == 27 or abs(dx) == hw)
+				if is_edge:
+					_safe_px(car, tx, dy, out_col)
+				elif is_rim:
+					var rc: Color = Color("#8f9ec2") if (dx <= 0 and dy <= 23) else (c_rust_md if wx == 52 else c_rim)
+					_safe_px(car, tx, dy, rc)
+				else:
+					_safe_px(car, tx, dy, c_tire_hi if dy <= 21 else c_tire)
+
+	# Crisp Outer Pixel Silhouette Outline Pass
+	var car_copy := car.duplicate() as Image
+	for y in range(ch):
+		for x in range(cw):
+			if car_copy.get_pixel(x, y).a > 0.5:
+				continue
+			var adj: bool = false
+			for off in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+				var nx: int = x + off.x
+				var ny: int = y + off.y
+				if nx >= 0 and nx < cw and ny >= 0 and ny < ch and car_copy.get_pixel(nx, ny).a > 0.5:
+					adj = true
+					break
+			if adj:
+				car.set_pixel(x, y, out_col)
+	car.save_png("res://assets/obstacles/px_wrecked_car.png")
+
+	# 2. Collectible Medical First-Aid Kit (18 x 16)
+	var mw: int = 18
+	var mh: int = 16
+	var med := Image.create(mw, mh, false, Image.FORMAT_RGBA8)
+	# Steel top carry handle (x = 5..12, y = 0..3)
+	for x in range(5, 13):
+		if x >= 6 and x <= 11:
+			med.set_pixel(x, 0, out_col)
+			med.set_pixel(x, 1, Color("#96a9cc") if x < 10 else Color("#667799"))
+		if x == 5 or x == 12:
+			med.set_pixel(x, 1, out_col)
+			med.set_pixel(x, 2, out_col)
+		if x == 6 or x == 11:
+			med.set_pixel(x, 2, Color("#667799"))
+	# Case shell body (x = 1..16, y = 3..14) with 1px chamfered corners
+	for y in range(3, 15):
+		for x in range(1, 17):
+			var dx: int = mini(x - 1, 16 - x)
+			var dy: int = mini(y - 3, 14 - y)
+			if dx == 0 and dy == 0:
+				continue
+			if x == 1 or x == 16 or y == 3 or y == 14 or (dx == 1 and dy == 1):
+				med.set_pixel(x, y, out_col)
+				continue
+			var col: Color
+			if y == 4:
+				col = Color("#e3ecf7")
+			elif y <= 6:
+				col = Color("#cad7eb")
+			elif y <= 11:
+				col = Color("#b3c3db")
+			elif y == 12:
+				col = Color("#8c9eb8")
+			else:
+				col = Color("#6b7c96")
+			# Warm brass latches at top left/right corners
+			if (x in [3, 4, 13, 14]) and y in [4, 5]:
+				col = Color("#ebbc6e") if y == 4 else Color("#ab7533")
+			elif y == 6:
+				col = Color("#7e90ad") # lid seam
+			med.set_pixel(x, y, col)
+	# Coral-Crimson Medical Cross (+) in center with deep contrast outline
+	for y in range(6, 13):
+		for x in range(5, 13):
+			var in_vert: bool = (x >= 7 and x <= 10 and y >= 6 and y <= 12)
+			var in_horz: bool = (x >= 5 and x <= 12 and y >= 8 and y <= 10)
+			if in_vert or in_horz:
+				var ccol: Color = Color("#e33d5f")
+				if (in_vert and x == 7 and y <= 9) or (in_horz and y == 8 and x <= 9):
+					ccol = Color("#ff8aa3")
+				elif x == 10 or y == 12 or (in_horz and y == 10):
+					ccol = Color("#ab203e")
+				med.set_pixel(x, y, ccol)
+			else:
+				# Crisp dark berry halo/shadow under right & bottom of cross
+				var adj_l: bool = ((x - 1 >= 7 and x - 1 <= 10 and y >= 6 and y <= 12) or (x - 1 >= 5 and x - 1 <= 12 and y >= 8 and y <= 10))
+				var adj_u: bool = ((x >= 7 and x <= 10 and y - 1 >= 6 and y - 1 <= 12) or (x >= 5 and x <= 12 and y - 1 >= 8 and y - 1 <= 10))
+				if adj_l or adj_u:
+					med.set_pixel(x, y, Color("#6b7c96"))
+	med.save_png("res://assets/pickups/px_medkit.png")
+
+func _make_heal_sfx() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/audio"))
+	var sr: int = 22050
+	var dur: float = 0.28
+	var total_samples: int = int(sr * dur)
+	var data_bytes: int = total_samples * 2
+	var buf := StreamPeerBuffer.new()
+	buf.big_endian = false
+	buf.put_data("RIFF".to_ascii_buffer())
+	buf.put_32(36 + data_bytes)
+	buf.put_data("WAVE".to_ascii_buffer())
+	buf.put_data("fmt ".to_ascii_buffer())
+	buf.put_32(16)
+	buf.put_16(1) # PCM
+	buf.put_16(1) # Mono
+	buf.put_32(sr)
+	buf.put_32(sr * 2)
+	buf.put_16(2)
+	buf.put_16(16)
+	buf.put_data("data".to_ascii_buffer())
+	buf.put_32(data_bytes)
+	for i in range(total_samples):
+		var t: float = float(i) / float(sr)
+		var is_second: bool = t >= 0.11
+		var local_t: float = t - 0.11 if is_second else t
+		var f1: float = 783.99 if is_second else 523.25
+		var f2: float = 1046.50 if is_second else 659.25
+		var env: float = minf(1.0, local_t / 0.008) * exp(-local_t * (12.0 if is_second else 16.0))
+		var s: float = (sin(TAU * f1 * t) * 0.58 + sin(TAU * f2 * t) * 0.34) * env
+		buf.put_16(int(clampf(s, -1.0, 1.0) * 14500.0))
+	var f := FileAccess.open("res://assets/audio/sfx_heal.wav", FileAccess.WRITE)
+	if f:
+		f.store_buffer(buf.data_array)
+		f.close()
+
 
 
 

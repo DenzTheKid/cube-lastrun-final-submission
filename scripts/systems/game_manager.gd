@@ -92,6 +92,12 @@ func add_kill(kill_score: int = 100) -> void:
 	combo_updated.emit(combo_count, combo_multiplier)
 	score_updated.emit(score)
 
+func add_bonus_score(points: int) -> void:
+	if current_state != State.PLAYING or points <= 0:
+		return
+	score += points
+	score_updated.emit(score)
+
 func reset_combo() -> void:
 	if combo_count > 0 or combo_multiplier > 1:
 		combo_count = 0

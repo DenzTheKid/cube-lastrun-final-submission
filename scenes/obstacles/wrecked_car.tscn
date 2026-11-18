@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/obstacles/wrecked_car.gd" id="1_car"]
+[ext_resource type="Texture2D" path="res://assets/obstacles/px_wrecked_car.png" id="2_cartex"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_chassis"]
+size = Vector2(58, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cabin"]
+size = Vector2(28, 10)
+
+[sub_resource type="Gradient" id="Gradient_smoke"]
+offsets = PackedFloat32Array(0, 0.35, 1)
+colors = PackedColorArray(0.55, 0.62, 0.78, 0.42, 0.36, 0.42, 0.56, 0.24, 0.2, 0.24, 0.34, 0)
+
+[node name="WreckedCar" type="StaticBody2D"]
+collision_layer = 1
+collision_mask = 6
+script = ExtResource("1_car")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(0, -14)
+texture = ExtResource("2_cartex")
+
+[node name="ChassisCollision" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("RectangleShape2D_chassis")
+
+[node name="CabinCollision" type="CollisionShape2D" parent="."]
+position = Vector2(3, -21)
+shape = SubResource("RectangleShape2D_cabin")
+
+[node name="SmokeParticles" type="CPUParticles2D" parent="."]
+position = Vector2(-21, -17)
+amount = 7
+lifetime = 1.4
+preprocess = 0.6
+direction = Vector2(-0.25, -1)
+spread = 18.0
+gravity = Vector2(0, -8)
+initial_velocity_min = 12.0
+initial_velocity_max = 20.0
+scale_amount_min = 2.0
+scale_amount_max = 3.5
+color_ramp = SubResource("Gradient_smoke")

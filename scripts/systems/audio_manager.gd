@@ -29,6 +29,7 @@ const SFX_STREAMS: Dictionary = {
 	"zombie_hit": preload("res://assets/audio/sfx_zombie_hit.wav"),
 	"zombie_death": preload("res://assets/audio/sfx_zombie_death.wav"),
 	"player_hurt": preload("res://assets/audio/sfx_player_hurt.wav"),
+	"heal": preload("res://assets/audio/sfx_heal.wav"),
 	"game_over": preload("res://assets/audio/sfx_game_over.wav"),
 	"ui_click": preload("res://assets/audio/sfx_ui_click.wav"),
 	"shotgun_acoustic": preload("res://assets/audio/sfx_shotgun_acoustic.wav"),

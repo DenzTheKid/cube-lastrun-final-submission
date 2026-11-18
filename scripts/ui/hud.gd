@@ -91,6 +91,13 @@ func _on_health_changed(hp: int, max_hp: int) -> void:
 		_hp_pip_2.scale = Vector2(1.35, 1.35)
 		var tw: Tween = create_tween()
 		tw.tween_property(_hp_pip_2, "scale", Vector2.ONE, 0.16)
+	elif hp > _last_hp and _hp_pip_2:
+		var pop_pip: TextureRect = _hp_pip_2 if hp >= 2 else _hp_pip_1
+		if pop_pip:
+			pop_pip.pivot_offset = Vector2(10.0, 8.5)
+			pop_pip.scale = Vector2(1.38, 1.38)
+			var tw_heal: Tween = create_tween()
+			tw_heal.tween_property(pop_pip, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_last_hp = hp
 
 	if hp == 1:

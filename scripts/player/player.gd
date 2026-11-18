@@ -388,6 +388,41 @@ func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 		if knockback_dir != Vector2.ZERO:
 			velocity += knockback_dir.normalized() * 140.0
 
+func heal(amount: int = 1) -> bool:
+	if is_dead or is_transforming or amount <= 0:
+		return false
+
+	var prev_hp: int = current_hp
+	current_hp = mini(current_hp + amount, max_hp)
+	var gained: int = current_hp - prev_hp
+	health_changed.emit(current_hp, max_hp)
+
+	if AudioManager:
+		AudioManager.play_sfx("heal", 0.04)
+
+	if GameFeel:
+		if gained > 0:
+			GameFeel.spawn_floating_text(global_position + Vector2(0, -16), "+%d HP!" % gained, Color(0.45, 0.95, 0.65), 1.1)
+		else:
+			if GameManager:
+				GameManager.add_bonus_score(50)
+			GameFeel.spawn_floating_text(global_position + Vector2(0, -16), "MAX HP +50!", Color(0.55, 0.95, 0.85), 1.0)
+		GameFeel.spawn_shockwave_ring(global_position, Color(0.45, 0.95, 0.65, 0.85))
+
+	if _shader_mat and gained > 0:
+		_shader_mat.set_shader_parameter("rim_color", Color(0.45, 0.98, 0.65, 1.0))
+		_shader_mat.set_shader_parameter("rim_strength", 0.75)
+		var tw: Tween = create_tween()
+		tw.tween_method(func(v: float):
+			if is_instance_valid(self) and _shader_mat:
+				_shader_mat.set_shader_parameter("rim_strength", v)
+				if v <= 0.36:
+					_shader_mat.set_shader_parameter("rim_color", Color(0.45, 0.95, 1.0, 1.0))
+		, 0.75, 0.35, 0.35)
+
+	_visual_scale = Vector2(0.86, 1.20)
+	return gained > 0
+
 func die() -> void:
 	if is_dead:
 		return
