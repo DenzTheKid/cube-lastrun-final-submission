@@ -105,10 +105,10 @@ func stop_music() -> void:
 	_music_player.stop()
 
 func set_sfx_volume(val_normalized: float) -> void:
-	sfx_volume_db = linear_to_db(clampf(val_normalized, 0.001, 1.0))
+	sfx_volume_db = -80.0 if val_normalized <= 0.001 else linear_to_db(clampf(val_normalized, 0.001, 1.0))
 	for p in _sfx_players:
 		p.volume_db = sfx_volume_db
 
 func set_music_volume(val_normalized: float) -> void:
-	music_volume_db = linear_to_db(clampf(val_normalized, 0.001, 1.0))
+	music_volume_db = -80.0 if val_normalized <= 0.001 else linear_to_db(clampf(val_normalized, 0.001, 1.0))
 	_music_player.volume_db = music_volume_db

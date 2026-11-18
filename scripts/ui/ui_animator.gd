@@ -69,5 +69,6 @@ static func _update_toggle_visual(btn: Button, is_on: bool, is_focused: bool) ->
 	var col: Color = PALETTE.ACCENT_CYAN if is_on else PALETTE.TEXT_DIM
 	btn.add_theme_color_override("font_color", col)
 	btn.add_theme_color_override("font_hover_color", PALETTE.ACCENT_AMBER if is_focused else col)
+	btn.add_theme_color_override("font_hover_pressed_color", PALETTE.ACCENT_AMBER if is_focused else col)
 	btn.add_theme_color_override("font_pressed_color", col)
 	btn.add_theme_color_override("font_focus_color", PALETTE.ACCENT_AMBER)

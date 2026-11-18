@@ -25,15 +25,7 @@ func _ready() -> void:
 		UI_ANIMATOR.style_toggle_button(sfx_check, "SFX")
 	if music_check:
 		UI_ANIMATOR.style_toggle_button(music_check, "BGM")
-	if AudioManager:
-		if sfx_check:
-			var sfx_on: bool = AudioManager.sfx_volume_db > -40.0
-			sfx_check.set_pressed_no_signal(sfx_on)
-			UI_ANIMATOR._update_toggle_visual(sfx_check, sfx_on, false)
-		if music_check:
-			var bgm_on: bool = AudioManager.music_volume_db > -40.0
-			music_check.set_pressed_no_signal(bgm_on)
-			UI_ANIMATOR._update_toggle_visual(music_check, bgm_on, false)
+	_sync_audio_toggles()
 
 	resume_btn.pressed.connect(_on_resume_pressed)
 	restart_btn.pressed.connect(_on_restart_pressed)
@@ -77,9 +69,21 @@ func toggle_pause() -> void:
 	if dimmer:
 		dimmer.visible = paused
 	if paused:
+		_sync_audio_toggles()
 		resume_btn.grab_focus()
 		if AudioManager:
 			AudioManager.play_sfx("ui_click")
+
+func _sync_audio_toggles() -> void:
+	if AudioManager:
+		if sfx_check:
+			var sfx_on: bool = AudioManager.sfx_volume_db > -40.0
+			sfx_check.set_pressed_no_signal(sfx_on)
+			UI_ANIMATOR._update_toggle_visual(sfx_check, sfx_on, sfx_check.has_focus())
+		if music_check:
+			var bgm_on: bool = AudioManager.music_volume_db > -40.0
+			music_check.set_pressed_no_signal(bgm_on)
+			UI_ANIMATOR._update_toggle_visual(music_check, bgm_on, music_check.has_focus())
 
 func _on_resume_pressed() -> void:
 	if AudioManager:
@@ -96,6 +100,8 @@ func _on_restart_pressed() -> void:
 func _on_sfx_toggled(toggled_on: bool) -> void:
 	if AudioManager:
 		AudioManager.set_sfx_volume(1.0 if toggled_on else 0.0)
+		if toggled_on:
+			AudioManager.play_sfx("ui_click")
 
 func _on_music_toggled(toggled_on: bool) -> void:
 	if AudioManager:
