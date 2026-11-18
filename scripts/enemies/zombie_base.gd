@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
-	velocity.x = -move_speed
+	_apply_movement(delta)
 	if not is_on_floor():
 		velocity.y += gravity * delta
 
@@ -58,11 +58,14 @@ func _physics_process(delta: float) -> void:
 		sprite.scale = _visual_scale
 
 	# Despawn if far behind player / horde
-	var root: Node = get_tree().current_scene
+	var root: Node = get_tree().current_scene if get_tree() else null
 	if root:
 		var player: Node2D = root.find_child("Player", true, false) as Node2D
 		if player and global_position.x < player.global_position.x - 320.0:
 			queue_free()
+
+func _apply_movement(_delta: float) -> void:
+	velocity.x = -move_speed
 
 func _update_animation(delta: float) -> void:
 	_anim_timer += delta

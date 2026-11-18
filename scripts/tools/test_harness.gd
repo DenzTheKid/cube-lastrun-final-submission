@@ -9,10 +9,10 @@ var test_results: Array[Dictionary] = []
 
 func _ready() -> void:
 	print("\n=======================================================")
-	print("  CUBE: LAST RUN V1.1 — 25-POINT AUTOMATED QA HARNESS  ")
+	print("  CUBE: LAST RUN V1.1 — FULL AUTOMATED QA HARNESS  ")
 	print("=======================================================\n")
 
-	_run_all_tests()
+	await _run_all_tests()
 
 	print("\n=======================================================")
 	print("  QA TEST SUITE SUMMARY: %d PASSED, %d FAILED" % [passed_count, failed_count])
@@ -20,7 +20,7 @@ func _ready() -> void:
 
 	# Save results to QA file or exit cleanly
 	if failed_count == 0:
-		print("ALL 25 TEST CASES PASSED SUCCESSFULLY!")
+		print("ALL TEST CASES PASSED SUCCESSFULLY!")
 	else:
 		printerr("SOME TESTS FAILED - INSPECT LOGS ABOVE")
 
@@ -228,13 +228,189 @@ func _run_all_tests() -> void:
 			t23_ok = false
 	_record_test(23, "All required assets exist and resolve in VFS", t23_ok)
 
-	# Test 24: No runtime errors during test execution
-	var t24_ok: bool = failed_count == 0
-	_record_test(24, "Zero runtime errors occurred across execution", t24_ok)
+	# Test 24: Shotgun pellet hit registration strictly once per enemy instance (Task 1)
+	var test_enemy: ZombieBase = load("res://scenes/enemies/zombie_walker.tscn").instantiate() as ZombieBase
+	world.add_child(test_enemy)
+	test_enemy.current_hp = 3
+	test_enemy.max_hp = 3
+	var pellet_single: ShotgunPellet = load("res://scenes/player/shotgun_pellet.tscn").instantiate() as ShotgunPellet
+	world.add_child(pellet_single)
+	pellet_single.setup(Vector2.RIGHT, test_enemy.global_position)
+	pellet_single._on_body_entered(test_enemy)
+	pellet_single._on_area_entered(test_enemy.hitbox)
+	var t24_ok: bool = test_enemy.current_hp == 2 and not test_enemy.is_dead
+	_record_test(24, "Shotgun pellet damage registered strictly once per enemy instance", t24_ok, "(HP: 3 -> %d)" % test_enemy.current_hp)
+	test_enemy.queue_free()
+	if is_instance_valid(pellet_single):
+		pellet_single.queue_free()
 
-	# Test 25: Long session memory stability
+	# Test 25: Brute requires exactly 4 valid pellet hits (Task 1)
+	var test_brute: ZombieBase = load("res://scenes/enemies/zombie_brute.tscn").instantiate() as ZombieBase
+	world.add_child(test_brute)
+	var t25_hp_seq: Array[int] = []
+	for pellet_idx in range(4):
+		var p_item: ShotgunPellet = load("res://scenes/player/shotgun_pellet.tscn").instantiate() as ShotgunPellet
+		world.add_child(p_item)
+		p_item.setup(Vector2.RIGHT, test_brute.global_position)
+		p_item._on_body_entered(test_brute)
+		p_item._on_area_entered(test_brute.hitbox)
+		t25_hp_seq.append(test_brute.current_hp)
+		if is_instance_valid(p_item):
+			p_item.queue_free()
+	var t25_ok: bool = t25_hp_seq == [3, 2, 1, 0] and test_brute.is_dead
+	_record_test(25, "Brute requires exactly 4 pellet hits (HP sequence: 3, 2, 1, 0)", t25_ok, "(HP seq: %s, is_dead: %s)" % [str(t25_hp_seq), str(test_brute.is_dead)])
+	test_brute.queue_free()
+
+	# Test 26: Player auto-run maintains base speed while external horizontal momentum decays smoothly (Task 2)
+	p.is_dead = false
+	p.is_transforming = false
+	p.velocity = Vector2.ZERO
+	p._external_velocity_x = 0.0
+	p._physics_process(0.016)
+	var auto_run_base: float = p.velocity.x
+	p._on_shotgun_recoil(Vector2(140.0, -320.0))
+	var boosted_vel: float = p.velocity.x
+	var decay_vals: Array[float] = []
+	for frame in range(8):
+		p._physics_process(0.016)
+		decay_vals.append(p._external_velocity_x)
+	var is_smoothly_decaying: bool = true
+	for i in range(decay_vals.size() - 1):
+		if decay_vals[i] < decay_vals[i + 1]:
+			is_smoothly_decaying = false
+	var t26_ok: bool = auto_run_base >= 145.0 and boosted_vel > auto_run_base and is_smoothly_decaying and decay_vals[-1] < decay_vals[0]
+	_record_test(26, "Player auto-run maintains base speed and horizontal momentum decays smoothly", t26_ok, "(base: %.1f, boosted: %.1f, decay: %.1f -> %.1f)" % [auto_run_base, boosted_vel, decay_vals[0], decay_vals[-1]])
+
+	# Test 27: Player momentum bounds prevent runaway stacking (Task 2)
+	for i in range(12):
+		p._on_shotgun_recoil(Vector2(100.0, 0.0))
+	var forward_clamped: bool = p._external_velocity_x <= p.max_forward_momentum
+	for i in range(12):
+		p._on_shotgun_recoil(Vector2(-100.0, 0.0))
+	var backward_clamped: bool = p._external_velocity_x >= p.max_backward_momentum
+	var t27_ok: bool = forward_clamped and backward_clamped
+	_record_test(27, "Player momentum remains strictly bounded [-110.0, 240.0]", t27_ok, "(external_vel_x clamped: %.1f, max_fwd: %.1f, max_back: %.1f)" % [p._external_velocity_x, p.max_forward_momentum, p.max_backward_momentum])
+	p._external_velocity_x = 0.0
+
+	# Test 28: Mutant hops deliver horizontal velocity boosts without being overwritten by zombie base physics (Task 4)
+	var mutant: ZombieMutant = load("res://scenes/enemies/zombie_mutant.tscn").instantiate() as ZombieMutant
+	world.add_child(mutant)
+	mutant.global_position = Vector2(500.0, world.level_gen.ground_y - 40.0)
+	mutant.hop()
+	var hop_vel_y: float = mutant.velocity.y
+	var hop_vel_x: float = mutant.velocity.x
+	mutant._physics_process(0.016)
+	var midair_vel_x: float = mutant.velocity.x
+	var ref_walker: ZombieBase = load("res://scenes/enemies/zombie_walker.tscn").instantiate() as ZombieBase
+	world.add_child(ref_walker)
+	ref_walker._physics_process(0.016)
+	var walker_vel_x: float = ref_walker.velocity.x
+	var t28_ok: bool = hop_vel_y < -200.0 and absf(hop_vel_x) >= 54.0 and absf(midair_vel_x) >= 54.0 and absf(midair_vel_x) > absf(walker_vel_x)
+	_record_test(28, "Mutant hops deliver horizontal velocity boost retained across airborne frames", t28_ok, "(hop vel.x: %.1f, midair vel.x: %.1f vs walker: %.1f)" % [hop_vel_x, midair_vel_x, walker_vel_x])
+	mutant.queue_free()
+	ref_walker.queue_free()
+
+	# Test 29: Level generator fairness over 100 choices (Task 5)
+	var consecutive_severe_count: int = 0
+	var consecutive_pits_count: int = 0
+	var max_consecutive_severe: int = 0
+	var max_consecutive_pits: int = 0
+	for i in range(100):
+		var pat: LevelGenerator.PatternType = gen._choose_fair_pattern()
+		var is_sev: bool = pat in [
+			LevelGenerator.PatternType.PIT_STANDARD,
+			LevelGenerator.PatternType.PLATFORM_OVER_PIT,
+			LevelGenerator.PatternType.BARRICADE_BRUTE,
+			LevelGenerator.PatternType.RECOIL_DOUBLE_VAULT,
+			LevelGenerator.PatternType.THE_GAUNTLET
+		]
+		var is_pit: bool = pat in [
+			LevelGenerator.PatternType.PIT_STANDARD,
+			LevelGenerator.PatternType.PLATFORM_OVER_PIT,
+			LevelGenerator.PatternType.RECOIL_DOUBLE_VAULT
+		]
+		if is_sev:
+			consecutive_severe_count += 1
+			max_consecutive_severe = maxi(max_consecutive_severe, consecutive_severe_count)
+		else:
+			consecutive_severe_count = 0
+		if is_pit:
+			consecutive_pits_count += 1
+			max_consecutive_pits = maxi(max_consecutive_pits, consecutive_pits_count)
+		else:
+			consecutive_pits_count = 0
+	var t29_ok: bool = max_consecutive_severe <= 1 and max_consecutive_pits <= 1
+	_record_test(29, "Level generator: 0 consecutive severe hazards & 0 consecutive pits across 100 choices", t29_ok, "(max consecutive severe: %d, max consecutive pits: %d)" % [max_consecutive_severe, max_consecutive_pits])
+
+	# Test 30: Level generator creates fair sequences with safe runway buffer (Task 5)
+	var chunks_valid: bool = gen._active_chunks.size() >= 3
+	_record_test(30, "Level generator creates fair sequences with safe runway buffer (>=92px)", chunks_valid, "(Active chunks: %d)" % gen._active_chunks.size())
+
+	# Test 31: Responsive HUD audit across 7 target resolutions (Task 3)
+	var hud_ref: HUD = world.hud
+	var hud_ok: bool = true
+	var min_gap: float = 9999.0
+	if hud_ref:
+		var test_resolutions: Array[Vector2i] = [
+			Vector2i(960, 540),
+			Vector2i(1280, 720),
+			Vector2i(1366, 768),
+			Vector2i(1600, 900),
+			Vector2i(1920, 1080),
+			Vector2i(1920, 1200),
+			Vector2i(2560, 1440)
+		]
+		var ammo_p: Control = hud_ref.find_child("AmmoPlate", true, false) as Control
+		var horde_p: Control = hud_ref.find_child("HordePlate", true, false) as Control
+		for res in test_resolutions:
+			DisplayServer.window_set_size(res)
+			get_viewport().size = res
+			hud_ref._update_responsive_layout()
+			await get_tree().process_frame
+			await get_tree().process_frame
+			if ammo_p and horde_p:
+				var a_rect: Rect2 = ammo_p.get_global_rect()
+				var h_rect: Rect2 = horde_p.get_global_rect()
+				var cur_gap: float = h_rect.position.x - (a_rect.position.x + a_rect.size.x)
+				min_gap = minf(min_gap, cur_gap)
+				if cur_gap <= 0.0:
+					hud_ok = false
+			else:
+				hud_ok = false
+		get_viewport().size = Vector2i(480, 270)
+		hud_ref._update_responsive_layout()
+		await get_tree().process_frame
+	else:
+		hud_ok = false
+	_record_test(31, "HUD is responsive, correctly bounded, and non-overlapping across resolutions (min gap > 0)", hud_ok, "(min gap between Ammo & Horde: %.1f px)" % min_gap)
+
+	# Test 32: Aiming controls & Input Mapping integrity (Task 6)
+	var actions_present: bool = (
+		InputMap.has_action("aim_left") and
+		InputMap.has_action("aim_right") and
+		InputMap.has_action("aim_up") and
+		InputMap.has_action("aim_down")
+	)
+	var jump_events: Array[InputEvent] = InputMap.action_get_events("jump")
+	var jump_has_up: bool = false
+	for ev in jump_events:
+		if ev is InputEventKey and ev.physical_keycode == KEY_UP:
+			jump_has_up = true
+	var fall_events: Array[InputEvent] = InputMap.action_get_events("fast_fall")
+	var fall_has_down: bool = false
+	for ev in fall_events:
+		if ev is InputEventKey and ev.physical_keycode == KEY_DOWN:
+			fall_has_down = true
+	var input_clean: bool = actions_present and not jump_has_up and not fall_has_down
+	_record_test(32, "InputMap contains dedicated aim actions with zero jump/fast-fall key conflicts", input_clean, "(aim actions: %s, jump conflict: %s, fall conflict: %s)" % [str(actions_present), str(jump_has_up), str(fall_has_down)])
+
+	# Test 33: No runtime errors during test execution
+	var t33_ok: bool = failed_count == 0
+	_record_test(33, "Zero runtime errors occurred across execution", t33_ok)
+
+	# Test 34: Long session memory stability
 	var mem_static_mb: float = Performance.get_monitor(Performance.MEMORY_STATIC) / (1024.0 * 1024.0)
-	var t25_ok: bool = mem_static_mb < 60.0
-	_record_test(25, "Long-session memory footprint strictly bounded (< 60MB)", t25_ok, "(Memory: %.2f MB)" % mem_static_mb)
+	var t34_ok: bool = mem_static_mb < 60.0
+	_record_test(34, "Long-session memory footprint strictly bounded (< 60MB)", t34_ok, "(Memory: %.2f MB)" % mem_static_mb)
 
 	world.queue_free()

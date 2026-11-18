@@ -12,6 +12,8 @@ const SPARK_SCENE: PackedScene = preload("res://scenes/effects/bullet_spark.tscn
 var direction: Vector2 = Vector2.RIGHT
 var _time_alive: float = 0.0
 var _trail_line: Line2D = null
+var _is_destroyed: bool = false
+var _hit_targets: Dictionary = {}
 
 func _ready() -> void:
 	monitoring = true
@@ -43,23 +45,43 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 
 func _on_body_entered(body: Node2D) -> void:
-	if body.has_method("take_damage"):
-		body.take_damage(damage, direction)
-	_spawn_impact()
-	queue_free()
+	_handle_hit(body, true)
 
 func _on_area_entered(area: Area2D) -> void:
-	var target: Node = area.get_parent()
-	if target and target.has_method("take_damage"):
+	_handle_hit(area, false)
+
+func _handle_hit(collider: Node, is_solid_body: bool) -> void:
+	if _is_destroyed or collider == null:
+		return
+
+	var target: Node = null
+	if collider.has_method("take_damage"):
+		target = collider
+	elif collider.get_parent() and collider.get_parent().has_method("take_damage"):
+		target = collider.get_parent()
+
+	if target != null:
+		var target_id: int = target.get_instance_id()
+		if _hit_targets.has(target_id):
+			return
+		_hit_targets[target_id] = true
 		target.take_damage(damage, direction)
-	elif area.has_method("take_damage"):
-		area.take_damage(damage, direction)
+	elif not is_solid_body:
+		return
+
+	_is_destroyed = true
+	set_deferred("monitoring", false)
 	_spawn_impact()
 	queue_free()
 
 func _spawn_impact() -> void:
-	var spark = SPARK_SCENE.instantiate()
-	spark.global_position = global_position
-	get_tree().current_scene.add_child(spark)
+	if SPARK_SCENE:
+		var spark = SPARK_SCENE.instantiate()
+		spark.global_position = global_position
+		var current = get_tree().current_scene if get_tree() else null
+		if current:
+			current.add_child(spark)
+		elif get_parent():
+			get_parent().add_child(spark)
 	if AudioManager:
 		AudioManager.play_sfx("impact_metal", 0.08)

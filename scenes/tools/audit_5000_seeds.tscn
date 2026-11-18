@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/tools/audit_5000_seeds.gd" id="1_seeds"]
+
+[node name="Audit5000Seeds" type="Node2D"]
+script = ExtResource("1_seeds")

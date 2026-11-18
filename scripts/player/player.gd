@@ -26,6 +26,11 @@ const SPARK_SCENE: PackedScene = preload("res://scenes/effects/bullet_spark.tscn
 @export var fast_fall_gravity_mult: float = 2.8
 @export var fast_fall_dive_speed: float = 340.0
 @export var max_upward_velocity: float = -540.0
+@export var external_momentum_decay: float = 7.0
+@export var max_forward_momentum: float = 240.0
+@export var max_backward_momentum: float = -110.0
+
+var _external_velocity_x: float = 0.0
 
 @export var max_hp: int = 2
 var current_hp: int = 2
@@ -171,13 +176,17 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 		return
 
-	# Auto-running speed scaled smoothly by difficulty
+	# Auto-running base speed scaled smoothly by difficulty
 	var speed_mult: float = GameManager.difficulty_factor if GameManager else 1.0
-	velocity.x = base_run_speed * speed_mult
+	var base_run_x: float = base_run_speed * speed_mult
 
-	# Distance tracking
-	if GameManager:
-		GameManager.add_distance(velocity.x * delta * 0.05)
+	# Smooth decay/friction on external horizontal momentum (higher friction on ground for punchy responsiveness)
+	var friction_rate: float = external_momentum_decay if is_on_floor() else (external_momentum_decay * 0.72)
+	_external_velocity_x = lerpf(_external_velocity_x, 0.0, 1.0 - exp(-friction_rate * delta))
+	if absf(_external_velocity_x) < 0.8:
+		_external_velocity_x = 0.0
+
+	velocity.x = base_run_x + _external_velocity_x
 
 	# Gravity & Ground Contact
 	var is_fast_falling: bool = false
@@ -261,6 +270,20 @@ func _physics_process(delta: float) -> void:
 		global_position.y = MIN_CEILING_Y
 		if velocity.y < 0.0:
 			velocity.y = 0.0
+
+	# Collision stability: absorb external horizontal momentum when obstructed by walls
+	if is_on_wall():
+		var wall_norm: Vector2 = get_wall_normal()
+		if wall_norm.x < -0.5 and _external_velocity_x > 0.0:
+			_external_velocity_x = 0.0
+		elif wall_norm.x > 0.5 and _external_velocity_x < 0.0:
+			_external_velocity_x = 0.0
+
+	# Correct distance tracking based on actual forward motion
+	var forward_motion: float = maxf(0.0, get_real_velocity().x) if is_on_wall() else maxf(0.0, velocity.x)
+	if GameManager:
+		GameManager.add_distance(forward_motion * delta * 0.05)
+
 	_update_animation(delta)
 	_update_juice_visuals(delta, speed_mult)
 	if shotgun and shotgun.is_reloading:
@@ -279,11 +302,10 @@ func _is_physical_jump_held() -> bool:
 		Input.is_action_pressed("jump")
 		or Input.is_key_pressed(KEY_SPACE)
 		or Input.is_key_pressed(KEY_W)
-		or Input.is_key_pressed(KEY_UP)
 	)
 
 func _is_fast_fall_held() -> bool:
-	return Input.is_action_pressed("fast_fall") or Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN)
+	return Input.is_action_pressed("fast_fall") or Input.is_key_pressed(KEY_S)
 
 func _perform_jump() -> void:
 	velocity.y = jump_velocity
@@ -330,8 +352,11 @@ func _on_shotgun_recoil(force: Vector2) -> void:
 	else:
 		_visual_scale = Vector2(0.88, 1.12)
 
-	# Apply horizontal impulse
-	velocity.x += force.x
+	# Apply horizontal impulse into external momentum with stacking bounds
+	_external_velocity_x += force.x
+	_external_velocity_x = clampf(_external_velocity_x, max_backward_momentum, max_forward_momentum)
+	var speed_mult: float = GameManager.difficulty_factor if GameManager else 1.0
+	velocity.x = (base_run_speed * speed_mult) + _external_velocity_x
 
 func _update_animation(delta: float) -> void:
 	_anim_timer += delta
@@ -430,7 +455,12 @@ func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 		invuln_timer.start(0.85)
 		sprite.modulate = Color(1.0, 0.35, 0.35, 0.85)
 		if knockback_dir != Vector2.ZERO:
-			velocity += knockback_dir.normalized() * 140.0
+			var kb_dir: Vector2 = knockback_dir.normalized()
+			_external_velocity_x += kb_dir.x * 140.0
+			_external_velocity_x = clampf(_external_velocity_x, max_backward_momentum, max_forward_momentum)
+			var speed_mult: float = GameManager.difficulty_factor if GameManager else 1.0
+			velocity.x = (base_run_speed * speed_mult) + _external_velocity_x
+			velocity.y += kb_dir.y * 140.0
 
 func heal(amount: int = 1) -> bool:
 	if is_dead or is_transforming or amount <= 0:
@@ -480,6 +510,7 @@ func die() -> void:
 		return
 	is_dead = true
 	_disable_skin_swap()
+	_external_velocity_x = 0.0
 	velocity = Vector2.ZERO
 	shotgun.visible = false
 	if _scarf_line:
@@ -501,6 +532,7 @@ func trigger_horde_catch() -> void:
 		return
 	is_transforming = true
 	_disable_skin_swap()
+	_external_velocity_x = 0.0
 	velocity = Vector2.ZERO
 	shotgun.visible = false
 	if _scarf_line:
