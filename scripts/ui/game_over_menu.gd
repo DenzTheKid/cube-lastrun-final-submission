@@ -7,6 +7,7 @@ class_name GameOverMenu
 const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 
 @onready var panel: PanelContainer = %GameOverPanel
+@onready var dimmer: ColorRect = %Dimmer
 @onready var score_lbl: Label = %FinalScoreLabel
 @onready var dist_lbl: Label = %FinalDistLabel
 @onready var time_lbl: Label = %FinalTimeLabel
@@ -18,8 +19,14 @@ const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	panel.visible = false
+	if dimmer:
+		dimmer.visible = false
 	UI_ANIMATOR.style_button(retry_btn, true)
 	UI_ANIMATOR.style_button(menu_btn, false)
+	retry_btn.focus_neighbor_top = menu_btn.get_path()
+	retry_btn.focus_neighbor_bottom = menu_btn.get_path()
+	menu_btn.focus_neighbor_top = retry_btn.get_path()
+	menu_btn.focus_neighbor_bottom = retry_btn.get_path()
 	if GameManager:
 		GameManager.game_over.connect(_on_game_over)
 	retry_btn.pressed.connect(_on_retry_pressed)
@@ -37,7 +44,9 @@ func _on_game_over(final_score: int, distance: float, survival_time: float, kill
 
 	record_banner.visible = is_new
 
-	await get_tree().create_timer(0.8).timeout
+	await get_tree().create_timer(0.6, true, false, true).timeout
+	if dimmer:
+		dimmer.visible = true
 	panel.visible = true
 	retry_btn.grab_focus()
 

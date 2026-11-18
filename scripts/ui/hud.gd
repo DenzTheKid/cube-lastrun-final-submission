@@ -33,6 +33,7 @@ var _warning_pulse_timer: float = 0.0
 var _last_hp: int = 2
 
 func _ready() -> void:
+	_set_mouse_filter_ignore(root_control)
 	if GameManager:
 		GameManager.score_updated.connect(_on_score_updated)
 		GameManager.distance_updated.connect(_on_distance_updated)
@@ -42,6 +43,12 @@ func _ready() -> void:
 	reload_bar.visible = false
 	reload_label.visible = false
 	horde_warning.visible = false
+
+func _set_mouse_filter_ignore(node: Node) -> void:
+	if node is Control:
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in node.get_children():
+		_set_mouse_filter_ignore(child)
 
 func _process(delta: float) -> void:
 	if GameManager and GameManager.current_state == GameManager.State.PLAYING:
