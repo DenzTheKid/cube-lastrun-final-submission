@@ -9,6 +9,7 @@ const SKY_SHADER: Shader = preload("res://shaders/dusk_sky_gradient.gdshader")
 const HERO_SKIN_SHADER: Shader = preload("res://shaders/hit_flash.gdshader")
 const TIME_OF_DAY_SCRIPT = preload("res://scripts/gameplay/time_of_day.gd")
 const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
+const ANIMATED_FIRE_SCRIPT = preload("res://scripts/effects/animated_fire_node.gd")
 
 @onready var play_btn: Button = %PlayButton
 @onready var controls_btn: Button = %ControlsButton
@@ -138,6 +139,30 @@ func _setup_layout_and_background() -> void:
 	# Default lobby background to dusk with the sun low and setting cleanly in the right sky gap
 	if not _time_of_day._debug_override_active:
 		_time_of_day.set_fixed_time(0.36)
+
+	if bg_buildings and not bg_buildings.has_node("LobbyFires"):
+		var fires_root := Node2D.new()
+		fires_root.name = "LobbyFires"
+		bg_buildings.add_child(fires_root)
+		var lobby_fire_spots: Array[ Array ] = [
+			[28.0, 96.0, 1.35, 1.25],
+			[24.0, 134.0, 0.95, 0.95],
+			[100.0, 118.0, 1.05, 1.05],
+			[150.0, 110.0, 1.30, 1.25],
+			[123.0, 122.0, 0.85, 0.85],
+			[174.0, 68.0, 0.95, 0.95],
+			[219.0, 150.0, 0.95, 0.95],
+			[270.0, 84.0, 1.15, 1.10],
+			[320.0, 132.0, 0.95, 0.95],
+			[374.0, 64.0, 1.10, 1.05],
+			[398.0, 122.0, 1.00, 1.00],
+			[450.0, 124.0, 1.10, 1.05]
+		]
+		for fp: Array in lobby_fire_spots:
+			var fnode: Sprite2D = ANIMATED_FIRE_SCRIPT.new()
+			fnode.position = Vector2(float(fp[0]), float(fp[1]))
+			fnode.base_scale = Vector2(float(fp[2]), float(fp[3]))
+			fires_root.add_child(fnode)
 
 func _setup_buttons_and_focus() -> void:
 	UI_ANIMATOR.style_button(play_btn, true)

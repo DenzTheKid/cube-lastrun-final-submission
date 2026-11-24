@@ -221,7 +221,8 @@ func _run_all_tests() -> void:
 		"res://assets/environment/parallax_sky.png",
 		"res://assets/audio/sfx_shotgun.wav",
 		"res://assets/audio/sfx_recoil.wav",
-		"res://assets/audio/music_gameplay.wav"
+		"res://assets/audio/music_menu.mp3",
+		"res://assets/audio/music_gameplay.ogg"
 	]
 	for path in check_paths:
 		if not ResourceLoader.exists(path):

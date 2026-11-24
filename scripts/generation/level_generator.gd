@@ -33,6 +33,7 @@ const BRUTE_SCENE: PackedScene = preload("res://scenes/enemies/zombie_brute.tscn
 const MUTANT_SCENE: PackedScene = preload("res://scenes/enemies/zombie_mutant.tscn")
 
 const URBAN_TILES: Texture2D = preload("res://assets/environment/urban_tiles.png")
+const COLLAPSED_BRIDGE_TEX: Texture2D = preload("res://assets/environment/collapsed_bridge_pit.png")
 
 enum PatternType {
 	FLAT_START,
@@ -95,6 +96,7 @@ func _spawn_next_chunk(is_safe_start: bool) -> void:
 	chunk.name = "Chunk_%d" % _chunks_spawned
 	chunk.position = Vector2(next_chunk_x, 0)
 	chunk.tiles_texture = URBAN_TILES
+	chunk.collapsed_bridge_texture = COLLAPSED_BRIDGE_TEX
 	chunk.ground_y = ground_y
 	add_child(chunk)
 	_active_chunks.append(chunk)
@@ -457,6 +459,7 @@ func _cleanup_old_chunks(player_x: float) -> void:
 # ------------------------------------------------------------------------------
 class ChunkNode extends Node2D:
 	var tiles_texture: Texture2D
+	var collapsed_bridge_texture: Texture2D
 	var ground_y: float = 224.0
 	var ground_segments: Array[Vector2] = [] # (start_x, width)
 
@@ -481,7 +484,7 @@ class ChunkNode extends Node2D:
 		if not tiles_texture:
 			return
 
-		# 0. Pit Chasm Void (Render deep chasm under any gap between ground segments)
+		# 0. Pit Chasm & Collapsed Bridge ("Jembatan Roboh di bawah lubang")
 		if ground_segments.size() > 1:
 			for s_idx in range(ground_segments.size() - 1):
 				var s_curr: Vector2 = ground_segments[s_idx]
@@ -489,14 +492,14 @@ class ChunkNode extends Node2D:
 				var gap_x: float = s_curr.x + s_curr.y
 				var gap_w: float = s_next.x - gap_x
 				if gap_w > 0.0:
-					# Deep chasm abyss under the road floor
-					draw_rect(Rect2(gap_x, ground_y, gap_w, 46.0), Color(0.04, 0.05, 0.08, 1.0), true)
-					# Left fractured bridge abutment wall
-					draw_rect(Rect2(gap_x, ground_y, 3.0, 46.0), Color(0.16, 0.18, 0.24, 1.0), true)
-					draw_rect(Rect2(gap_x, ground_y, 1.0, 46.0), Color(0.08, 0.10, 0.14, 1.0), true)
-					# Right fractured bridge abutment wall
-					draw_rect(Rect2(s_next.x - 3.0, ground_y, 3.0, 46.0), Color(0.16, 0.18, 0.24, 1.0), true)
-					draw_rect(Rect2(s_next.x - 1.0, ground_y, 1.0, 46.0), Color(0.08, 0.10, 0.14, 1.0), true)
+					if collapsed_bridge_texture:
+						draw_texture_rect(
+							collapsed_bridge_texture,
+							Rect2(gap_x, ground_y - 8.0, gap_w, 64.0),
+							false
+						)
+					else:
+						draw_rect(Rect2(gap_x, ground_y, gap_w, 46.0), Color(0.04, 0.05, 0.08, 1.0), true)
 
 		for seg in ground_segments:
 			var sx: float = seg.x

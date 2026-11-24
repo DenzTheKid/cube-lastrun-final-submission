@@ -161,8 +161,9 @@ Every asset integrated into the project tree underwent rigorous quarantine valid
 - `sfx_player_hurt.wav`: Grunt and impact crunch when taking hazard damage.
 - `sfx_game_over.wav`: Dramatic descending minor arpeggio marking player demise.
 - `sfx_ui_click.wav`: Snappy tactile UI navigation chirp.
-- `music_gameplay.wav`: Driving 172 BPM industrial synthwave battle loop with rhythmic bassline.
-- `music_menu.wav`: Eerie 90 BPM atmospheric apocalyptic menu theme.
+- `music_gameplay.ogg`: "HellDrake" by Centurion_of_war (OpenGameArt.org, CC-BY 4.0) — high-energy dark retro synth-metal battle loop.
+- `music_menu.mp3`: "Cyberpunk Moonlight Sonata (v2)" by Joth (OpenGameArt.org, CC0 1.0 Public Domain) — moody retro synthwave dusk-city lobby theme.
+- `AUDIO_CREDITS.txt`: Full attribution and license manifest for music assets.
 
 ---
 

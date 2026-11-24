@@ -17,8 +17,9 @@ func _init() -> void:
 		return
 	print("=== Generating City Skylines, Clustered Windows, Street Lamps, Horde & AAA Pixel UI Art ===")
 	_make_clean_horde_wall()
-	_make_foreground_overpass()
-	_make_city_skylines()
+	if "--rebuild-clean-city" in OS.get_cmdline_user_args():
+		_make_foreground_overpass()
+		_make_city_skylines()
 	_make_pixel_button_plates()
 	_make_pixel_icons()
 	_make_title_logo_and_ribbon()

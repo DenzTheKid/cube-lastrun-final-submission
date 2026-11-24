@@ -10,6 +10,7 @@ extends Node
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _music_player: AudioStreamPlayer
 var _current_music_name: String = ""
+var _music_tween: Tween = null
 
 var sfx_volume_db: float = 0.0
 var music_volume_db: float = -6.0
@@ -17,6 +18,12 @@ var music_volume_db: float = -6.0
 # Cooldown tracking to prevent audio spam / cacophony
 var _sfx_cooldowns: Dictionary = {}
 const MIN_SFX_INTERVAL: float = 0.045
+
+# Per-track mix trim so mastered BGM tracks sit cleanly beneath shotgun & zombie SFX
+const MUSIC_TRACK_TRIM_DB: Dictionary = {
+	"menu": -3.0,
+	"gameplay": -4.0,
+}
 
 const SFX_STREAMS: Dictionary = {
 	"jump": preload("res://assets/audio/sfx_jump.wav"),
@@ -38,8 +45,8 @@ const SFX_STREAMS: Dictionary = {
 }
 
 const MUSIC_STREAMS: Dictionary = {
-	"gameplay": preload("res://assets/audio/music_gameplay.wav"),
-	"menu": preload("res://assets/audio/music_menu.wav"),
+	"gameplay": preload("res://assets/audio/music_gameplay.ogg"),
+	"menu": preload("res://assets/audio/music_menu.mp3"),
 }
 
 func _ready() -> void:
@@ -89,18 +96,45 @@ func play_sfx(sfx_name: String, pitch_range: float = 0.05) -> void:
 	fallback.volume_db = sfx_volume_db
 	fallback.play()
 
+func _get_effective_music_db(music_name: String = "") -> float:
+	if music_volume_db <= -79.0:
+		return -80.0
+	var key: String = _current_music_name if music_name.is_empty() else music_name
+	var trim_db: float = float(MUSIC_TRACK_TRIM_DB.get(key, 0.0))
+	return music_volume_db + trim_db
+
+func _kill_music_tween() -> void:
+	if _music_tween and _music_tween.is_valid():
+		_music_tween.kill()
+	_music_tween = null
+
 func play_music(music_name: String) -> void:
 	if _current_music_name == music_name and _music_player.playing:
 		return
 	if not MUSIC_STREAMS.has(music_name):
 		return
+	_kill_music_tween()
 	_current_music_name = music_name
 	_music_player.stop()
-	_music_player.stream = MUSIC_STREAMS[music_name]
-	_music_player.volume_db = music_volume_db
-	_music_player.play()
+	var stream: AudioStream = MUSIC_STREAMS[music_name]
+	if stream is AudioStreamMP3:
+		(stream as AudioStreamMP3).loop = true
+	elif stream is AudioStreamOggVorbis:
+		(stream as AudioStreamOggVorbis).loop = true
+	_music_player.stream = stream
+	var target_db: float = _get_effective_music_db(music_name)
+	if music_volume_db <= -79.0 or not is_inside_tree():
+		_music_player.volume_db = target_db
+		_music_player.play()
+	else:
+		_music_player.volume_db = minf(target_db - 18.0, -24.0)
+		_music_player.play()
+		_music_tween = create_tween()
+		_music_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		_music_tween.tween_property(_music_player, "volume_db", target_db, 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func stop_music() -> void:
+	_kill_music_tween()
 	_current_music_name = ""
 	_music_player.stop()
 
@@ -110,5 +144,6 @@ func set_sfx_volume(val_normalized: float) -> void:
 		p.volume_db = sfx_volume_db
 
 func set_music_volume(val_normalized: float) -> void:
+	_kill_music_tween()
 	music_volume_db = -80.0 if val_normalized <= 0.001 else linear_to_db(clampf(val_normalized, 0.001, 1.0))
-	_music_player.volume_db = music_volume_db
+	_music_player.volume_db = _get_effective_music_db()

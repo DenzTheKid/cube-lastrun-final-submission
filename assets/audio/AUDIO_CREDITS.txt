@@ -1,0 +1,17 @@
+CUBE: LAST RUN — Music & Audio Credits
+======================================
+
+1. Main Menu Music (`assets/audio/music_menu.mp3`)
+   - Title: Cyberpunk Moonlight Sonata (v2)
+   - Author: Joth
+   - Source: https://opengameart.org/content/cyberpunk-moonlight-sonata
+   - License: CC0 1.0 Universal (Public Domain Dedication)
+   - License URL: https://creativecommons.org/publicdomain/zero/1.0/
+
+2. Gameplay Music (`assets/audio/music_gameplay.ogg`)
+   - Title: HellDrake
+   - Author: Centurion_of_war
+   - Source: https://opengameart.org/content/helldrake
+   - License: CC-BY 4.0 (Creative Commons Attribution 4.0 International)
+   - License URL: https://creativecommons.org/licenses/by/4.0/
+   - Attribution: "HellDrake" by Centurion_of_war (OpenGameArt.org), licensed under CC-BY 4.0.
