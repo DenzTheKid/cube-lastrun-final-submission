@@ -93,6 +93,8 @@ func _on_game_over(final_score: int, distance: float, survival_time: float, kill
 		dimmer.visible = true
 	panel.visible = true
 	retry_btn.grab_focus()
+	if AudioManager:
+		AudioManager.play_music("game_over", 0.1)
 
 func _on_retry_pressed() -> void:
 	if _is_transitioning:

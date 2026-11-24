@@ -287,6 +287,8 @@ func start_reload() -> void:
 		return
 	is_reloading = true
 	reload_timer = 0.0
+	if AudioManager:
+		AudioManager.play_sfx("shotgun_pump", 0.05)
 	# Eject spent shells on break-action open
 	if GameFeel and ejection_port:
 		GameFeel.spawn_shell_casing(ejection_port.global_position, Vector2(-0.8, -1.0))

@@ -457,7 +457,7 @@ func _play_next_milestone_banner() -> void:
 		_milestone_style.border_color = accent
 
 	if AudioManager:
-		AudioManager.play_sfx("heal", 0.08)
+		AudioManager.play_sfx("ui_milestone", 0.08)
 
 	milestone_banner.visible = true
 	milestone_banner.modulate = Color(1.0, 1.0, 1.0, 0.0)

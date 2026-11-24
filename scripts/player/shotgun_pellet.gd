@@ -89,4 +89,4 @@ func _spawn_impact() -> void:
 		elif get_parent():
 			get_parent().add_child(spark)
 	if AudioManager:
-		AudioManager.play_sfx("impact_metal", 0.08)
+		AudioManager.play_sfx("impact_concrete", 0.08)

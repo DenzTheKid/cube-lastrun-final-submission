@@ -31,6 +31,16 @@ static func style_button(btn: Button, is_primary: bool = false) -> void:
 	btn.expand_icon = false
 	btn.theme_type_variation = &"PrimaryButton" if is_primary else &"Button"
 	btn.text = raw_text
+	btn.mouse_entered.connect(func():
+		var am = Engine.get_main_loop().root.get_node_or_null("AudioManager") if Engine.get_main_loop() else null
+		if am:
+			am.play_sfx("ui_hover", 0.04)
+	)
+	btn.focus_entered.connect(func():
+		var am = Engine.get_main_loop().root.get_node_or_null("AudioManager") if Engine.get_main_loop() else null
+		if am:
+			am.play_sfx("ui_hover", 0.04)
+	)
 
 static func style_toggle_button(btn: Button, label_prefix: String) -> void:
 	if not btn:
@@ -50,10 +60,25 @@ static func style_toggle_button(btn: Button, label_prefix: String) -> void:
 	btn.expand_icon = false
 	btn.theme_type_variation = &"Button"
 	_update_toggle_visual(btn, btn.button_pressed, false)
-	btn.toggled.connect(func(on: bool): _update_toggle_visual(btn, on, btn.has_focus()))
-	btn.focus_entered.connect(func(): _update_toggle_visual(btn, btn.button_pressed, true))
+	btn.toggled.connect(func(on: bool):
+		_update_toggle_visual(btn, on, btn.has_focus())
+		var am = Engine.get_main_loop().root.get_node_or_null("AudioManager") if Engine.get_main_loop() else null
+		if am:
+			am.play_sfx("ui_toggle", 0.04)
+	)
+	btn.focus_entered.connect(func():
+		_update_toggle_visual(btn, btn.button_pressed, true)
+		var am = Engine.get_main_loop().root.get_node_or_null("AudioManager") if Engine.get_main_loop() else null
+		if am:
+			am.play_sfx("ui_hover", 0.04)
+	)
 	btn.focus_exited.connect(func(): _update_toggle_visual(btn, btn.button_pressed, false))
-	btn.mouse_entered.connect(func(): _update_toggle_visual(btn, btn.button_pressed, true))
+	btn.mouse_entered.connect(func():
+		_update_toggle_visual(btn, btn.button_pressed, true)
+		var am = Engine.get_main_loop().root.get_node_or_null("AudioManager") if Engine.get_main_loop() else null
+		if am:
+			am.play_sfx("ui_hover", 0.04)
+	)
 	btn.mouse_exited.connect(func(): _update_toggle_visual(btn, btn.button_pressed, btn.has_focus()))
 
 static func _update_toggle_visual(btn: Button, is_on: bool, is_focused: bool) -> void:

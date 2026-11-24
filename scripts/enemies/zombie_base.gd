@@ -82,6 +82,8 @@ func take_damage(amount: int, knockback_dir: Vector2 = Vector2.ZERO) -> void:
 	if AudioManager:
 		AudioManager.play_sfx("zombie_hit", 0.1)
 		AudioManager.play_sfx("impact_flesh", 0.08)
+		if max_hp >= 4:
+			AudioManager.play_sfx("brute_tank", 0.08)
 
 	var root: Node = get_tree().current_scene if get_tree() else null
 	if root:
@@ -121,6 +123,9 @@ func die() -> void:
 
 	if AudioManager:
 		AudioManager.play_sfx("zombie_death", 0.15)
+		AudioManager.play_sfx("zombie_death_splat", 0.1)
+		if max_hp >= 4:
+			AudioManager.play_sfx("brute_roar", 0.1)
 
 	var mult: int = 1
 	if GameManager:

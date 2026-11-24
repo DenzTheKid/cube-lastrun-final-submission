@@ -30,6 +30,8 @@ func hop() -> void:
 	velocity.y = -hop_jump_force # Small jump
 	velocity.x = -move_speed * hop_speed_mult
 	is_hopping = true
+	if AudioManager:
+		AudioManager.play_sfx("mutant_leap", 0.08)
 
 func land() -> void:
 	is_hopping = false
