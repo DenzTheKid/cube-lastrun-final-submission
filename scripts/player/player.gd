@@ -231,7 +231,7 @@ func _physics_process(delta: float) -> void:
 			_visual_scale = Vector2(1.34, 0.68)
 			_spawn_footstep_dust(1.1)
 			if AudioManager:
-				AudioManager.play_sfx("land", 0.1)
+				AudioManager.play_sfx("player_land", 0.1)
 
 		# Footsteps on pavement
 		_footstep_timer += delta
@@ -241,7 +241,7 @@ func _physics_process(delta: float) -> void:
 			_visual_scale = Vector2(1.07, 0.93)
 			_spawn_footstep_dust(0.55)
 			if AudioManager:
-				AudioManager.play_sfx("land", 0.2)
+				AudioManager.play_sfx("footstep", 0.15)
 
 	_was_on_floor = is_on_floor()
 
@@ -588,7 +588,7 @@ func grant_shield(amount: int = 1) -> bool:
 	shield_changed.emit(shield_hp, max_shield)
 
 	if AudioManager:
-		AudioManager.play_sfx("heal", 0.05)
+		AudioManager.play_sfx("shield", 0.05)
 
 	if GameFeel:
 		if gained > 0:

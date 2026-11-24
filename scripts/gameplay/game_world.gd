@@ -46,6 +46,11 @@ func _ready() -> void:
 
 	if GameManager:
 		GameManager.start_game()
+		if not GameManager.horde_proximity_changed.is_connected(_on_horde_proximity_changed):
+			GameManager.horde_proximity_changed.connect(_on_horde_proximity_changed)
+
+	if AudioManager:
+		AudioManager.play_ambient("night_wind", 1.2)
 
 	if hud and player:
 		hud.setup_player(player)
@@ -106,5 +111,16 @@ func _on_player_health_changed(hp: int, _max_hp: int) -> void:
 	if hp < player.max_hp:
 		add_shake(0.75) # Heavy impact shake on damage
 
+func _on_horde_proximity_changed(proximity: float) -> void:
+	if AudioManager:
+		if proximity > 0.65:
+			AudioManager.play_music("horde", 0.5)
+		elif proximity < 0.35 and AudioManager._current_music_name == "horde":
+			AudioManager.play_music("gameplay", 0.5)
+
 func _exit_tree() -> void:
 	Input.set_custom_mouse_cursor(null)
+	if GameManager and GameManager.horde_proximity_changed.is_connected(_on_horde_proximity_changed):
+		GameManager.horde_proximity_changed.disconnect(_on_horde_proximity_changed)
+	if AudioManager:
+		AudioManager.stop_ambient(0.5)

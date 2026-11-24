@@ -16,4 +16,6 @@ func _on_body_entered(body: Node2D) -> void:
 		if is_lethal:
 			body.die()
 		else:
+			if AudioManager:
+				AudioManager.play_sfx("barricade_hit", 0.08)
 			body.take_damage(damage, Vector2(-1.0, -0.5))

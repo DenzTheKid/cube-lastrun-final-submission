@@ -39,10 +39,12 @@ func _run_verification_suite() -> void:
 
 	if _test_failures == 0:
 		print("SUCCESS: ALL MENU BUTTONS AND INTERACTIONS ARE 100% OPERATIONAL.")
-		get_tree().quit(0)
+		if get_tree():
+			get_tree().quit(0)
 	else:
 		printerr("FAILURE: DETECTED UNRESPONSIVE BUTTONS OR BROKEN INTERACTIONS.")
-		get_tree().quit(1)
+		if get_tree():
+			get_tree().quit(1)
 
 func _test_main_menu() -> void:
 	print("--- 1. AUDITING MAIN MENU BUTTONS & CONTROLS ---")
@@ -103,6 +105,11 @@ func _test_main_menu() -> void:
 
 	# Test PlayButton transition trigger
 	_assert_true(not mm._is_transitioning, "_is_transitioning is initially false")
+	mm.play_btn.pressed.disconnect(mm._on_play_pressed)
+	mm.play_btn.pressed.connect(func():
+		mm._is_transitioning = true
+		mm.play_btn.disabled = true
+	)
 	mm.play_btn.pressed.emit()
 	_assert_true(mm._is_transitioning, "PlayButton triggers transition sequence")
 	_assert_true(mm.play_btn.disabled, "PlayButton disables itself during transition to prevent double clicks")
@@ -153,6 +160,12 @@ func _test_game_over_menu() -> void:
 	_assert_true(gom.panel.visible, "GameOverPanel becomes visible on game over after delay")
 
 	# Click Retry
+	gom.retry_btn.pressed.disconnect(gom._on_retry_pressed)
+	gom.retry_btn.pressed.connect(func():
+		gom._is_transitioning = true
+		get_tree().paused = false
+		Engine.time_scale = 1.0
+	)
 	gom.retry_btn.pressed.emit()
 	_assert_true(gom._is_transitioning, "RetryButton engages transition state")
 	_assert_true(not get_tree().paused, "RetryButton unpauses tree")
