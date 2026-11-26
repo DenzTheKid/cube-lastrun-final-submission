@@ -199,221 +199,231 @@ def build_clean_foreground_overpass():
 
 def build_apocalyptic_backgrounds_for_animated_fires():
     """
-    Regenerates parallax_buildings_mid.png, parallax_skyline_distant.png, and collapsed_bridge_pit.png
-    WITHOUT static frozen fire drawings so that live animated fire nodes burn dynamically on them!
+    Regenerates parallax_buildings_mid.png and parallax_skyline_distant.png:
+    - Mostly classic dark, moody post-apocalyptic skyscrapers with dark unlit windows & only a FEW sparse lit rooms
+      ("sisanya kaya awal gedung biasa yang lampunya hidupnya cuma beberapa aja").
+    - Only 2-3 focal apocalyptic destruction landmarks (the crashed commercial airplane skyscraper + 1 blasted tower)
+      so fires are minimal, high-impact, and never cluttered ("yang kebakar dikit aja jangan banyak banyak").
     """
-    from build_apocalypse_city_and_bridge import draw_organic_smoke
-
-    # 1. Distant Skyline (480x270)
+    # 1. Distant Skyline (480x270) — Clean moody dark city silhouettes with very sparse dim windows
     dist = Image.new("RGBA", (480, 270), (0, 0, 0, 0))
     d_draw = ImageDraw.Draw(dist)
-    rng = random.Random(777)
 
-    SIL_COL = (24, 18, 36, 255)
-    SIL_RIM = (78, 36, 50, 255)
-    GIRDER_COL = (42, 28, 48, 255)
-    WIN_FIRE = (245, 128, 38, 235)
-    WIN_DARK = (14, 11, 22, 255)
+    SIL_COL = (22, 18, 36, 255)
+    SIL_RIM = (46, 32, 62, 255)
+    WIN_UNLIT = (14, 12, 24, 255)
+    WIN_AMBER_DIM = (195, 118, 56, 255)
 
+    # [x, w, top_y, has_spire, seed, is_damaged]
     dist_specs = [
-        (0, 44, 116, 0),
-        (42, 38, 134, 1),
-        (78, 52, 98, 3),
-        (128, 40, 126, 2),
-        (166, 48, 108, 1),
-        (212, 42, 132, 0),
-        (252, 54, 96, 3),
-        (304, 38, 140, 2),
-        (340, 48, 112, 1),
-        (386, 46, 124, 0),
-        (430, 50, 104, 3)
+        (0, 44, 118, True, 1, False),
+        (42, 38, 136, False, 2, False),
+        (78, 52, 98, True, 3, True),    # Subtle damaged top
+        (128, 40, 128, False, 4, False),
+        (166, 48, 108, True, 5, False),
+        (212, 42, 134, False, 6, False),
+        (252, 54, 94, True, 7, True),   # Subtle damaged top
+        (304, 38, 140, False, 8, False),
+        (340, 48, 112, True, 9, False),
+        (386, 46, 126, False, 10, False),
+        (430, 50, 104, True, 11, False)
     ]
 
-    for bx, bw, by, rtype in dist_specs:
-        if rtype == 0:
-            pts = [(bx, 270), (bx, by + 2), (bx + bw // 3, by), (bx + bw // 2, by + 10), (bx + bw, by + 18), (bx + bw, 270)]
-        elif rtype == 1:
-            pts = [(bx, 270), (bx, by), (bx + bw // 4, by), (bx + bw // 2, by + 14), (bx + (bw * 3) // 4, by + 2), (bx + bw, by + 4), (bx + bw, 270)]
-        elif rtype == 2:
-            pts = [(bx, 270), (bx, by + 16), (bx + bw // 2, by + 8), (bx + (bw * 3) // 4, by), (bx + bw, by + 3), (bx + bw, 270)]
+    for bx, bw, by, has_spire, b_seed, is_damaged in dist_specs:
+        if is_damaged:
+            pts = [(bx, 270), (bx, by), (bx + bw // 3, by + 2), (bx + (bw * 2) // 3, by + 11), (bx + bw, by + 14), (bx + bw, 270)]
+            d_draw.polygon(pts, fill=SIL_COL, outline=OUTLINE)
         else:
-            pts = [(bx, 270), (bx, by + 14), (bx + 6, by + 4), (bx + bw // 2, by), (bx + bw - 6, by + 6), (bx + bw, by + 14), (bx + bw, 270)]
+            d_draw.rectangle([bx, by, bx + bw, 270], fill=SIL_COL, outline=OUTLINE)
+            d_draw.line([(bx + 1, by + 1), (bx + bw - 1, by + 1)], fill=SIL_RIM)
+            if has_spire:
+                tx = bx + bw // 2
+                d_draw.rectangle([tx, by - 16, tx + 1, by], fill=SIL_COL)
+                d_draw.rectangle([tx, by - 18, tx + 1, by - 17], fill=(230, 57, 98, 255))
 
-        d_draw.polygon(pts, fill=SIL_COL, outline=OUTLINE)
-        d_draw.line(pts[1:-1], fill=SIL_RIM, width=1)
-
-        for gx in range(bx + 6, bx + bw - 6, 10):
-            gh = rng.randint(5, 12)
-            d_draw.line([(gx, by + 6), (gx + rng.randint(-2, 2), by + 6 - gh)], fill=GIRDER_COL, width=1)
-
+        # Mostly darkened distant towers; only 2 buildings retain a couple dim rooms
+        dist_has_lights = (b_seed == 1 or b_seed == 4)
         cols = max(1, (bw - 10) // 6)
-        for wy in range(by + 20, 212, 8):
+        floor_idx = 0
+        wy = (by + 16) if is_damaged else (by + 10)
+        while wy < 214:
+            lit_col = -1
+            if dist_has_lights and (floor_idx == 2 or floor_idx == 5):
+                lit_col = (floor_idx + b_seed) % max(1, cols)
             for c in range(cols):
-                wx = bx + 5 + c * 6
-                val = rng.random()
-                if val > 0.82:
-                    d_draw.rectangle([wx, wy, wx + 3, wy + 3], fill=WIN_FIRE)
-                elif val > 0.35:
-                    d_draw.rectangle([wx, wy, wx + 2, wy + 2], fill=WIN_DARK)
+                wx = bx + 6 + c * 6
+                wcol = WIN_AMBER_DIM if c == lit_col else WIN_UNLIT
+                d_draw.rectangle([wx, wy, wx + 2, wy + 2], fill=wcol)
+            wy += 7
+            floor_idx += 1
 
     dist.save(os.path.join(ENV_DIR, "parallax_skyline_distant.png"))
 
-    # 2. Mid-Ground Skyline (480x270) — Ruined buildings + Crashed Airplane (no static frozen flames!)
+    # 2. Mid-Ground Skyline (480x270) — 100% CLEAN classic dark navy/slate buildings with sparse lit rooms!
+    # Disasters (crashed airplane & side blast crater) are saved as separate rare overlay sprites
+    # so they only appear rarely on ParallaxRareLandmarks (e.g. 1 airplane every 6 blocks = 2880px)!
     mid = Image.new("RGBA", (480, 270), (0, 0, 0, 0))
     m_draw = ImageDraw.Draw(mid)
-    rng = random.Random(2026)
 
-    NAVY_DARK = (22, 26, 46, 255)
-    NAVY_SLATE = (30, 36, 62, 255)
-    CHARRED_WALL = (16, 15, 26, 255)
+    NAVY_DARK = (22, 27, 51, 255)      # #161b33
+    NAVY_SLATE = (31, 39, 71, 255)     # #1f2747
+    NAVY_LEDGE = (46, 56, 94, 255)
+    MID_RIM = (52, 62, 102, 255)
+    MID_UNLIT = (11, 14, 26, 255)
+    WIN_AMBER = (242, 140, 56, 255)    # #f28c38
+    WIN_CYAN = (56, 216, 242, 255)     # #38d8f2
+    NEON_MAGENTA = (230, 57, 98, 255)  # #e63962
     STEEL_GIRDER = (64, 72, 98, 255)
     STEEL_RUST = (118, 58, 48, 255)
-    WIN_UNLIT = (11, 13, 24, 255)
-    WIN_FIRE_A = (248, 118, 28, 255)
-    WIN_FIRE_B = (255, 215, 75, 255)
-    NEON_PINK = (230, 57, 98, 255)
-    NEON_CYAN = (56, 216, 242, 255)
 
+    # [bx, bw, by, style, rooftop_feature]
     mid_buildings = [
-        (2, 54, 96, 0, "inferno_tower"),
-        (60, 54, 84, 1, "collapsed_half"),
-        (120, 72, 72, 0, "airplane_crash"),
-        (196, 46, 114, 1, "skeletal_bomb_ruin"),
-        (246, 50, 88, 0, "cracked_burning"),
-        (300, 44, 136, 1, "collapsed_crane"),
-        (348, 66, 76, 0, "side_explosion_crater"),
-        (418, 60, 98, 1, "industrial_inferno")
+        (0, 56, 106, 0, "neon_magenta"),
+        (62, 52, 82, 1, "tower"),
+        (120, 68, 76, 0, "none"),         # Intact skyscraper (rarely overlaid with airplane_crash_overlay.png)
+        (194, 48, 122, 1, "ac"),
+        (248, 52, 88, 0, "neon_magenta"),
+        (306, 44, 134, 1, "ac"),          # Classic low building (preserves sunset/moon canyon gap)
+        (356, 62, 78, 0, "neon_cyan"),    # Intact skyscraper (occasionally overlaid with side_blast_overlay.png)
+        (424, 54, 102, 1, "tower")
     ]
 
-    for bx, bw, by, st, disaster in mid_buildings:
+    for idx, (bx, bw, by, st, feat) in enumerate(mid_buildings):
         bcol = NAVY_DARK if st == 0 else NAVY_SLATE
-        roof_y_left = by + (14 if disaster == "inferno_tower" else 0)
-        roof_y_right = by + (26 if disaster == "collapsed_half" else (12 if disaster == "cracked_burning" else 0))
+        div_col = (18, 22, 42, 255) if st == 0 else (25, 31, 58, 255)
 
-        poly = [
-            (bx, 270),
-            (bx, roof_y_left),
-            (bx + bw // 4, by + rng.randint(0, 7)),
-            (bx + bw // 2, by + (16 if disaster == "skeletal_bomb_ruin" else rng.randint(2, 10))),
-            (bx + (bw * 3) // 4, by + rng.randint(0, 8)),
-            (bx + bw, roof_y_right),
-            (bx + bw, 270)
-        ]
-        m_draw.polygon(poly, fill=bcol, outline=OUTLINE)
+        # Draw clean building body
+        m_draw.rectangle([bx, by, bx + bw, 270], fill=bcol, outline=OUTLINE)
+        # Clean top cornice ledge (3px deep)
+        m_draw.rectangle([bx - 1, by, bx + bw + 1, by + 3], fill=NAVY_LEDGE, outline=OUTLINE)
+        m_draw.line([(bx, by + 1), (bx + bw, by + 1)], fill=MID_RIM)
 
-        for gx in range(bx + 6, bx + bw - 6, 9):
-            top_pt_y = max(by, roof_y_left)
-            gh = rng.randint(6, 15)
-            m_draw.line([(gx, top_pt_y + 4), (gx, top_pt_y - gh)], fill=STEEL_GIRDER, width=2)
-            if rng.random() > 0.4:
-                m_draw.line([(gx - 4, top_pt_y - gh // 2), (gx + 5, top_pt_y - gh // 2 + 2)], fill=STEEL_RUST, width=1)
+        # Classic rooftop architecture
+        if feat == "neon_magenta":
+            bbw = bw - 14
+            m_draw.rectangle([bx + 7, by - 18, bx + 7 + bbw, by - 4], fill=(18, 16, 30, 255), outline=OUTLINE)
+            m_draw.rectangle([bx + 9, by - 16, bx + 5 + bbw, by - 6], fill=(14, 12, 24, 255), outline=NEON_MAGENTA)
+            m_draw.rectangle([bx + 13, by - 12, bx + 1 + bbw, by - 11], fill=NEON_MAGENTA)
+            m_draw.rectangle([bx + 11, by - 4, bx + 12, by], fill=OUTLINE)
+            m_draw.rectangle([bx + bbw, by - 4, bx + bbw + 1, by], fill=OUTLINE)
+        elif feat == "neon_cyan":
+            bbw = bw - 16
+            m_draw.rectangle([bx + 8, by - 16, bx + 8 + bbw, by - 4], fill=(18, 16, 30, 255), outline=OUTLINE)
+            m_draw.rectangle([bx + 10, by - 14, bx + 6 + bbw, by - 6], fill=(14, 12, 24, 255), outline=WIN_CYAN)
+            m_draw.rectangle([bx + 12, by - 4, bx + 13, by], fill=OUTLINE)
+            m_draw.rectangle([bx + bbw, by - 4, bx + bbw + 1, by], fill=OUTLINE)
+        elif feat == "tower":
+            m_draw.rectangle([bx + 10, by - 16, bx + 26, by - 4], fill=(48, 38, 46, 255), outline=OUTLINE)
+            m_draw.rectangle([bx + 8, by - 18, bx + 28, by - 15], fill=(36, 28, 36, 255), outline=OUTLINE)
+            m_draw.rectangle([bx + 12, by - 4, bx + 13, by], fill=OUTLINE)
+            m_draw.rectangle([bx + 22, by - 4, bx + 23, by], fill=OUTLINE)
+        elif feat == "ac":
+            m_draw.rectangle([bx + 8, by - 7, bx + 24, by], fill=NAVY_DARK, outline=OUTLINE)
+            m_draw.rectangle([bx + 28, by - 5, bx + 40, by], fill=NAVY_DARK, outline=OUTLINE)
 
-        cols = max(1, (bw - 12) // 8)
-        wy = by + 16
+        # Structured floor-and-bay window grids: MOSTLY DARK UNLIT (only a few sparse lit rooms!)
+        mid_has_lights = (idx == 0 or idx == 1 or idx == 2 or idx == 4 or idx == 7)
+        cols = max(1, (bw - 10) // 8)
+        floor_num = 0
+        wy = by + 9
         while wy < 214:
-            m_draw.line([(bx + 2, wy - 2), (bx + bw - 3, wy - 2)], fill=CHARRED_WALL)
+            m_draw.line([(bx + 2, wy - 2), (bx + bw - 3, wy - 2)], fill=div_col)
+
+            c_start_a = -10
+            c_len_a = 0
+            c_col_a = WIN_AMBER
+            if mid_has_lights:
+                if idx == 0 and floor_num == 4:
+                    c_start_a, c_len_a, c_col_a = 1, 2, WIN_AMBER
+                elif idx == 1 and (floor_num == 3 or floor_num == 7):
+                    c_start_a = 1 if floor_num == 3 else max(0, cols - 2)
+                    c_len_a = 1
+                    c_col_a = WIN_AMBER if floor_num == 3 else WIN_CYAN
+                elif idx == 2 and floor_num == 9:
+                    # Low sparse amber window well below rare airplane crash zone
+                    c_start_a, c_len_a, c_col_a = 4, 1, WIN_AMBER
+                elif idx == 4 and floor_num == 5:
+                    c_start_a, c_len_a, c_col_a = 2, 1, WIN_CYAN
+                elif idx == 7 and (floor_num == 2 or floor_num == 6):
+                    c_start_a, c_len_a, c_col_a = 1, 2, WIN_AMBER
+
             for c in range(cols):
                 wx = bx + 6 + c * 8
-                rval = rng.random()
-                if rval > 0.76:
-                    m_draw.rectangle([wx, wy, wx + 4, wy + 6], fill=WIN_FIRE_A)
-                    m_draw.rectangle([wx + 1, wy + 2, wx + 3, wy + 5], fill=WIN_FIRE_B)
-                elif rval > 0.18:
-                    m_draw.rectangle([wx, wy, wx + 4, wy + 6], fill=WIN_UNLIT)
-                    if rval > 0.55:
-                        m_draw.point((wx + 1, wy + 1), fill=STEEL_GIRDER)
+                wcol = c_col_a if (c >= c_start_a and c < c_start_a + c_len_a) else MID_UNLIT
+                m_draw.rectangle([wx, wy, wx + 3, wy + 5], fill=wcol)
+                m_draw.line([(wx, wy + 6), (wx + 3, wy + 6)], fill=OUTLINE)
             wy += 10
-
-        if disaster == "collapsed_half":
-            crater = [
-                (bx + bw // 2, by + 4),
-                (bx + bw + 1, by + 2),
-                (bx + bw + 1, by + 54),
-                (bx + bw - 16, by + 44),
-                (bx + bw // 2 - 4, by + 24)
-            ]
-            m_draw.polygon(crater, fill=(0, 0, 0, 0))
-            m_draw.line([(bx + bw // 2, by + 24), (bx + bw, by + 54)], fill=OUTLINE, width=2)
-            m_draw.line([(bx + bw // 2, by + 24), (bx + bw - 2, by + 24)], fill=STEEL_RUST, width=2)
-            m_draw.line([(bx + bw - 14, by + 12), (bx + bw - 14, by + 46)], fill=STEEL_GIRDER, width=2)
-            m_draw.polygon([(bx + 6, by), (bx + 20, by - 4), (bx + 22, by - 15), (bx + 4, by - 11)], fill=(58, 38, 44, 255), outline=OUTLINE)
-
-        elif disaster == "airplane_crash":
-            impact_cy = by + 44
-            crater_pts = [
-                (bx, impact_cy - 14), (bx + 16, impact_cy - 21), (bx + 38, impact_cy - 17),
-                (bx + 48, impact_cy - 4), (bx + 42, impact_cy + 14), (bx + 20, impact_cy + 18), (bx, impact_cy + 10)
-            ]
-            m_draw.polygon(crater_pts, fill=(18, 8, 12, 255), outline=OUTLINE)
-            for gx in range(bx + 6, bx + 42, 7):
-                m_draw.line([(gx, impact_cy - 16), (gx + 2, impact_cy + 14)], fill=(70, 52, 60, 255), width=1)
-
-            FUSE_WHITE = (232, 238, 248, 255)
-            FUSE_SILVER = (175, 188, 208, 255)
-            FUSE_SHADOW = (96, 108, 130, 255)
-            AIRLINE_RED = (232, 45, 66, 255)
-            AIRLINE_GOLD = (255, 208, 65, 255)
-
-            tail_fin_pts = [(bx - 22, impact_cy - 14), (bx - 30, impact_cy - 36), (bx - 19, impact_cy - 36), (bx - 8, impact_cy - 11)]
-            m_draw.polygon(tail_fin_pts, fill=AIRLINE_RED, outline=OUTLINE)
-            m_draw.line([(bx - 27, impact_cy - 28), (bx - 14, impact_cy - 23)], fill=FUSE_WHITE, width=2)
-            m_draw.line([(bx - 25, impact_cy - 24), (bx - 13, impact_cy - 19)], fill=AIRLINE_GOLD, width=1)
-
-            fuse_pts = [(bx - 24, impact_cy - 14), (bx + 20, impact_cy - 2), (bx + 16, impact_cy + 12), (bx - 26, impact_cy - 2)]
-            m_draw.polygon(fuse_pts, fill=FUSE_WHITE, outline=OUTLINE)
-            belly_pts = [(bx - 25, impact_cy - 7), (bx + 18, impact_cy + 5), (bx + 16, impact_cy + 12), (bx - 26, impact_cy - 2)]
-            m_draw.polygon(belly_pts, fill=FUSE_SHADOW, outline=OUTLINE)
-            m_draw.line([(bx - 24, impact_cy - 8), (bx + 18, impact_cy + 4)], fill=AIRLINE_RED, width=2)
-
-            for w_idx in range(8):
-                wx = bx - 20 + w_idx * 5
-                wy = int(impact_cy - 11 + w_idx * 1.35)
-                m_draw.rectangle([wx, wy, wx + 2, wy + 2], fill=(16, 22, 36, 255))
-
-            htail_pts = [(bx - 22, impact_cy - 7), (bx - 33, impact_cy - 1), (bx - 25, impact_cy + 2), (bx - 14, impact_cy - 5)]
-            m_draw.polygon(htail_pts, fill=FUSE_SILVER, outline=OUTLINE)
-
-            wing_pts = [(bx - 4, impact_cy + 1), (bx + 12, impact_cy + 5), (bx - 6, impact_cy + 24), (bx - 16, impact_cy + 20)]
-            m_draw.polygon(wing_pts, fill=FUSE_SILVER, outline=OUTLINE)
-            m_draw.rectangle([bx - 2, impact_cy + 11, bx + 9, impact_cy + 18], fill=FUSE_SHADOW, outline=OUTLINE)
-
-        elif disaster == "skeletal_bomb_ruin":
-            hole_poly = [
-                (bx + 8, by + 28), (bx + 18, by + 23), (bx + bw - 9, by + 27),
-                (bx + bw - 7, by + 46), (bx + bw - 18, by + 53), (bx + 11, by + 49)
-            ]
-            m_draw.polygon(hole_poly, fill=(16, 12, 22, 245), outline=OUTLINE)
-            m_draw.line([(bx + 11, by + 27), (bx + bw - 11, by + 49)], fill=STEEL_GIRDER, width=2)
-            m_draw.line([(bx + bw - 11, by + 27), (bx + 11, by + 49)], fill=STEEL_GIRDER, width=2)
-            m_draw.polygon([(bx + 4, by - 10), (bx + 32, by - 2), (bx + 29, by + 9), (bx + 1, by + 1)], fill=(20, 14, 28, 255), outline=NEON_PINK)
-
-        elif disaster == "cracked_burning":
-            # Clean blast notch & exposed steel girder core (removed the thin orange zigzag line)
-            notch = [(bx, by + 32), (bx + 16, by + 38), (bx + 12, by + 54), (bx, by + 58)]
-            m_draw.polygon(notch, fill=(16, 12, 22, 245), outline=OUTLINE)
-            m_draw.line([(bx + 6, by + 35), (bx + 6, by + 56)], fill=STEEL_GIRDER, width=2)
-
-        elif disaster == "collapsed_crane":
-            m_draw.line([(bx + 6, by), (bx + 42, by - 22)], fill=(195, 138, 38, 255), width=3)
-            m_draw.line([(bx + 10, by), (bx + 42, by - 22)], fill=OUTLINE, width=1)
-            m_draw.line([(bx + 42, by - 22), (bx + 46, by + 12)], fill=(90, 95, 110, 255), width=1)
-
-        elif disaster == "side_explosion_crater":
-            side_crater = [
-                (bx + bw + 1, by + 26), (bx + bw - 22, by + 34), (bx + bw - 26, by + 52),
-                (bx + bw - 14, by + 64), (bx + bw + 1, by + 70)
-            ]
-            m_draw.polygon(side_crater, fill=(0, 0, 0, 0))
-            m_draw.line([(bx + bw, by + 26), (bx + bw - 22, by + 34), (bx + bw - 26, by + 52), (bx + bw - 14, by + 64), (bx + bw, by + 70)], fill=OUTLINE, width=2)
-            m_draw.line([(bx + bw - 18, by + 32), (bx + bw - 18, by + 64)], fill=STEEL_GIRDER, width=2)
-            m_draw.rectangle([bx + 8, by - 14, bx + 46, by - 2], fill=(18, 14, 28, 255), outline=NEON_CYAN)
-
-        elif disaster == "industrial_inferno":
-            m_draw.polygon([(bx + 12, by), (bx + 8, by - 20), (bx + 15, by - 20), (bx + 18, by)], fill=STEEL_RUST, outline=OUTLINE)
-            m_draw.polygon([(bx + 28, by), (bx + 36, by - 16), (bx + 42, by - 14), (bx + 34, by)], fill=STEEL_RUST, outline=OUTLINE)
+            floor_num += 1
 
     mid.save(os.path.join(ENV_DIR, "parallax_buildings_mid.png"))
-    print("Saved parallax_buildings_mid.png ready for live animated fire nodes!")
+    print("Saved clean classic parallax_buildings_mid.png (dark skyscrapers + sparse lit windows!)")
+
+    # 2B. Rare Crashed Airplane Overlay (480x270) — Aligned pixel-for-pixel onto Building 3 (bx=120, bw=68, by=76)
+    plane_img = Image.new("RGBA", (480, 270), (0, 0, 0, 0))
+    p_draw = ImageDraw.Draw(plane_img)
+    bx, bw, by = 120, 68, 76
+    impact_cy = by + 42
+
+    # Jagged charred impact crater inside Building 3
+    crater_pts = [
+        (bx, impact_cy - 14), (bx + 16, impact_cy - 20), (bx + 36, impact_cy - 16),
+        (bx + 46, impact_cy - 4), (bx + 40, impact_cy + 14), (bx + 20, impact_cy + 17), (bx, impact_cy + 10)
+    ]
+    p_draw.polygon(crater_pts, fill=(18, 8, 12, 255), outline=OUTLINE)
+    for gx in range(bx + 6, bx + 40, 7):
+        p_draw.line([(gx, impact_cy - 15), (gx + 2, impact_cy + 13)], fill=(70, 52, 60, 255), width=1)
+
+    FUSE_WHITE = (232, 238, 248, 255)
+    FUSE_SILVER = (175, 188, 208, 255)
+    FUSE_SHADOW = (96, 108, 130, 255)
+    AIRLINE_RED = (232, 45, 66, 255)
+    AIRLINE_GOLD = (255, 208, 65, 255)
+
+    tail_fin_pts = [(bx - 22, impact_cy - 14), (bx - 30, impact_cy - 35), (bx - 19, impact_cy - 35), (bx - 8, impact_cy - 11)]
+    p_draw.polygon(tail_fin_pts, fill=AIRLINE_RED, outline=OUTLINE)
+    p_draw.line([(bx - 27, impact_cy - 27), (bx - 14, impact_cy - 22)], fill=FUSE_WHITE, width=2)
+    p_draw.line([(bx - 25, impact_cy - 23), (bx - 13, impact_cy - 18)], fill=AIRLINE_GOLD, width=1)
+
+    fuse_pts = [(bx - 24, impact_cy - 14), (bx + 20, impact_cy - 2), (bx + 16, impact_cy + 12), (bx - 26, impact_cy - 2)]
+    p_draw.polygon(fuse_pts, fill=FUSE_WHITE, outline=OUTLINE)
+    belly_pts = [(bx - 25, impact_cy - 7), (bx + 18, impact_cy + 5), (bx + 16, impact_cy + 12), (bx - 26, impact_cy - 2)]
+    p_draw.polygon(belly_pts, fill=FUSE_SHADOW, outline=OUTLINE)
+    p_draw.line([(bx - 24, impact_cy - 8), (bx + 18, impact_cy + 4)], fill=AIRLINE_RED, width=2)
+
+    for w_idx in range(8):
+        wx = bx - 20 + w_idx * 5
+        wy = int(impact_cy - 11 + w_idx * 1.35)
+        p_draw.rectangle([wx, wy, wx + 2, wy + 2], fill=(16, 22, 36, 255))
+
+    htail_pts = [(bx - 22, impact_cy - 7), (bx - 33, impact_cy - 1), (bx - 25, impact_cy + 2), (bx - 14, impact_cy - 5)]
+    p_draw.polygon(htail_pts, fill=FUSE_SILVER, outline=OUTLINE)
+
+    wing_pts = [(bx - 4, impact_cy + 1), (bx + 12, impact_cy + 5), (bx - 6, impact_cy + 23), (bx - 16, impact_cy + 19)]
+    p_draw.polygon(wing_pts, fill=FUSE_SILVER, outline=OUTLINE)
+    p_draw.rectangle([bx - 2, impact_cy + 10, bx + 9, impact_cy + 17], fill=FUSE_SHADOW, outline=OUTLINE)
+
+    plane_img.save(os.path.join(ENV_DIR, "airplane_crash_overlay.png"))
+    print("Saved rare airplane_crash_overlay.png!")
+
+    # 2C. Occasional Side Blast Crater Overlay (480x270) — Aligned pixel-for-pixel onto Building 7 (bx=356, bw=62, by=78)
+    blast_img = Image.new("RGBA", (480, 270), (0, 0, 0, 0))
+    bl_draw = ImageDraw.Draw(blast_img)
+    bx, bw, by = 356, 62, 78
+
+    # Charred dark interior blast cavity on upper-right side of Building 7
+    blast_pts = [
+        (bx + bw, by + 26), (bx + bw - 19, by + 33), (bx + bw - 24, by + 49),
+        (bx + bw - 13, by + 62), (bx + bw, by + 66)
+    ]
+    bl_draw.polygon(blast_pts, fill=(16, 10, 14, 255), outline=OUTLINE)
+    # Jagged scorched concrete rim & exposed internal steel girders/floor slab
+    bl_draw.line([(bx + bw, by + 26), (bx + bw - 19, by + 33), (bx + bw - 24, by + 49), (bx + bw - 13, by + 62), (bx + bw, by + 66)], fill=OUTLINE, width=2)
+    bl_draw.line([(bx + bw - 15, by + 32), (bx + bw - 15, by + 61)], fill=STEEL_GIRDER, width=2)
+    bl_draw.line([(bx + bw - 22, by + 46), (bx + bw - 2, by + 46)], fill=STEEL_RUST, width=1)
+    bl_draw.line([(bx + bw - 18, by + 56), (bx + bw - 3, by + 56)], fill=(48, 38, 46, 255), width=2)
+
+    blast_img.save(os.path.join(ENV_DIR, "side_blast_overlay.png"))
+    print("Saved side_blast_overlay.png!")
 
     # 3. Collapsed Bridge Pit (80x64) — Clean collapsed bridge structure (live animated fire node placed on top in game!)
     w, h = 80, 64

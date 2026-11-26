@@ -10,6 +10,8 @@ const HERO_SKIN_SHADER: Shader = preload("res://shaders/hit_flash.gdshader")
 const TIME_OF_DAY_SCRIPT = preload("res://scripts/gameplay/time_of_day.gd")
 const UI_ANIMATOR = preload("res://scripts/ui/ui_animator.gd")
 const ANIMATED_FIRE_SCRIPT = preload("res://scripts/effects/animated_fire_node.gd")
+const AIRPLANE_CRASH_TEX: Texture2D = preload("res://assets/environment/airplane_crash_overlay.png")
+const SIDE_BLAST_TEX: Texture2D = preload("res://assets/environment/side_blast_overlay.png")
 
 @onready var play_btn: Button = %PlayButton
 @onready var controls_btn: Button = %ControlsButton
@@ -141,22 +143,21 @@ func _setup_layout_and_background() -> void:
 		_time_of_day.set_fixed_time(0.36)
 
 	if bg_buildings and not bg_buildings.has_node("LobbyFires"):
+		for overlay_tex: Texture2D in [AIRPLANE_CRASH_TEX, SIDE_BLAST_TEX]:
+			var ov := TextureRect.new()
+			ov.texture = overlay_tex
+			ov.set_anchors_preset(Control.PRESET_FULL_RECT)
+			ov.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			ov.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			bg_buildings.add_child(ov)
+
 		var fires_root := Node2D.new()
 		fires_root.name = "LobbyFires"
 		bg_buildings.add_child(fires_root)
 		var lobby_fire_spots: Array[ Array ] = [
-			[28.0, 96.0, 1.35, 1.25],
-			[24.0, 134.0, 0.95, 0.95],
-			[100.0, 118.0, 1.05, 1.05],
-			[150.0, 110.0, 1.30, 1.25],
-			[123.0, 122.0, 0.85, 0.85],
-			[174.0, 68.0, 0.95, 0.95],
-			[219.0, 150.0, 0.95, 0.95],
-			[270.0, 84.0, 1.15, 1.10],
-			[320.0, 132.0, 0.95, 0.95],
-			[374.0, 64.0, 1.10, 1.05],
-			[398.0, 122.0, 1.00, 1.00],
-			[450.0, 124.0, 1.10, 1.05]
+			[148.0, 114.0, 1.15, 1.10], # Building 3: Airplane crash impact crater
+			[123.0, 120.0, 0.72, 0.72], # Building 3: Burning airplane wing / jet engine
+			[405.0, 131.0, 0.90, 0.85]  # Building 7: Side blast crater ledge
 		]
 		for fp: Array in lobby_fire_spots:
 			var fnode: Sprite2D = ANIMATED_FIRE_SCRIPT.new()

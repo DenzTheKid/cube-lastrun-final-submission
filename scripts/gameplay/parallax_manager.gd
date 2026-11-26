@@ -7,12 +7,17 @@ class_name ParallaxManager
 
 const SKY_SHADER: Shader = preload("res://shaders/dusk_sky_gradient.gdshader")
 const FORE_TEXTURE: Texture2D = preload("res://assets/environment/parallax_overpass_fore.png")
+const AIRPLANE_CRASH_TEXTURE: Texture2D = preload("res://assets/environment/airplane_crash_overlay.png")
+const SIDE_BLAST_TEXTURE: Texture2D = preload("res://assets/environment/side_blast_overlay.png")
 const TIME_OF_DAY_SCRIPT = preload("res://scripts/gameplay/time_of_day.gd")
 const ANIMATED_FIRE_SCRIPT = preload("res://scripts/effects/animated_fire_node.gd")
+
+const RARE_LANDMARK_CYCLE_WIDTH: float = 2880.0 # 6 full mid-ground blocks (6 * 480px) so the crashed airplane is genuinely rare
 
 var _sky_layer: Parallax2D = null
 var _distant_layer: Parallax2D = null
 var _mid_layer: Parallax2D = null
+var _rare_mid_layer: Parallax2D = null
 var _fore_layer: Parallax2D = null
 var time_of_day: Node = null
 
@@ -32,20 +37,18 @@ func setup_environment(world: Node2D, _camera: Camera2D) -> void:
 			sky_mat.shader = SKY_SHADER
 			sky_spr.material = sky_mat
 
-	# 2. Layer 2: Distant Skyline Layer (Parallax 0.10) — ruined distant towers with live animated fires
+	# 2. Layer 2: Distant Skyline Layer (Parallax 0.10) — classic moody dark city silhouettes
 	if _distant_layer:
 		_distant_layer.scroll_scale = Vector2(0.10, 0.0)
-		_spawn_distant_animated_fires(_distant_layer)
 
-	# 3. Layer 3: Mid-Ground Urban Skyline Layer (Parallax 0.25) — apocalyptic burning city & airplane crash
+	# 3. Layer 3: Mid-Ground Urban Skyline Layer (Parallax 0.25) — 100% classic dark skyscrapers with sparse lit rooms
 	if _mid_layer:
 		_mid_layer.scroll_scale = Vector2(0.25, 0.0)
-		_spawn_midground_animated_fires(_mid_layer)
 		if not _mid_layer.has_node("ApocalypseEmbers"):
 			var embers := CPUParticles2D.new()
 			embers.name = "ApocalypseEmbers"
 			embers.position = Vector2(240.0, 145.0)
-			embers.amount = 18
+			embers.amount = 4
 			embers.lifetime = 2.4
 			embers.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 			embers.emission_rect_extents = Vector2(240.0, 48.0)
@@ -55,10 +58,24 @@ func setup_environment(world: Node2D, _camera: Camera2D) -> void:
 			embers.initial_velocity_min = 8.0
 			embers.initial_velocity_max = 20.0
 			var grad := Gradient.new()
-			grad.set_color(0, Color(1.0, 0.85, 0.3, 0.9))
+			grad.set_color(0, Color(1.0, 0.85, 0.3, 0.85))
 			grad.set_color(1, Color(1.0, 0.25, 0.08, 0.0))
 			embers.color_ramp = grad
 			_mid_layer.add_child(embers)
+
+	# 3B. Rare Mid-Ground Disasters Layer (Parallax 0.25 locked 1:1 with ParallaxMid, repeats every 6 blocks = 2880px!)
+	# Keeps the crashed airplane (1 per 6 blocks) & burning side-blast craters genuinely sparse across the city.
+	_rare_mid_layer = world.get_node_or_null("ParallaxRareLandmarks") as Parallax2D
+	if not _rare_mid_layer:
+		_rare_mid_layer = Parallax2D.new()
+		_rare_mid_layer.name = "ParallaxRareLandmarks"
+		_rare_mid_layer.scroll_scale = Vector2(0.25, 0.0)
+		_rare_mid_layer.repeat_size = Vector2(RARE_LANDMARK_CYCLE_WIDTH, 0.0)
+		_rare_mid_layer.repeat_times = 1
+		world.add_child(_rare_mid_layer)
+		if _mid_layer:
+			world.move_child(_rare_mid_layer, _mid_layer.get_index() + 1)
+		_populate_rare_landmarks(_rare_mid_layer)
 
 	# 4. Layer 4: Foreground Overpass / Street-Level Details Layer (Parallax 0.60)
 	_fore_layer = world.get_node_or_null("ParallaxFore") as Parallax2D
@@ -74,7 +91,9 @@ func setup_environment(world: Node2D, _camera: Camera2D) -> void:
 		fore_spr.centered = false
 		_fore_layer.add_child(fore_spr)
 		world.add_child(_fore_layer)
-		if _mid_layer:
+		if _rare_mid_layer:
+			world.move_child(_fore_layer, _rare_mid_layer.get_index() + 1)
+		elif _mid_layer:
 			world.move_child(_fore_layer, _mid_layer.get_index() + 1)
 
 	# 5. Attach TimeOfDay controller to drive sky phases & atmospheric perspective layer tints
@@ -82,59 +101,52 @@ func setup_environment(world: Node2D, _camera: Camera2D) -> void:
 	time_of_day.name = "TimeOfDay"
 	add_child(time_of_day)
 	time_of_day.bind_layers(sky_mat, _distant_layer, _mid_layer, _fore_layer)
+	if _rare_mid_layer and time_of_day.has_method("add_mid_layer"):
+		time_of_day.add_mid_layer(_rare_mid_layer)
 
 
-func _spawn_distant_animated_fires(layer: Node2D) -> void:
-	if layer.has_node("DistantFiresContainer"):
+func _populate_rare_landmarks(layer: Node2D) -> void:
+	if layer.has_node("RareLandmarksRoot"):
 		return
-	var container := Node2D.new()
-	container.name = "DistantFiresContainer"
-	layer.add_child(container)
+	var root := Node2D.new()
+	root.name = "RareLandmarksRoot"
+	layer.add_child(root)
 
-	var spots: Array[Vector3] = [
-		Vector3(60.0, 128.0, 0.65),
-		Vector3(104.0, 92.0, 0.72),
-		Vector3(190.0, 102.0, 0.65),
-		Vector3(278.0, 90.0, 0.75),
-		Vector3(364.0, 106.0, 0.65),
-		Vector3(454.0, 98.0, 0.72)
+	# 6-block cycle (2880px = 6 * 480px):
+	# - Block 0 (x = 0):    1 side-blast crater + 1 steady fire
+	# - Block 1 (x = 480):  100% normal classic dark buildings
+	# - Block 2 (x = 960):  RARE crashed commercial airplane + 2 steady fires (appears only once per 6 blocks!)
+	# - Block 3 (x = 1440): 100% normal classic dark buildings
+	# - Block 4 (x = 1920): 1 side-blast crater + 1 steady fire
+	# - Block 5 (x = 2400): 100% normal classic dark buildings
+
+	for block_offset_x: float in [0.0, 1920.0]:
+		var blast_spr := Sprite2D.new()
+		blast_spr.texture = SIDE_BLAST_TEXTURE
+		blast_spr.centered = false
+		blast_spr.position = Vector2(block_offset_x, 0.0)
+		root.add_child(blast_spr)
+
+		var blast_fire: Sprite2D = ANIMATED_FIRE_SCRIPT.new()
+		blast_fire.position = Vector2(block_offset_x + 405.0, 131.0)
+		blast_fire.base_scale = Vector2(0.90, 0.85)
+		root.add_child(blast_fire)
+
+	var plane_block_x: float = 960.0
+	var plane_spr := Sprite2D.new()
+	plane_spr.name = "RareAirplaneCrash"
+	plane_spr.texture = AIRPLANE_CRASH_TEXTURE
+	plane_spr.centered = false
+	plane_spr.position = Vector2(plane_block_x, 0.0)
+	root.add_child(plane_spr)
+
+	var plane_fires: Array[ Array ] = [
+		[plane_block_x + 148.0, 114.0, 1.15, 1.10], # Airplane impact crater fire
+		[plane_block_x + 123.0, 120.0, 0.72, 0.72]  # Burning jet engine / wing fire
 	]
-	for sp in spots:
-		var fire: Sprite2D = ANIMATED_FIRE_SCRIPT.new()
-		fire.position = Vector2(sp.x, sp.y)
-		fire.base_scale = Vector2(sp.z, sp.z)
-		fire.modulate = Color(1.0, 0.82, 0.68, 0.85)
-		container.add_child(fire)
-
-
-func _spawn_midground_animated_fires(layer: Node2D) -> void:
-	if layer.has_node("MidFiresContainer"):
-		return
-	var container := Node2D.new()
-	container.name = "MidFiresContainer"
-	layer.add_child(container)
-
-	# [x, y, scale_x, scale_y] positioned on ruined rooftops, blown-out floors, and the airplane crash crater!
-	var fire_placements: Array[ Array ] = [
-		[28.0, 96.0, 1.35, 1.25],   # Building 1: Inferno Tower roof blaze
-		[24.0, 134.0, 0.95, 0.95],  # Building 1: Middle floor fire
-		[34.0, 172.0, 0.90, 0.90],  # Building 1: Lower floor fire
-		[100.0, 118.0, 1.05, 1.05], # Building 2: Collapsed half crater fire
-		[150.0, 110.0, 1.30, 1.25], # Building 3: AIRPLANE CRASH MAIN IMPACT CRATER FIRE!
-		[123.0, 122.0, 0.85, 0.85], # Building 3: Burning airplane wing & jet engine!
-		[174.0, 68.0, 0.95, 0.95],  # Building 3: Rooftop fire above airplane crash
-		[219.0, 150.0, 0.95, 0.95], # Building 4: Skeletal bomb ruin core fire
-		[270.0, 84.0, 1.15, 1.10],  # Building 5: Ruined tower rooftop fire
-		[256.0, 132.0, 0.85, 0.85], # Building 5: Side blast notch fire
-		[320.0, 132.0, 0.95, 0.95], # Building 6: Collapsed crane roof fire
-		[374.0, 64.0, 1.10, 1.05],  # Building 7: Burning neon billboard on roof
-		[398.0, 122.0, 1.00, 1.00], # Building 7: Side explosion crater fire
-		[430.0, 74.0, 0.75, 0.80],  # Building 8: Burning industrial smokestack
-		[450.0, 124.0, 1.10, 1.05]  # Building 8: Industrial inferno floor
-	]
-	for fp: Array in fire_placements:
+	for fp: Array in plane_fires:
 		var fire: Sprite2D = ANIMATED_FIRE_SCRIPT.new()
 		fire.position = Vector2(float(fp[0]), float(fp[1]))
 		fire.base_scale = Vector2(float(fp[2]), float(fp[3]))
-		container.add_child(fire)
+		root.add_child(fire)
 

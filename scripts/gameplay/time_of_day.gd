@@ -28,6 +28,7 @@ var _debug_shot_name: String = ""
 var _sky_material: ShaderMaterial = null
 var _distant_node: CanvasItem = null
 var _mid_node: CanvasItem = null
+var _extra_mid_nodes: Array[CanvasItem] = []
 var _fore_node: CanvasItem = null
 
 func _ready() -> void:
@@ -59,6 +60,11 @@ func bind_layers(sky_mat: ShaderMaterial, distant: CanvasItem, mid: CanvasItem, 
 	_mid_node = mid
 	_fore_node = fore
 	_apply_phase(current_phase_t)
+
+func add_mid_layer(extra_mid: CanvasItem) -> void:
+	if is_instance_valid(extra_mid) and not _extra_mid_nodes.has(extra_mid):
+		_extra_mid_nodes.append(extra_mid)
+		_apply_phase(current_phase_t)
 
 func set_fixed_time(t_val: float) -> void:
 	_debug_override_active = true
@@ -266,5 +272,8 @@ func _apply_phase(t: float) -> void:
 		_distant_node.modulate = dist_tint
 	if is_instance_valid(_mid_node):
 		_mid_node.modulate = mid_tint
+	for extra_mid: CanvasItem in _extra_mid_nodes:
+		if is_instance_valid(extra_mid):
+			extra_mid.modulate = mid_tint
 	if is_instance_valid(_fore_node):
 		_fore_node.modulate = fore_tint
