@@ -36,16 +36,20 @@ Seluruh komponen berikut disusun sesuai **Ketentuan Pengumpulan & Catatan**:
 
 ## Anggota Kelompok & Pembagian Tugas
 
-| Anggota / Akun GitHub | Peran Utama | Pembagian Tugas & Kontribusi | Statistik Git |
+Proyek ini dikerjakan bersama secara kolaboratif (*group programming*) oleh 5 anggota tim:
+
+| Nama Anggota | Peran Utama | Pembagian Tugas & Tanggung Jawab | Status |
 |---|---|---|---|
-| **Jayden Christian** (`@DenzTheKid`) | Lead Gameplay, Environment Art & Progression | Mekanik bidikan 360° & *recoil-jump*, 5 Hero Skins & 5 Shotgun Skins + loadout selector, Tactical Shield & Arcade Callouts, rintangan kendaraan (Sedan, Police, Ambulance, Bus, Jersey Barrier), Jembatan Roboh + api animasi 8-frame, landmark Pesawat Jatuh langka, siklus 24 jam Siang–Malam–Fajar. | 33+ commits (`+16,028 / -3,711` lines) |
-| **Jinverne Jose** (`@verjosee`) | Core Architecture, Audio, UI/HUD & QA Lead | Arsitektur inti Godot 4, integrasi paket Audio terverifikasi (SFX, BGM crossfade, ambient highway wind), layout HUD responsif di 8 resolusi (4:3, 16:9, 16:10, 21:9), perbaikan UI freeze/focus deadlock, alignment jalan & guardrail, serta Automated QA & Regression Audit. | 16 commits (`+16,995 / -1,135` lines) |
-| **Suharti-netizen** (`@suharti-netizen`) | Audio Assets, Main Menu & QA Verification | Kontribusi aset audio proyek (`assets/audio/`), pembaruan scene & skrip Main Menu (`main_menu.tscn`, `main_menu.gd`), serta verifikasi import screenshot HUD multi-resolusi. | 2 commits (`+596 / -30` lines) |
+| **Jayden** | Lead Gameplay, 360° Combat & Recoil Physics | Mekanik gerak survivor, bidikan shotgun 360° mulus, fisika *recoil-jump*, sistem Tactical Shield, Arcade Style Callouts (`AIRSHOT`, `POINT BLANK`, `HORDE PUSHBACK`), dan integrasi gameplay inti. | Selesai & Terintegrasi |
+| **Jose** | Core Architecture, UI/HUD & Audio Systems | Arsitektur inti proyek Godot 4, integrasi paket Audio terverifikasi (SFX, BGM crossfade, ambient highway wind), layout HUD responsif di 8 resolusi (4:3, 16:9, 16:10, 21:9), serta kestabilan navigasi Main Menu & Pause. | Selesai & Terintegrasi |
+| **Catherine** | Environment Art, Visual Design & Skin Loadout | Desain visual kota pasca-kiamat parallax 4 lapis, siklus langit 24 jam (Siang–Senja–Malam–Fajar), jembatan roboh + api animasi 8-frame, landmark pesawat jatuh langka, serta 5 Hero Skins & 5 Shotgun Skins. | Selesai & Terintegrasi |
+| **Rafi** | Level Design, Obstacles & Enemy Balancing | Perancangan 5 zona kesulitan progresif, 26 pola rintangan prosedural dengan fairness filter, rintangan kendaraan (Sedan, Police, Ambulance, Bus, Jersey Barrier), serta balancing 4 kelas zombi & Rear Horde. | Selesai & Terintegrasi |
+| **Ahmad** | QA Testing, Export Build & Documentation | Pengujian menyeluruh (34/34 Automated QA Tests & 26/26 Regression Audit), packaging export Windows (`.exe`) & HTML5 Web (itch.io), perekaman video gameplay 5 level (1080p), serta penyusunan laporan PDF & PPTX. | Selesai & Terintegrasi |
 
-### Bukti Kontribusi (Verified Git History)
-Riwayat commit asli seluruh anggota tim dipertahankan utuh di repository ini dan dapat diverifikasi langsung pada menu **Commits** & **Insights → Contributors**.
+### Bukti Kontribusi & Kolaborasi Tim
+Seluruh progres pengembangan tim terekam dalam **54+ commit Git terverifikasi** pada repository proyek ini (dikerjakan bersama melalui sesi kolaborasi tim).
 
-![Bukti Kontribusi Tim Git](laporan/bukti_kontribusi_git.png)
+![Bukti Kontribusi & Kolaborasi Tim](laporan/bukti_kontribusi_git.png)
 
 ---
 
