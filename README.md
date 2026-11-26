@@ -14,7 +14,7 @@ Seluruh komponen berikut disusun sesuai **Ketentuan Pengumpulan & Catatan**:
 | No | Ketentuan Pengumpulan | Status | Tautan / Lokasi File |
 |---|---|---|---|
 | **1** | **Proyek Godot Lengkap** (`project.godot`, `scenes/`, `scripts/`, `assets/`, `shaders/`) | Lengkap & Terverifikasi | Root repository ini ([`project.godot`](project.godot)) |
-| **2** | **Build Hasil Export / Game Siap Main** (Windows `.exe` & HTML5 Web untuk itch.io) | Tersedia | [`builds/Cube_LastRun_Windows_x64.zip`](builds/Cube_LastRun_Windows_x64.zip) & [`builds/web/`](builds/web/) |
+| **2** | **Link Game di itch.io + Build Hasil Export** (Main di Browser & Windows `.exe`) | Tersedia (Public) | **https://denzthekid.itch.io/cube-last-run** & [`builds/Cube_LastRun_Windows_x64.zip`](builds/Cube_LastRun_Windows_x64.zip) |
 | **3** | **Laporan Lengkap (PDF & PPT)** berisi anggota, pembagian tugas, level, dan fitur | Tersedia (PDF + PPTX) | [`laporan/Laporan_Final_CUBE_LAST_RUN.pdf`](laporan/Laporan_Final_CUBE_LAST_RUN.pdf) & [`laporan/Presentasi_Final_CUBE_LAST_RUN.pptx`](laporan/Presentasi_Final_CUBE_LAST_RUN.pptx) |
 | **4** | **Bukti Kontribusi + Screenshot Setiap Level** | Tersedia | [`laporan/bukti_kontribusi_git.png`](laporan/bukti_kontribusi_git.png), tab [Contributors](../../graphs/contributors), & [`laporan/screenshots/`](laporan/screenshots/) |
 | **5** | **Video Gameplay Seluruh Level (5 Level)** — YouTube (Unlisted) | Tersedia | **https://youtu.be/xP-9e2LzxnY** |
@@ -100,14 +100,17 @@ Fase bertahan hidup kecepatan maksimal saat fajar menyingsing. Seluruh 26 pola r
 
 ## Cara Menjalankan Game
 
-### 1. Langsung Main (Tanpa Instal Godot — Windows)
+### 1. Main Langsung di Browser (itch.io — Tanpa Instalasi)
+- Klik langsung: **https://denzthekid.itch.io/cube-last-run** → tekan **Run game** (mendukung layar penuh / *Fullscreen*).
+
+### 2. Langsung Main di Windows (Standalone `.exe` — Tanpa Godot)
 1. Unduh [`builds/Cube_LastRun_Windows_x64.zip`](builds/Cube_LastRun_Windows_x64.zip).
 2. Ekstrak file ZIP lalu jalankan **`Cube_LastRun.exe`**.
 
-### 2. Build Web HTML5 (Siap Main di Browser / Upload ke itch.io)
-- Seluruh file export HTML5 (`index.html`, `index.js`, `index.wasm`, `index.pck`) tersedia di folder [`builds/web/`](builds/web/) dan dapat dijalankan via web server lokal (`py -m http.server`) maupun langsung diupload ke **itch.io**.
+### 3. Build Web HTML5 Lokal
+- Seluruh file export HTML5 (`index.html`, `index.js`, `index.wasm`, `index.pck`) tersedia di folder [`builds/web/`](builds/web/) dan dapat dijalankan via web server lokal (`py -m http.server`).
 
-### 3. Membuka Proyek di Godot Engine 4.7.1
+### 4. Membuka Proyek di Godot Engine 4.7.1
 1. Clone atau unduh repository ini.
 2. Buka **Godot Engine 4.7.1** → **Import** → pilih [`project.godot`](project.godot).
 3. Tekan **F5** untuk menjalankan game dari Main Menu.
